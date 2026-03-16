@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "id": "C001",
+    "area": "plugin-hooks",
+    "title": "plugin hooks 不支持 matcher 正则 | 语法",
+    "detail": "hooks.json 的 matcher 字段不支持 `stop|clear|logout` 这种正则写法，需要拆分为多个独立的 hook 条目，每个条目匹配一个事件。",
+    "learnedAt": "2026-03-16",
+    "ref": "68968fc"
+  },
+  {
+    "id": "C002",
+    "area": "plugin-hooks",
+    "title": "plugin hooks 的 matcher 不指定 = 匹配所有事件",
+    "detail": "plugin 格式的 hooks 不支持 matcher 精确匹配。去掉 matcher 字段时默认匹配该事件类型的所有触发。SessionStart 和 SessionEnd 都应去掉 matcher，否则可能不触发。",
+    "learnedAt": "2026-03-16",
+    "ref": "5b59e69, 9700e8b"
+  },
+  {
+    "id": "C003",
+    "area": "plugin-hooks",
+    "title": "plugin hook stdout 必须是 hookSpecificOutput JSON 格式",
+    "detail": "plugin hooks 的 stdout 如果是纯文本会被 Claude Code 忽略。必须输出 `{\"hookSpecificOutput\": {...}}` JSON 格式才能注入到会话 context 中。",
+    "learnedAt": "2026-03-16",
+    "ref": "75e4a24"
+  },
+  {
+    "id": "C004",
+    "area": "plugin-hooks",
+    "title": "claude -p --output-format json 会混入 API 元数据",
+    "detail": "在 hook 脚本中调用 `claude -p --output-format json` 时，输出不是纯 JSON 内容，会包含 API 元数据。应避免使用 --output-format json，并处理输出中可能被 markdown 代码块包裹的情况。",
+    "learnedAt": "2026-03-16",
+    "ref": "0d77fe9"
+  },
+  {
+    "id": "C005",
+    "area": "plugin-commands",
+    "title": "plugin command 脚本路径应基于 plugin cache 目录",
+    "detail": "plugin 安装后脚本位于 cache 目录，command 中引用脚本路径需要动态定位 plugin 安装目录，不能硬编码项目路径。",
+    "learnedAt": "2026-03-16",
+    "ref": "68cf1c9"
+  },
+  {
+    "id": "C006",
+    "area": "plugin-hooks",
+    "title": "SessionEnd 必须覆盖所有退出方式",
+    "detail": "Claude Code 有多种退出方式：clear、logout、exit、Ctrl+C 等。如果 SessionEnd hook 只注册了部分 matcher（如 clear 和 logout），正常退出时不会触发。解决方案：去掉 matcher，匹配所有退出事件。",
+    "learnedAt": "2026-03-16",
+    "ref": "9700e8b"
+  },
+  {
+    "title": "SessionEnd hook 递归循环",
+    "summary": "claude -p 子进程继承原项目 CWD 和环境，所有守卫条件（.rime/ 存在、tasks.json 存在）都通过，导致无限循环。需通过环境变量标记 worker 子进程并在 hook 开头检测退出。",
+    "tags": [
+      "hook",
+      "recursion",
+      "session-end"
+    ],
+    "id": "C-007",
+    "createdAt": "2026-03-16",
+    "source": "session-2026-03-16T18-49"
+  }
+]

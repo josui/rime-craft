@@ -44,9 +44,18 @@
       "difficulty": "large",
       "createdAt": "2026-03-16",
       "subtasks": [
-        { "title": "设计方案讨论", "status": "done" },
-        { "title": "实现 hook 脚本", "status": "todo" },
-        { "title": "更新 rimeflow skill", "status": "todo" }
+        {
+          "title": "设计方案讨论",
+          "status": "done"
+        },
+        {
+          "title": "实现 hook 脚本",
+          "status": "done"
+        },
+        {
+          "title": "更新 rimeflow skill",
+          "status": "todo"
+        }
       ]
     }
   ]

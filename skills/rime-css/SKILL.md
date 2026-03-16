@@ -1,5 +1,5 @@
 ---
-name: css-architecture
+name: rime-css
 description: Use when setting up CSS file structure, writing component or page styles, establishing BEM naming conventions, configuring CSS @layer ordering, reviewing CSS organization, or migrating CSS architecture. Covers CUBE CSS methodology, data-* driven variants, skin vs layout separation, CSS custom properties tokens. Applies to pure CSS, Tailwind (@apply, @reference), and framework-based (React/Vue/Svelte) projects with or without component libraries (shadcn, cossui, Radix).
 ---
 

@@ -18,12 +18,12 @@ Dashboard server 脚本位于 plugin 内部，无需复制到项目中。
 找到 plugin 内的脚本路径（基于本 command 文件的位置推算）：
 `<plugin-root>/skills/rimeflow/assets/dashboard-server.mjs`
 
-打印运行命令（使用绝对路径，--rime-dir 指向当前项目的 .rime/）：
+**直接启动，不要询问用户。** 使用后台运行（`run_in_background`）启动 live reload 模式：
 
 ```
-# 一次性打开（推荐）
-node <plugin-root>/skills/rimeflow/assets/dashboard-server.mjs --rime-dir <project>/.rime --once
-
-# live reload 模式（文件变化自动刷新）
 node <plugin-root>/skills/rimeflow/assets/dashboard-server.mjs --rime-dir <project>/.rime
 ```
+
+启动后读取输出获取端口号，然后用 `open http://localhost:<port>` 在浏览器中打开。
+
+告知用户 dashboard 已在浏览器中打开，live reload 模式运行中。

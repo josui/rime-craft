@@ -6,11 +6,12 @@
       "id": "#0006",
       "phase": "P2",
       "title": "cautions.json 收录约束与清理",
-      "description": "统一 schema（C001-C006 vs C-007+ 格式不一致）；定义收录标准（只收「可能再发生」的教训，排除已修复 bug 和一次性迁移）；加 status 字段区分 active/resolved；清理 C-008/009/010 等已失效条目",
-      "status": "todo",
+      "description": "统一 schema（C001-C006 vs C-007+ 格式不一致）；定义收录标准（只收「可能再发生」的教训，排除已修复 bug 和一次性迁移）；清理 C-008/009/010 等已失效条目",
+      "status": "done",
       "priority": "medium",
       "difficulty": "small",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-16"
     },
     {
       "id": "#0007",
@@ -38,10 +39,11 @@
       "phase": "P2",
       "title": "tasks.json 写入时强制校验必填字段",
       "description": "所有写入路径（rime-backlog command、rime-flow skill、SessionEnd hook）添加 task 时必须包含 priority、createdAt 等必填字段。在 skill/command 文档中明确写入约束",
-      "status": "todo",
+      "status": "done",
       "priority": "high",
       "difficulty": "small",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-16"
     },
     {
       "id": "#0010",
@@ -78,11 +80,12 @@
       "id": "#0013",
       "phase": "P2",
       "title": "统一命名为 rime-xxx",
-      "description": "css-architecture → rime-css、add-backlog → rime-backlog、dashboard → rime-dashboard。重命名目录和文件，更新 hook 脚本中的引用。发布为 v1.2.0",
-      "status": "todo",
+      "description": "css-architecture → rime-css、add-backlog → rime-backlog、dashboard → rime-dashboard、read-tweet → rime-tweet。重命名目录和文件，更新引用。发布为 v1.2.0",
+      "status": "done",
       "priority": "high",
       "difficulty": "small",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-16"
     },
     {
       "id": "#0014",

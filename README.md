@@ -11,14 +11,15 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | Name | Description |
 | ---- | ----------- |
 | [rimeflow](skills/rimeflow/) | 项目生命周期管理（.rime/ 数据层 + docs/ 叙事层） |
-| [css-architecture](skills/css-architecture/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
+| [rime-css](skills/rime-css/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
 
 ### Commands
 
 | Name | Description |
 | ---- | ----------- |
-| [add-backlog](commands/add-backlog.md) | 快速添加任务到 .rime/tasks.json |
-| [read-tweet](commands/read-tweet.md) | 读取 X/Twitter 推文内容 |
+| [rime-backlog](commands/rime-backlog.md) | 快速添加任务到 .rime/tasks.json |
+| [rime-dashboard](commands/rime-dashboard.md) | 打开 .rime/ 数据可视化 dashboard |
+| [rime-tweet](commands/rime-tweet.md) | 读取 X/Twitter 推文内容 |
 
 ### Hooks
 
@@ -29,7 +30,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 
 ## Requirements
 
-- **Node.js 18+** — Required for the dashboard server (`dashboard` command)
+- **Node.js 18+** — Required for the dashboard server (`rime-dashboard` command)
 
 ## Setup
 

@@ -28,7 +28,14 @@ description: 快速添加 backlog 条目
 4. 根据内容判断 priority（`high` / `medium` / `low`），不确定时询问用户
 5. 从 tasks.json 读取 `nextId`，生成新 id（补零 4 位）
 6. 如有 `segments`，根据 module 分配对应区间编号
-7. 追加 item：
+7. **写入前校验**：确保以下必填字段全部存在且格式正确，缺失则中止并报错：
+   - `id`: `#0001` 格式（4 位补零）
+   - `title`: 非空字符串
+   - `status`: 必须为 `todo`
+   - `priority`: `high` / `medium` / `low` 之一
+   - `createdAt`: `YYYY-MM-DD` 格式
+   - `phase`: 非空字符串
+8. 追加 item：
    ```json
    {
      "id": "#0001",
@@ -43,5 +50,5 @@ description: 快速添加 backlog 条目
      "subtasks": []
    }
    ```
-8. `nextId` 自增
-9. 显示添加结果：编号、标题、module、difficulty（🟢/🟡/🔴）、phase
+9. `nextId` 自增
+10. 显示添加结果：编号、标题、module、difficulty（🟢/🟡/🔴）、phase

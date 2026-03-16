@@ -1,3 +1,7 @@
+---
+description: 读取 X/Twitter 推文内容
+---
+
 读取 X/Twitter 推文内容。参数: 推文 URL 或 Tweet ID。
 
 ## 流程

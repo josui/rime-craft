@@ -93,7 +93,7 @@ AGENTS.md 放在项目根目录。定义 AI Agent 在此项目中的协作规则
 
 ### CSS（使用 CSS / Tailwind 的项目）
 
-- CSS 架构参照 `css-architecture` skill
+- CSS 架构参照 `rime-css` skill
 - 覆盖：CUBE CSS 分层、BEM 命名、`data-*` 变体、skin vs layout 分离
 - 适用于 shadcn、coss ui、Radix 等组件库项目
 

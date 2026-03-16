@@ -885,17 +885,21 @@ generate
 open "$OUT"
 
 if [ "$WATCH" = true ]; then
-  echo "Dashboard watching $RIME_DIR/ — Ctrl+C to stop"
-  HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
-  while true; do
-    sleep 2
-    NEW_HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
-    if [ "$NEW_HASH" != "$HASH" ]; then
-      generate
-      HASH="$NEW_HASH"
-      echo "  refreshed $(date +%H:%M:%S)"
-    fi
-  done
+  # Watch loop in background
+  (
+    HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
+    while true; do
+      sleep 2
+      NEW_HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
+      if [ "$NEW_HASH" != "$HASH" ]; then
+        generate
+        HASH="$NEW_HASH"
+      fi
+    done
+  ) &
+  WATCH_PID=$!
+  echo "Dashboard watching $RIME_DIR/ (pid: $WATCH_PID)"
+  echo "Stop: kill $WATCH_PID"
 else
   echo "Dashboard opened: $OUT"
   echo "Tip: use --watch for live reload"

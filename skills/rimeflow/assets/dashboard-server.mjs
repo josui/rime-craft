@@ -1,11 +1,10 @@
-// rime-dashboard v1.1.8
+// rime-dashboard v1.2.0
 import { createServer } from 'node:http'
-import { readFileSync, writeFileSync, watch } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { readFileSync, writeFileSync, watch, existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 import { exec } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { fileURLToPath } from 'node:url'
 
 const [major] = process.versions.node.split('.').map(Number)
 if (major < 18) {
@@ -13,8 +12,20 @@ if (major < 18) {
   process.exit(1)
 }
 
-const RIME_DIR = dirname(fileURLToPath(import.meta.url))
+// --rime-dir <path> で指定、なければ cwd/.rime、最後にスクリプト所在ディレクトリ
+const rimeDirArg = process.argv.indexOf('--rime-dir')
+const RIME_DIR = rimeDirArg !== -1 && process.argv[rimeDirArg + 1]
+  ? resolve(process.argv[rimeDirArg + 1])
+  : existsSync(join(process.cwd(), '.rime'))
+    ? join(process.cwd(), '.rime')
+    : join(process.cwd(), '.rime')
 const ONCE = process.argv.includes('--once')
+
+if (!existsSync(join(RIME_DIR, 'tasks.json'))) {
+  console.error(`No .rime/ data found at: ${RIME_DIR}`)
+  console.error('Run /rime-init to initialize the project first.')
+  process.exit(1)
+}
 
 function readJson(filename) {
   try {
@@ -100,7 +111,6 @@ es.onerror = () => {
   header .meta {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-left: auto;
   }
 
   .live-badge {
@@ -132,23 +142,25 @@ es.onerror = () => {
     50% { opacity: 0.3; }
   }
 
-  /* Tabs */
+  /* Tabs (inline in header) */
   .tabs {
     display: flex;
     gap: 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    margin-left: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
   }
 
   .tab {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 550;
     color: var(--text-secondary);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
     user-select: none;
   }
 
@@ -157,15 +169,16 @@ es.onerror = () => {
   }
 
   .tab.active {
-    color: var(--text);
-    border-bottom-color: var(--text);
+    background: var(--text);
+    color: #fff;
   }
 
   .tab .tab-count {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
-    color: var(--text-secondary);
-    margin-left: 0.35rem;
+    color: inherit;
+    opacity: 0.7;
+    margin-left: 0.3rem;
   }
 
   .tab-panel {
@@ -361,6 +374,21 @@ es.onerror = () => {
     font-weight: 600;
     color: var(--text-secondary);
     font-family: var(--font-mono);
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0.05rem 0.2rem;
+    margin: -0.05rem -0.2rem;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .task-id:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .task-id.copied {
+    background: var(--done);
+    color: #fff;
   }
 
   .task-module {
@@ -566,6 +594,21 @@ es.onerror = () => {
     font-weight: 600;
     color: var(--text-secondary);
     font-family: var(--font-mono);
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0.05rem 0.2rem;
+    margin: -0.05rem -0.2rem;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .caution-id:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .caution-id.copied {
+    background: var(--done);
+    color: #fff;
   }
 
   .caution-title {
@@ -631,6 +674,10 @@ es.onerror = () => {
   <h1>Rime Dashboard</h1>
   <span class="live-badge __LIVE_CLASS__"><span class="pulse"></span>Live</span>
   <span class="phase-badge" id="phase-badge" title="Click to view all phases"></span>
+  <nav class="tabs" id="tabs">
+    <div class="tab active" data-tab="tasks">Tasks<span class="tab-count" id="tab-count-tasks"></span></div>
+    <div class="tab" data-tab="cautions">Cautions<span class="tab-count" id="tab-count-cautions"></span></div>
+  </nav>
   <span class="meta" id="timestamp"></span>
 </header>
 
@@ -640,11 +687,6 @@ es.onerror = () => {
     <div id="phase-list"></div>
   </div>
 </div>
-
-<nav class="tabs" id="tabs">
-  <div class="tab active" data-tab="tasks">Tasks<span class="tab-count" id="tab-count-tasks"></span></div>
-  <div class="tab" data-tab="cautions">Cautions<span class="tab-count" id="tab-count-cautions"></span></div>
-</nav>
 
 <div class="tab-panel active" data-panel="tasks">
   <div class="filters" id="filters"></div>
@@ -835,6 +877,25 @@ function renderTasks() {
 
 buildFilters();
 renderTasks();
+
+// Copy ID to clipboard
+function copyId(el) {
+  const id = el.textContent.trim();
+  navigator.clipboard.writeText(id).then(() => {
+    el.classList.add('copied');
+    const orig = el.textContent;
+    el.textContent = 'Copied!';
+    setTimeout(() => {
+      el.textContent = orig;
+      el.classList.remove('copied');
+    }, 800);
+  });
+}
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('task-id') || e.target.classList.contains('caution-id')) {
+    copyId(e.target);
+  }
+});
 
 // Cautions
 document.getElementById('tab-count-cautions').textContent = CAUTIONS.length || 0;

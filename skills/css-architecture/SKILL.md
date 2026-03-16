@@ -39,6 +39,27 @@ theme < base < components < app < utilities
 @layer theme, base, components, app, utilities;
 ```
 
+### Legacy Coexistence (unlayered styles)
+
+When the page has **unlayered legacy/preload CSS you cannot modify**, unlayered styles always beat all `@layer` styles — regardless of specificity. In this case:
+
+- **Design system / third-party** → keep in `layer()` (e.g. `@import url("lib.css") layer(lib)`)
+- **Your components / app / utilities** → write **unlayered** (no `@layer` wrapper)
+- Maintain the same mental ordering (`components` before `app` before `utilities`) via source order and specificity, even without explicit layers
+
+```css
+/* Third-party in layer — lowest priority */
+@import url("lib.css") layer(lib);
+
+/* Your styles — unlayered to coexist with legacy unlayered CSS */
+/* components (loaded first = lower source-order priority) */
+@import './components/button.css';
+/* app (loaded after = wins over components by source order) */
+@import './pages/home.css';
+```
+
+Only adopt full `@layer` when you control **all** CSS on the page.
+
 ### Cascade Effect
 
 | Scenario | Winner | Why |
@@ -46,6 +67,7 @@ theme < base < components < app < utilities
 | app vs component | app | `app` > `components` |
 | app vs utility | utility | `utilities` > `app` |
 | component vs utility | utility | `utilities` > `components` |
+| any layered vs unlayered | unlayered | Unlayered always wins |
 
 Layout utilities naturally override lower layers — no `!important` needed. **`!important` is banned.**
 
@@ -91,7 +113,7 @@ Module namespace prefixes (`point-*`, `skin-*`, `cart-*`) prevent collisions.
 
 | Question | Answer |
 |----------|--------|
-| Where do skin styles go? | CSS file, `@layer components` or `@layer app` |
+| Where do skin styles go? | CSS file, in `@layer` or unlayered (see Legacy Coexistence) |
 | How to express variants? | `data-*` attributes + CSS selectors |
 | Can I use `--modifier` in BEM? | No. Use `data-*` instead |
 | Can I mix utilities with semantic class? | No. Semantic class = all styles in CSS |
@@ -100,8 +122,8 @@ Module namespace prefixes (`point-*`, `skin-*`, `cart-*`) prevent collisions.
 
 ## Review Checklist
 
-- [ ] `@layer` declarations in CSS entry file
-- [ ] Component CSS in `@layer components`, app CSS in `@layer app`
+- [ ] `@layer` declarations in CSS entry file (or source-order if legacy coexistence)
+- [ ] Component CSS in `@layer components`, app CSS in `@layer app` (or unlayered if legacy page)
 - [ ] BEM `block__element` only, no `--modifier`
 - [ ] All variants/states use `data-*`
 - [ ] No skin utilities in app-layer markup

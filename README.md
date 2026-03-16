@@ -27,6 +27,10 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | SessionStart | 自动注入项目上下文（phase、活跃任务、上次 session 摘要） |
 | SessionEnd | 自动总结对话、更新任务状态、记录踩坑点 |
 
+## Requirements
+
+- **Node.js 18+** — Required for the dashboard server (`dashboard` command)
+
 ## Setup
 
 Install as a Claude Code plugin:

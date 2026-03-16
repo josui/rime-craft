@@ -1,29 +1,50 @@
-#!/bin/bash
-# .rime/ dashboard — 生成本地 HTML 并在浏览器打开
-# Usage:
-#   bash dashboard.sh              一次性生成并打开
-#   bash dashboard.sh --watch      监听文件变化，自动刷新
-set -euo pipefail
+// rime-dashboard v1.1.8
+import { createServer } from 'node:http'
+import { readFileSync, writeFileSync, watch } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { createHash } from 'node:crypto'
+import { exec } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
 
-RIME_DIR=".rime"
-OUT="/tmp/rime-dashboard.html"
-WATCH=false
+const [major] = process.versions.node.split('.').map(Number)
+if (major < 18) {
+  console.error(`Node.js 18+ required (current: ${process.version})`)
+  process.exit(1)
+}
 
-for arg in "$@"; do
-  case "$arg" in
-    --watch|-w) WATCH=true ;;
-    *) RIME_DIR="$arg" ;;
-  esac
-done
+const RIME_DIR = dirname(fileURLToPath(import.meta.url))
+const ONCE = process.argv.includes('--once')
 
-if [ ! -d "$RIME_DIR" ]; then
-  echo "Error: $RIME_DIR not found" >&2
-  exit 1
-fi
+function readJson(filename) {
+  try {
+    return readFileSync(join(RIME_DIR, filename), 'utf8').trim()
+  } catch {
+    return filename.endsWith('cautions.json') ? '[]' : '{}'
+  }
+}
 
-generate() {
-cat > "$OUT" <<'HTMLEOF'
-<!DOCTYPE html>
+function openBrowser(url) {
+  const cmd = process.platform === 'darwin' ? 'open'
+            : process.platform === 'win32'  ? 'start'
+            : 'xdg-open'
+  exec(`${cmd} "${url}"`)
+}
+
+function generateHtml(isLive) {
+  const tasksJson = readJson('tasks.json')
+  const phaseJson = readJson('phase.json')
+  const cautionsJson = readJson('cautions.json')
+
+  const reloadScript = isLive
+    ? `const es = new EventSource('/events')
+es.onmessage = () => location.reload()
+es.onerror = () => {
+  document.querySelector('.live-badge')?.classList.remove('active')
+}`
+    : ''
+
+  const html = `<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -658,15 +679,7 @@ document.getElementById('timestamp').textContent =
 
 // Auto-reload in watch mode
 if (__WATCH_MODE__) {
-  let lastModified = '';
-  setInterval(async () => {
-    try {
-      const res = await fetch(location.href, { method: 'HEAD' });
-      const mod = res.headers.get('last-modified') || '';
-      if (lastModified && mod !== lastModified) location.reload();
-      lastModified = mod;
-    } catch {}
-  }, 1000);
+  ${reloadScript}
 }
 
 // Tabs
@@ -675,7 +688,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add('active');
+    document.querySelector(\`[data-panel="\${tab.dataset.tab}"]\`).classList.add('active');
   });
 });
 
@@ -684,7 +697,7 @@ const phases = PHASE.phases || [];
 const current = phases.find(p => p.status === 'active') || phases[phases.length - 1];
 const badge = document.getElementById('phase-badge');
 if (current) {
-  badge.innerHTML = `<span class="dot"></span><span class="id">${current.id}</span><span class="name">${current.name}</span>`;
+  badge.innerHTML = \`<span class="dot"></span><span class="id">\${current.id}</span><span class="name">\${current.name}</span>\`;
 } else {
   badge.style.display = 'none';
 }
@@ -692,13 +705,13 @@ if (current) {
 const phaseList = document.getElementById('phase-list');
 phases.forEach(p => {
   const date = p.completedAt || p.startedAt || '';
-  phaseList.innerHTML += `
-    <div class="modal-phase" data-status="${p.status}">
+  phaseList.innerHTML += \`
+    <div class="modal-phase" data-status="\${p.status}">
       <span class="dot"></span>
-      <span class="id">${p.id}</span>
-      <span>${p.name}</span>
-      ${date ? `<span class="date">${date}</span>` : ''}
-    </div>`;
+      <span class="id">\${p.id}</span>
+      <span>\${p.name}</span>
+      \${date ? \`<span class="date">\${date}</span>\` : ''}
+    </div>\`;
 });
 
 const modal = document.getElementById('phase-modal');
@@ -730,9 +743,9 @@ function buildFilters() {
 
   const group = (label, key, values, labelFn) => {
     if (values.length === 0) return '';
-    let s = `<div class="filter-group"><span class="filter-label">${label}</span>`;
+    let s = \`<div class="filter-group"><span class="filter-label">\${label}</span>\`;
     s += values.map(v =>
-      `<button class="filter-btn" data-key="${key}" data-value="${v}">${labelFn ? labelFn(v) : v}</button>`
+      \`<button class="filter-btn" data-key="\${key}" data-value="\${v}">\${labelFn ? labelFn(v) : v}</button>\`
     ).join('');
     s += '</div><div class="filter-sep"></div>';
     return s;
@@ -744,7 +757,7 @@ function buildFilters() {
   html += group('Difficulty', 'difficulty', allDifficulties, v => diffLabels[v] || v);
 
   // Remove trailing separator
-  html = html.replace(/<div class="filter-sep"><\/div>$/, '');
+  html = html.replace(/<div class="filter-sep"><\\/div>$/, '');
   el.innerHTML = html;
 
   el.querySelectorAll('.filter-btn').forEach(btn => {
@@ -755,7 +768,7 @@ function buildFilters() {
         filters[key] = null;
         btn.classList.remove('active');
       } else {
-        el.querySelectorAll(`[data-key="${key}"]`).forEach(b => b.classList.remove('active'));
+        el.querySelectorAll(\`[data-key="\${key}"]\`).forEach(b => b.classList.remove('active'));
         filters[key] = val;
         btn.classList.add('active');
       }
@@ -782,8 +795,8 @@ function renderTasks() {
   document.getElementById('tab-count-tasks').textContent = filtered.length;
 
   Object.entries(groups).forEach(([status, tasks]) => {
-    document.getElementById(`count-${status}`).textContent = tasks.length;
-    const col = document.getElementById(`col-${status}`);
+    document.getElementById(\`count-\${status}\`).textContent = tasks.length;
+    const col = document.getElementById(\`col-\${status}\`);
 
     if (tasks.length === 0) {
       col.innerHTML = '<div class="empty">No tasks</div>';
@@ -792,30 +805,30 @@ function renderTasks() {
 
     col.innerHTML = tasks.map(t => {
       const subtasksHtml = (t.subtasks && t.subtasks.length > 0)
-        ? `<div class="subtasks">${t.subtasks.map(s =>
-            `<div class="subtask" data-done="${s.status === 'done'}">
-              <span class="check">${s.status === 'done' ? '✓' : ''}</span>
-              <span>${s.title}</span>
-            </div>`
-          ).join('')}</div>`
+        ? \`<div class="subtasks">\${t.subtasks.map(s =>
+            \`<div class="subtask" data-done="\${s.status === 'done'}">
+              <span class="check">\${s.status === 'done' ? '\u2713' : ''}</span>
+              <span>\${s.title}</span>
+            </div>\`
+          ).join('')}</div>\`
         : '';
 
-      return `
+      return \`
         <div class="task">
           <div class="task-header">
-            <span class="task-id">${t.id}</span>
-            ${t.module ? `<span class="task-module">${t.module}</span>` : ''}
-            ${t.phase ? `<span class="task-phase">${t.phase}</span>` : ''}
+            <span class="task-id">\${t.id}</span>
+            \${t.module ? \`<span class="task-module">\${t.module}</span>\` : ''}
+            \${t.phase ? \`<span class="task-phase">\${t.phase}</span>\` : ''}
           </div>
-          <div class="task-title">${t.title}</div>
-          ${t.description ? `<div class="task-description">${t.description}</div>` : ''}
+          <div class="task-title">\${t.title}</div>
+          \${t.description ? \`<div class="task-description">\${t.description}</div>\` : ''}
           <div class="task-meta">
-            ${t.priority ? `<span class="badge ${t.priority}"><span class="dot"></span>${prioLabels[t.priority] || t.priority}</span>` : ''}
-            ${t.difficulty ? `<span class="difficulty ${t.difficulty}">${diffLabels[t.difficulty] || t.difficulty}</span>` : ''}
-            ${t.createdAt ? `<span class="task-date">${t.createdAt}</span>` : ''}
+            \${t.priority ? \`<span class="badge \${t.priority}"><span class="dot"></span>\${prioLabels[t.priority] || t.priority}</span>\` : ''}
+            \${t.difficulty ? \`<span class="difficulty \${t.difficulty}">\${diffLabels[t.difficulty] || t.difficulty}</span>\` : ''}
+            \${t.createdAt ? \`<span class="task-date">\${t.createdAt}</span>\` : ''}
           </div>
-          ${subtasksHtml}
-        </div>`;
+          \${subtasksHtml}
+        </div>\`;
     }).join('');
   });
 }
@@ -834,73 +847,94 @@ if (CAUTIONS.length === 0) {
     const title = c.title || c.summary || '';
     const summary = c.title ? (c.summary || '') : '';
 
-    cautionList.innerHTML += `
+    cautionList.innerHTML += \`
       <div class="caution-card">
         <div class="caution-header">
-          <span class="caution-id">${c.id || ''}</span>
-          ${c.module ? `<span class="task-module">${c.module}</span>` : ''}
+          <span class="caution-id">\${c.id || ''}</span>
+          \${c.module ? \`<span class="task-module">\${c.module}</span>\` : ''}
         </div>
-        <div class="caution-title">${title}</div>
-        ${summary ? `<div class="caution-field"><strong>Summary</strong>${summary}</div>` : ''}
-        ${c.solution ? `<div class="caution-field"><strong>Solution</strong>${c.solution}</div>` : ''}
-        ${c.reference ? `<div class="caution-field"><strong>Ref</strong>${c.reference}</div>` : ''}
-        ${(c.tags && c.tags.length) ? `<div class="caution-tags">${c.tags.map(t => `<span class="caution-tag">${t}</span>`).join('')}</div>` : ''}
+        <div class="caution-title">\${title}</div>
+        \${summary ? \`<div class="caution-field"><strong>Summary</strong>\${summary}</div>\` : ''}
+        \${c.solution ? \`<div class="caution-field"><strong>Solution</strong>\${c.solution}</div>\` : ''}
+        \${c.reference ? \`<div class="caution-field"><strong>Ref</strong>\${c.reference}</div>\` : ''}
+        \${(c.tags && c.tags.length) ? \`<div class="caution-tags">\${c.tags.map(t => \`<span class="caution-tag">\${t}</span>\`).join('')}</div>\` : ''}
         <div class="caution-meta">
-          ${c.createdAt || c.discoveredAt ? `<span>${c.createdAt || c.discoveredAt}</span>` : ''}
-          ${c.source ? `<span>${c.source}</span>` : ''}
+          \${c.createdAt || c.discoveredAt ? \`<span>\${c.createdAt || c.discoveredAt}</span>\` : ''}
+          \${c.source ? \`<span>\${c.source}</span>\` : ''}
         </div>
-      </div>`;
+      </div>\`;
   });
 }
 </script>
 </body>
-</html>
-HTMLEOF
+</html>`
 
-  # Inject JSON data and mode flags
-  local live_class="active"
-  local watch_mode="true"
-  if [ "$WATCH" = false ]; then
-    live_class=""
-    watch_mode="false"
-  fi
-
-  python3 -c "
-import sys
-with open('$RIME_DIR/tasks.json') as f: tasks = f.read().strip()
-with open('$RIME_DIR/phase.json') as f: phase = f.read().strip()
-with open('$RIME_DIR/cautions.json') as f: cautions = f.read().strip()
-with open('$OUT', 'r') as f: html = f.read()
-html = html.replace('__TASKS_DATA__', tasks)
-html = html.replace('__PHASE_DATA__', phase)
-html = html.replace('__CAUTIONS_DATA__', cautions)
-html = html.replace('__WATCH_MODE__', '$watch_mode')
-html = html.replace('__LIVE_CLASS__', '$live_class')
-with open('$OUT', 'w') as f: f.write(html)
-"
+  return html
+    .replace('__TASKS_DATA__', () => tasksJson)
+    .replace('__PHASE_DATA__', () => phaseJson)
+    .replace('__CAUTIONS_DATA__', () => cautionsJson)
+    .replace('__WATCH_MODE__', () => isLive ? 'true' : 'false')
+    .replace('__LIVE_CLASS__', () => isLive ? 'active' : '')
 }
 
-# Generate and open
-generate
-open "$OUT"
+// --once mode
+if (ONCE) {
+  const html = generateHtml(false)
+  const hash = createHash('md5').update(RIME_DIR).digest('hex').slice(0, 8)
+  const outPath = join(tmpdir(), `rime-dashboard-${hash}.html`)
+  writeFileSync(outPath, html)
+  console.log(`Dashboard: ${outPath}`)
+  openBrowser(outPath)
+  process.exit(0)
+}
 
-if [ "$WATCH" = true ]; then
-  # Watch loop in background
-  (
-    HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
-    while true; do
-      sleep 2
-      NEW_HASH=$(cat "$RIME_DIR"/*.json 2>/dev/null | shasum)
-      if [ "$NEW_HASH" != "$HASH" ]; then
-        generate
-        HASH="$NEW_HASH"
-      fi
-    done
-  ) &
-  WATCH_PID=$!
-  echo "Dashboard watching $RIME_DIR/ (pid: $WATCH_PID)"
-  echo "Stop: kill $WATCH_PID"
-else
-  echo "Dashboard opened: $OUT"
-  echo "Tip: use --watch for live reload"
-fi
+// Watch mode (default) - HTTP server + SSE + fs.watch
+let html = generateHtml(true)
+const sseClients = new Set()
+
+const server = createServer((req, res) => {
+  if (req.url === '/events') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    })
+    sseClients.add(res)
+    req.on('close', () => sseClients.delete(res))
+    return
+  }
+  if (req.url === '/' || req.url === '') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(html)
+    return
+  }
+  res.writeHead(404)
+  res.end('Not Found')
+})
+
+server.listen(0, () => {
+  const { port } = server.address()
+  const url = `http://localhost:${port}`
+  console.log(`Dashboard: ${url}`)
+  console.log(`Watching: ${RIME_DIR}`)
+  console.log('Press Ctrl+C to stop')
+  openBrowser(url)
+})
+
+let debounceTimer = null
+watch(RIME_DIR, () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    html = generateHtml(true)
+    for (const client of sseClients) {
+      client.write('data: reload\n\n')
+    }
+  }, 300)
+})
+
+function shutdown() {
+  server.close()
+  process.exit(0)
+}
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)

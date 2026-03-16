@@ -1,0 +1,11 @@
+{
+  "name": "rime-marketplace",
+  "owner": { "name": "bing" },
+  "plugins": [
+    {
+      "name": "rime-craft",
+      "source": "./",
+      "description": "项目生命周期管理 + session 自动接续 + CSS 架构方法论"
+    }
+  ]
+}

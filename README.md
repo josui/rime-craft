@@ -32,11 +32,17 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 Install as a Claude Code plugin:
 
 ```bash
-# Development / testing
-claude --plugin-dir /path/to/rime-craft
+# 1. Add marketplace
+/plugin marketplace add josui/rime-craft
 
-# Or via marketplace (when published)
-# /plugin install rime-craft@marketplace-name
+# 2. Install
+/plugin install rime-craft@rime-marketplace
+```
+
+For development / testing:
+
+```bash
+claude --plugin-dir /path/to/rime-craft
 ```
 
 ## Philosophy

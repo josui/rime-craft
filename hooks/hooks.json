@@ -2,11 +2,6 @@
   "hooks": {
     "SessionEnd": [
       {
-        "matcher": "clear",
-        "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end.sh" }]
-      },
-      {
-        "matcher": "logout",
         "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end.sh" }]
       }
     ],

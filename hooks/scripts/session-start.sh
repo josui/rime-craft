@@ -107,10 +107,15 @@ if [ -n "$CAUTIONS" ]; then
   HAS_CONTENT=true
 fi
 
-# 只有有内容时才输出
+# 只有有内容时才输出（使用 hookSpecificOutput JSON 格式）
 if [ "$HAS_CONTENT" = true ]; then
   log "output: anchor=${LATEST_ANCHOR:-none}"
-  echo "$OUTPUT"
+  jq -n --arg ctx "$OUTPUT" '{
+    hookSpecificOutput: {
+      hookEventName: "SessionStart",
+      additionalContext: $ctx
+    }
+  }'
 else
   log "no content to output"
 fi

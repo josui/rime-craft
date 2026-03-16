@@ -6,25 +6,39 @@
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "nextId": 1,
+  "segments": {},
   "items": []
+}
+```
+
+`segments` 可选，用于按 module 分配编号区间：
+
+```json
+{
+  "segments": {
+    "infra": "0001-0099",
+    "feature-a": "0100-0199"
+  }
 }
 ```
 
 ## Item Schema
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | string | `#001` 格式，从 nextId 补零 3 位生成 |
-| title | string | 功能标题（大颗粒，人定义） |
-| status | enum | `todo` / `doing` / `done` |
-| phase | string | 所属阶段 `P0`, `P1`, ... |
-| priority | enum | `high` / `medium` / `low` |
-| difficulty | enum | `small`(🟢 半小时内) / `medium`(🟡 半天) / `large`(🔴 1天+) |
-| createdAt | string | ISO 日期 `YYYY-MM-DD` |
-| completedAt | string? | 完成日期，仅 done 时填写 |
-| subtasks | array | AI 自动拆解的子任务 `[{title, status}]` |
+| 字段 | 类型 | 必须 | 说明 |
+|------|------|------|------|
+| id | string | ✓ | `#0001` 格式，4 位补零 |
+| module | string | | 功能模块（对应 segments 的 key） |
+| title | string | ✓ | 功能标题（大颗粒，人定义） |
+| description | string | | 详细说明 |
+| status | enum | ✓ | `todo` / `doing` / `done` |
+| phase | string | | 所属阶段 `P0`, `P1`, ... |
+| priority | enum | ✓ | `high` / `medium` / `low` |
+| difficulty | enum | | `small`(🟢 半小时内) / `medium`(🟡 半天) / `large`(🔴 1天+) |
+| createdAt | string | ✓ | ISO 日期 `YYYY-MM-DD` |
+| completedAt | string? | | 完成日期，仅 done 时填写 |
+| subtasks | array | | AI 自动拆解的子任务 `[{title, status}]` |
 
 ## 状态流转
 
@@ -39,9 +53,10 @@ todo → doing → done
 
 ## 编号规则
 
-- `nextId` 是纯数字，生成 id 时补零 3 位: `nextId: 5` → `"#005"`
+- `nextId` 是纯数字，生成 id 时补零 4 位: `nextId: 5` → `"#0005"`
 - 编号全局唯一，不回收不复用
 - 新增 item 后 nextId 自增
+- 有 `segments` 时，按 module 对应区间分配编号
 
 ## Phase.json 初始模板
 
@@ -61,14 +76,16 @@ todo → doing → done
 []
 ```
 
-Caution 由 SessionEnd hook 自动提取并追加，格式:
+Caution 由 SessionEnd hook 自动提取或手动追加。
 
-```json
-{
-  "id": "C001",
-  "summary": "描述",
-  "tags": ["tag1", "tag2"],
-  "discoveredAt": "YYYY-MM-DD",
-  "source": "session-YYYY-MM-DDTHH-MM"
-}
-```
+| 字段 | 类型 | 必须 | 说明 |
+|------|------|------|------|
+| id | string | ✓ | `C-001` 格式 |
+| module | string | | 所属模块 |
+| title | string | ✓ | 简短标题 |
+| summary | string | | 详细描述 |
+| solution | string | | 解决方案 |
+| tags | array | | 标签 |
+| reference | string | | 参考文件/链接 |
+| createdAt | string | ✓ | `YYYY-MM-DD` |
+| source | string | | session 来源（hook 自动填） |

@@ -62,7 +62,7 @@ $FILTERED
   \"subtasksAdded\": [{\"taskId\": \"#xxx\", \"title\": \"新子任务\"}],
   \"decisions\": [\"关键决策\"],
   \"nextSteps\": [\"下一步\"],
-  \"cautions\": [{\"summary\": \"踩坑描述\", \"tags\": [\"tag1\"]}]
+  \"cautions\": [{\"title\": \"踩坑标题\", \"summary\": \"详细描述（可选）\", \"tags\": [\"tag1\"]}]
 }
 
 规则:
@@ -137,7 +137,7 @@ jq --arg today "$TODAY" '
 CAUTION_COUNT=$(echo "$RESULT" | jq '.cautions | length' 2>/dev/null || echo "0")
 if [ "$CAUTION_COUNT" -gt 0 ] 2>/dev/null; then
   # 读取当前最大 caution ID
-  MAX_NUM=$(jq -r '.[].id // "C000"' "$RIME_DIR/cautions.json" 2>/dev/null | sed 's/C//' | sort -n | tail -1 || echo "0")
+  MAX_NUM=$(jq -r '.[].id // "C-000"' "$RIME_DIR/cautions.json" 2>/dev/null | sed 's/C[-]*0*//' | sort -n | tail -1 || echo "0")
   [ -z "$MAX_NUM" ] && MAX_NUM=0
   COUNTER=$((10#$MAX_NUM))
 
@@ -145,10 +145,10 @@ if [ "$CAUTION_COUNT" -gt 0 ] 2>/dev/null; then
   echo "$RESULT" | jq -c '.cautions[]' 2>/dev/null | while IFS= read -r caution; do
     [ -z "$caution" ] && continue
     COUNTER=$((COUNTER + 1))
-    NEW_ID=$(printf "C%03d" $COUNTER)
+    NEW_ID=$(printf "C-%03d" $COUNTER)
     # 创建完整 caution 对象并追加到数组
     FULL_CAUTION=$(echo "$caution" | jq --arg id "$NEW_ID" --arg date "$TODAY" --arg src "session-$TIMESTAMP" \
-      '. + {id: $id, discoveredAt: $date, source: $src}')
+      '. + {id: $id, createdAt: $date, source: $src}')
     jq --argjson nc "$FULL_CAUTION" '. += [$nc]' "$RIME_DIR/cautions.json" > "$TMP" && cp "$TMP" "$RIME_DIR/cautions.json"
   done
   rm -f "$TMP"

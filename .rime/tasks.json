@@ -1,9 +1,9 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "nextId": 5,
   "items": [
     {
-      "id": "#001",
+      "id": "#0001",
       "title": "rimeflow skill 开发",
       "status": "done",
       "phase": "P0",
@@ -14,7 +14,7 @@
       "subtasks": []
     },
     {
-      "id": "#002",
+      "id": "#0002",
       "title": "css-architecture skill",
       "status": "done",
       "phase": "P0",
@@ -25,7 +25,7 @@
       "subtasks": []
     },
     {
-      "id": "#003",
+      "id": "#0003",
       "title": "add-backlog command",
       "status": "done",
       "phase": "P0",
@@ -36,7 +36,7 @@
       "subtasks": []
     },
     {
-      "id": "#004",
+      "id": "#0004",
       "title": "session 自动接续系统",
       "status": "doing",
       "phase": "P1",

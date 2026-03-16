@@ -26,12 +26,15 @@ description: 快速添加 backlog 条目
 2. 从 `$ARGUMENTS` 解析内容（如有 Phase 前缀则提取，否则用 `phase.json` 的 current）
 3. 根据内容判断 difficulty（`small` / `medium` / `large`），告知用户
 4. 根据内容判断 priority（`high` / `medium` / `low`），不确定时询问用户
-5. 从 tasks.json 读取 `nextId`，生成新 id（补零 3 位）
-6. 追加 item：
+5. 从 tasks.json 读取 `nextId`，生成新 id（补零 4 位）
+6. 如有 `segments`，根据 module 分配对应区间编号
+7. 追加 item：
    ```json
    {
-     "id": "#xxx",
+     "id": "#0001",
+     "module": "模块名（有 segments 时推断，否则可选）",
      "title": "用户提供的内容",
+     "description": "",
      "status": "todo",
      "phase": "从解析或 phase.json 获取",
      "priority": "判断结果",
@@ -40,5 +43,5 @@ description: 快速添加 backlog 条目
      "subtasks": []
    }
    ```
-7. `nextId` 自增
-8. 显示添加结果：编号、标题、difficulty（🟢/🟡/🔴）、phase
+8. `nextId` 自增
+9. 显示添加结果：编号、标题、module、difficulty（🟢/🟡/🔴）、phase

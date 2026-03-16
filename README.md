@@ -2,7 +2,7 @@
 
 > 霜凝成形，精心打造的 AI 协作工具集。
 
-Personal toolkit of skills and commands for AI-assisted development workflows.
+Claude Code plugin for project lifecycle management and AI-assisted development workflows.
 
 ## What's inside
 
@@ -10,23 +10,33 @@ Personal toolkit of skills and commands for AI-assisted development workflows.
 
 | Name | Description |
 | ---- | ----------- |
-| [project-workflow](skills/project-workflow/) | 项目文档骨架与工作流管理 |
+| [rimeflow](skills/rimeflow/) | 项目生命周期管理（.rime/ 数据层 + docs/ 叙事层） |
 | [css-architecture](skills/css-architecture/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
 
 ### Commands
 
 | Name | Description |
 | ---- | ----------- |
-| [next-session](commands/next-session.md) | 从对话中提取待办，生成下次启动 prompt |
+| [add-backlog](commands/add-backlog.md) | 快速添加任务到 .rime/tasks.json |
+| [read-tweet](commands/read-tweet.md) | 读取 X/Twitter 推文内容 |
+
+### Hooks
+
+| Event | Description |
+| ----- | ----------- |
+| SessionStart | 自动注入项目上下文（phase、活跃任务、上次 session 摘要） |
+| SessionEnd | 自动总结对话、更新任务状态、记录踩坑点 |
 
 ## Setup
 
-Symlink into `~/.claude/` for Claude Code:
+Install as a Claude Code plugin:
 
 ```bash
-ln -s ~/Projects/rime-craft/skills/project-workflow ~/.claude/skills/project-workflow
-ln -s ~/Projects/rime-craft/skills/css-architecture ~/.claude/skills/css-architecture
-ln -s ~/Projects/rime-craft/commands/next-session.md ~/.claude/commands/next-session.md
+# Development / testing
+claude --plugin-dir /path/to/rime-craft
+
+# Or via marketplace (when published)
+# /plugin install rime-craft@marketplace-name
 ```
 
 ## Philosophy

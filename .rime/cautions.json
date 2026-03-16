@@ -80,5 +80,16 @@
     "id": "C-009",
     "createdAt": "2026-03-16",
     "source": "session-2026-03-16T20-17"
+  },
+  {
+    "title": "phase 关闭流程的 done items 回收",
+    "summary": "P0 的 done items (#0001-#0003) 在上次关闭时遗漏，本次 P1 关闭时一并清理。nextId 保持 6 以保证编号全局唯一不回收",
+    "tags": [
+      "workflow",
+      "migration"
+    ],
+    "id": "C-010",
+    "createdAt": "2026-03-16",
+    "source": "session-2026-03-16T20-29"
   }
 ]

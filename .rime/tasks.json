@@ -1,5 +1,108 @@
 {
   "schemaVersion": 2,
-  "nextId": 6,
-  "items": []
+  "nextId": 16,
+  "items": [
+    {
+      "id": "#0006",
+      "phase": "P2",
+      "title": "cautions.json 收录约束与清理",
+      "description": "统一 schema（C001-C006 vs C-007+ 格式不一致）；定义收录标准（只收「可能再发生」的教训，排除已修复 bug 和一次性迁移）；加 status 字段区分 active/resolved；清理 C-008/009/010 等已失效条目",
+      "status": "todo",
+      "priority": "medium",
+      "difficulty": "small",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0007",
+      "phase": "P2",
+      "title": "dashboard skill 缺少 mjs 文件存在性检查",
+      "description": "已被 #0010 取代（改为 plugin 内置运行后此问题不再存在）",
+      "status": "done",
+      "priority": "medium",
+      "difficulty": "small",
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-16"
+    },
+    {
+      "id": "#0008",
+      "phase": "P2",
+      "title": "rime-commit command 迁入",
+      "description": "将外部 git-commit skill 迁入为 rime-craft 的 command（commands/rime-commit.md）。核心内容：type 规范（add/update/fix 等）、按粒度拆分多 commit、部分提交。迁入后移除外部 git-commit skill，更新 CLAUDE.md 引用",
+      "status": "todo",
+      "priority": "low",
+      "difficulty": "medium",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0009",
+      "phase": "P2",
+      "title": "tasks.json 写入时强制校验必填字段",
+      "description": "所有写入路径（rime-backlog command、rime-flow skill、SessionEnd hook）添加 task 时必须包含 priority、createdAt 等必填字段。在 skill/command 文档中明确写入约束",
+      "status": "todo",
+      "priority": "high",
+      "difficulty": "small",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0010",
+      "phase": "P2",
+      "title": "rime-dashboard: plugin 内置 server",
+      "description": "dashboard server 脚本留在 plugin cache 内，command 自动检测 cwd 下的 .rime/ 目录启动。零文件侵入、plugin 更新即生效。参考实现：superpowers/skills/brainstorming/scripts/start-server.sh",
+      "status": "done",
+      "completedAt": "2026-03-16",
+      "priority": "medium",
+      "difficulty": "medium",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0011",
+      "phase": "P2",
+      "title": "rimeflow 拆分为 rime-init + rime-flow",
+      "description": "将 skills/rimeflow/ 拆分：场景 A（初创）+ 场景 C（迁移）→ skills/rime-init/；场景 B（过程中更新）→ skills/rime-flow/。rime-flow 保留 task/phase lifecycle、文档更新规则、编号规则、文件职责表。rime-init 包含 scaffolding、.rime/ 数据层创建、docs 骨架、AGENTS.md、工具链配置。【重要】rime-flow 要显式定义与 superpowers 的组合工作流：brainstorming 产出 → tasks.json → 逐个 session 消化，每个 task 独立决定是否需要 writing-plans。这是 rime-craft 的核心协作模式。设计文档：docs/superpowers/specs/2026-03-16-rime-craft-restructure-design.md",
+      "status": "todo",
+      "priority": "high",
+      "difficulty": "large",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0012",
+      "phase": "P2",
+      "title": "rime-init: preset 驱动的工具链配置",
+      "description": "在 skills/rime-init/presets/ 下定义 preset JSON（default / minimal / oxfmt 等），init 时选择 preset 再逐项确认。assets/ 放各工具配置模板，reference/ 放文档模板（从 rimeflow/reference 迁移）。目的是快速启动不是一步到位",
+      "status": "todo",
+      "priority": "medium",
+      "difficulty": "medium",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0013",
+      "phase": "P2",
+      "title": "统一命名为 rime-xxx",
+      "description": "css-architecture → rime-css、add-backlog → rime-backlog、dashboard → rime-dashboard。重命名目录和文件，更新 hook 脚本中的引用。发布为 v1.2.0",
+      "status": "todo",
+      "priority": "high",
+      "difficulty": "small",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0014",
+      "phase": "P2",
+      "title": "每个 rime skill 添加「配合工具」section",
+      "description": "在每个 SKILL.md 中添加 ## 配合工具 段落，定义与外部 skill 的工作流衔接点（不只是推荐列表）。如 rime-flow 定义 brainstorming → tasks.json 的接口、rime-css 定义 agent-browser 验证时机、code review 发现转化为 backlog task 的路径。这是 rime × superpowers 组合工作流的实现载体",
+      "status": "todo",
+      "priority": "low",
+      "difficulty": "small",
+      "createdAt": "2026-03-16"
+    },
+    {
+      "id": "#0015",
+      "phase": "P2",
+      "title": "README 更新：ecosystem 全局概览",
+      "description": "README 中增加 ecosystem section，展示所有 rime skill/command 和推荐搭配的外部 skill 的关系表",
+      "status": "todo",
+      "priority": "low",
+      "difficulty": "small",
+      "createdAt": "2026-03-16"
+    }
+  ]
 }

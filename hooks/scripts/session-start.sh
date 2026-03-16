@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+LOG="$HOME/.rime-hook.log"
+log() { echo "[$(date +%H:%M:%S)] session-start: $*" >> "$LOG"; }
+
 # 1. 读取 stdin 获取 cwd
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
-[ -z "$CWD" ] && exit 0
+if [ -z "$CWD" ]; then log "exit: no cwd"; exit 0; fi
 
 # 2. 检查 .rime/ 是否存在
 RIME_DIR="$CWD/.rime"
-[ -d "$RIME_DIR" ] || exit 0
+if [ ! -d "$RIME_DIR" ]; then log "exit: no .rime/ in $CWD"; exit 0; fi
+log "start: cwd=$CWD"
 
 # 3. 读取 phase
 PHASE_CURRENT=$(jq -r '.current // empty' "$RIME_DIR/phase.json" 2>/dev/null || echo "")
@@ -105,5 +109,8 @@ fi
 
 # 只有有内容时才输出
 if [ "$HAS_CONTENT" = true ]; then
+  log "output: anchor=${LATEST_ANCHOR:-none}"
   echo "$OUTPUT"
+else
+  log "no content to output"
 fi

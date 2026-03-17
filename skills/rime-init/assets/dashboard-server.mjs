@@ -151,7 +151,7 @@ es.onerror = () => {
     border-radius: 4px;
     font-size: 0.78rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s ease-out, border-color 0.15s ease-out;
     user-select: none;
   }
 
@@ -229,7 +229,7 @@ es.onerror = () => {
     color: var(--text-3);
     cursor: pointer;
     border-radius: 3px;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s ease-out, color 0.15s ease-out;
     user-select: none;
   }
 
@@ -289,7 +289,7 @@ es.onerror = () => {
     color: var(--text-2);
     cursor: pointer;
     font-weight: 500;
-    transition: all 0.12s;
+    transition: background 0.12s ease-out, border-color 0.12s ease-out, color 0.12s ease-out;
   }
 
   .fb:hover {
@@ -315,18 +315,15 @@ es.onerror = () => {
     display: grid;
     grid-template-columns: 2fr 3fr 2fr;
     gap: 0.65rem;
-    align-items: start;
+    align-items: stretch;
   }
 
   .col {
     border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 70%, var(--border));
     overflow: hidden;
-  }
-
-  .col[data-status="doing"] {
-    border-color: color-mix(in srgb, var(--doing) 25%, var(--border));
+    display: flex;
+    flex-direction: column;
   }
 
   .col-h {
@@ -339,7 +336,6 @@ es.onerror = () => {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-3);
-    border-bottom: 1px solid var(--border);
   }
 
   .col-h .dot {
@@ -363,26 +359,31 @@ es.onerror = () => {
   }
 
   .col-b {
-    padding: 0.35rem;
+    padding: 0.5rem;
     max-height: 72vh;
     overflow-y: auto;
-    min-height: 40px;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.4rem;
   }
 
   /* ── Task item ── */
   .tk {
     padding: 0.6rem 0.65rem;
     border-radius: 4px;
-    border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    background: var(--surface);
     position: relative;
-    transition: background 0.12s;
+    transition: box-shadow 0.12s ease-out, opacity 0.15s ease-out;
+    overflow-wrap: anywhere;
   }
 
   .tk:hover {
-    background: color-mix(in srgb, var(--bg) 50%, transparent);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .tk:active {
+    transform: scale(0.98);
   }
 
   .col[data-status="todo"] .tk,
@@ -596,18 +597,24 @@ es.onerror = () => {
 
   /* ── Task Modal ── */
   .dw-overlay {
-    display: none;
+    display: flex;
     position: fixed;
     inset: 0;
-    background: rgba(44,42,37,0.25);
+    background: rgba(44,42,37,0);
     z-index: 90;
     justify-content: center;
     align-items: flex-start;
     padding-top: 8vh;
+    visibility: hidden;
+    pointer-events: none;
+    transition: background 0.18s ease, visibility 0.18s;
   }
 
   .dw-overlay.open {
-    display: flex;
+    visibility: visible;
+    pointer-events: auto;
+    background: rgba(44,42,37,0.25);
+    transition: background 0.25s ease, visibility 0.25s;
   }
 
   .dw {
@@ -621,6 +628,15 @@ es.onerror = () => {
     padding: 1.5rem 1.75rem;
     position: relative;
     z-index: 100;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .dw-overlay.open .dw {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s cubic-bezier(0.23,1,0.32,1), transform 0.3s cubic-bezier(0.23,1,0.32,1);
   }
 
   .dw-x {
@@ -645,6 +661,10 @@ es.onerror = () => {
   .dw-x:hover {
     background: var(--bg);
     color: var(--text);
+  }
+
+  .dw-x:active {
+    transform: scale(0.92);
   }
 
   .dw .tk-title {
@@ -696,8 +716,7 @@ es.onerror = () => {
     padding: 0.65rem 0.75rem;
     border-radius: var(--radius);
     background: var(--surface);
-    border: 1px solid var(--border);
-    transition: box-shadow 0.12s;
+    transition: box-shadow 0.12s ease-out;
     break-inside: avoid;
     margin-bottom: 0.6rem;
   }
@@ -785,11 +804,20 @@ es.onerror = () => {
   }
 
   .tk { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+  .ctn { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) both; }
 
   @media (max-width: 768px) {
     body { padding: 0.75rem; }
     .board { grid-template-columns: 1fr; }
     .dw { width: 95vw; min-height: auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>
 </head>
@@ -1076,10 +1104,10 @@ const cList = document.getElementById('caution-list');
 if (!CAUTIONS.length) {
   cList.innerHTML = '<div class="empty">\u2014</div>';
 } else {
-  CAUTIONS.forEach(c => {
+  CAUTIONS.forEach((c, i) => {
     const title = c.title || c.summary || '';
     const summary = c.title ? (c.summary || '') : '';
-    cList.innerHTML += \`<div class="ctn">
+    cList.innerHTML += \`<div class="ctn" style="animation-delay:\${i * 25}ms">
       <div class="ctn-head">
         <span class="ctn-id">\${c.id || ''}</span>
         \${c.module ? \`<span class="tk-mod">\${c.module}</span>\` : ''}

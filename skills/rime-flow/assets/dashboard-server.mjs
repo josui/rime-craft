@@ -534,7 +534,7 @@ es.onerror = () => {
 
   .subtask {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.35rem;
     font-size: 0.7rem;
     color: var(--text-secondary);
@@ -551,6 +551,7 @@ es.onerror = () => {
     justify-content: center;
     flex-shrink: 0;
     font-size: 0.55rem;
+    translate: 0 0.18em;
   }
 
   .subtask[data-done="true"] .check {

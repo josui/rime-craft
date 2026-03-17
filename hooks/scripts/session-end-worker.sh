@@ -75,9 +75,7 @@ if [ "$COMPLETED_COUNT" -gt 0 ] 2>/dev/null; then
     [ -z "$subtask" ] && continue
     jq --arg st "$subtask" '
       .items |= map(
-        .subtasks |= map(
-          if .title == $st then .status = "done" else . end
-        )
+        .subtasks = ([(.subtasks // [])[] | if .title == $st then .status = "done" else . end])
       )
     ' "$RIME_DIR/tasks.json" > "$TMP" && cp "$TMP" "$RIME_DIR/tasks.json"
   done
@@ -95,8 +93,8 @@ if [ "$ADDED_COUNT" -gt 0 ] 2>/dev/null; then
     [ -z "$TASK_ID" ] || [ -z "$TITLE" ] && continue
     jq --arg id "$TASK_ID" --arg title "$TITLE" '
       .items |= map(
-        if .id == $id and ([.subtasks[] | select(.title == $title)] | length == 0) then
-          .subtasks += [{"title": $title, "status": "todo"}]
+        if .id == $id and ([(.subtasks // [])[] | select(.title == $title)] | length == 0) then
+          .subtasks = ((.subtasks // []) + [{"title": $title, "status": "todo"}])
         else . end
       )
     ' "$RIME_DIR/tasks.json" > "$TMP" && cp "$TMP" "$RIME_DIR/tasks.json"
@@ -108,7 +106,7 @@ fi
 TMP=$(mktemp)
 jq --arg today "$TODAY" '
   .items |= map(
-    if .status == "doing" and (.subtasks | length > 0) and (.subtasks | all(.status == "done")) then
+    if .status == "doing" and ((.subtasks // []) | length > 0) and ((.subtasks // []) | all(.status == "done")) then
       .status = "done" | .completedAt = $today
     else . end
   )

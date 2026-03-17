@@ -19,6 +19,8 @@ tasks.json (status: doing)
     ├─ small → 直接实现
     ├─ medium → superpowers:writing-plans → 实施
     └─ large → superpowers:brainstorming → writing-plans → 实施
+    ⚠ plan 的每个 task 完成后必须更新 tasks.json 中对应 subtask 的 status
+    ⚠ brainstorming/writing-plans 产出 spec/plan 文件后，将路径写入 task 的 docs 字段
     ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
@@ -29,17 +31,30 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 
 用户说「做 #0011」「执行任务 xxx」等表达时：
 
-1. 読取 `.rime/tasks.json`，找到対応 item
+1. 读取 `.rime/tasks.json`，找到对应 item
 2. 将 status 更新为 `doing`
-3. 読取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前対話 context，无匹配则跳过
+3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
 4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
-5. 根据 difficulty 决定执行方式（見上方流程図）
+5. 根据 difficulty 决定执行方式（见上方流程图）
+6. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
+7. **Branch 建议**（仅文字建议，用户自行决定）:
+   - `small` → 不建议
+   - `medium` → 可选建议："这个任务可以考虑新建分支 `feature/xxx`，也可以直接在当前分支开发"
+   - `large` → 强烈建议："建议为这个任务创建独立分支 `feature/xxx`"
+   - 命名格式: `feature/xxx` / `fix/xxx`，描述性，不含 task ID
+8. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
 
 ### 完成 task
 
 1. 实施完成后，向用户确认结果
-2. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
-3. 如有 subtasks，确认全部完成
+2. **收集 commit range**（标记 done 之前）:
+   - 检查 task 是否有 `commitFrom`，为空则跳过
+   - 获取当前 `git rev-parse HEAD` 作为 `commitTo`
+   - 若 `commitFrom` === `commitTo`（零 commit），跳过写入
+   - 否则写入 `commits: { "from": "<commitFrom>", "to": "<HEAD>" }`
+   - 多个 task 同时 doing 时，各自范围可能重叠，属预期行为
+3. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
+4. 如有 subtasks，确认全部完成
 
 ---
 
@@ -124,3 +139,12 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 | `.rime/anchors/` | session 记录 | 每次 session 结束自动生成，gitignore |
 | `docs/prd.md` | 产品定位和规格 | 叙事文档，用 #ID 引用 tasks.json |
 | `docs/archive.md` | 阶段叙事归档 | phase 关闭时写入总结 |
+
+### tasks.json 可选字段
+
+| 字段 | 类型 | 写入时机 | 说明 |
+|------|------|----------|------|
+| `branch` | string, 可选 | doing 时用户确认后 | 关联分支名 |
+| `commitFrom` | string, 可选 | doing 时自动（每次覆写） | HEAD hash，commit range 起点 |
+| `commits` | object, 可选 | done 时自动 | `{ "from": "...", "to": "..." }` |
+| `docs` | array, 可选 | brainstorming/writing-plans 产出后 | `[{ "type": "spec\|plan", "path": "相对路径" }]` |

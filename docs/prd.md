@@ -26,6 +26,7 @@ claude mcp add-from-claude-plugin rime-craft
 /rime-flow         ← 项目文档与生命周期管理
 /rime-css          ← CSS 架构方法论
 /rime-backlog      ← 快速添加 backlog 条目
+/rime-git          ← Git commit 规范化
 /rime-dashboard    ← 数据可视化
 
 # hooks 自动触发
@@ -42,7 +43,7 @@ SessionEnd   → 提取 cautions、生成 anchor
 
 - skill 间依赖管理和版本兼容性
 - plugin marketplace 自动发布 CI
-- 更多 skill 开发（git-commit、agent-browser 等已由外部 plugin 覆盖）
+- 更多 skill 开发（agent-browser 等已由外部 plugin 覆盖）
 
 ## 不做的事
 

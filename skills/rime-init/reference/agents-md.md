@@ -30,11 +30,17 @@ AGENTS.md 放在项目根目录。定义 AI Agent 在此项目中的协作规则
 遇到困难时的闭环：搜索 → 沟通 → 尝试 → 失败再搜索。
 原则：先查权威资料，再动手。
 
+### Rime 对齐规则
+
+使用 `.rime/` 管理的项目，execution plan 必须与 tasks.json 保持同步：
+- plan 的每个 task 完成后，更新对应 subtask 的 status 为 `done`
+- plan 开始前确认 task status 为 `doing`，plan 全部完成后标记 `done`
+
 ## Git 规范
 
 - 仅在用户明确要求时才 commit
 - Subagent 执行过程中**禁止逐步 commit**
-- 使用 `git-commit` skill 处理提交
+- 使用 `/rime-git` command 处理提交
 - 禁止添加 co-authored-by
 - Branch 命名：`feature/xxxx-xxxx`、`fix/xxxx-xxxx`
 - `.gitignore` 忽略的文件遇 add 报错直接跳过，不用 `-f`

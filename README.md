@@ -29,6 +29,22 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | SessionStart | 自动注入项目上下文（phase、活跃任务、上次 session 摘要） |
 | SessionEnd | 自动总结对话、更新任务状态、记录踩坑点 |
 
+## Ecosystem
+
+rime-craft 与外部 skill 组合使用，各司其职。
+
+| 场景 | rime-craft | 外部 skill |
+| ---- | ---------- | ---------- |
+| 新项目启动 | `rime-init` scaffolding | — |
+| 任务拆分与规划 | `rime-flow` 管理 tasks.json | `superpowers:brainstorming` 产出设计 |
+| 执行大型 task | `rime-flow` 状态追踪 | `superpowers:writing-plans` → `executing-plans` |
+| 日常开发 | `rime-flow` task 状态流转 | `superpowers:test-driven-development` |
+| Code review | `rime-backlog` 转化发现为 task | `superpowers:requesting-code-review` |
+| CSS 架构 | `rime-css` 方法论 | `agent-browser` 响应式验证 |
+| React 开发 | — | `vercel-react-best-practices` / `react-doctor` |
+
+**核心接口**：`tasks.json` — superpowers 擅长单次 session 深度执行，rime-flow 擅长跨 session 状态追踪。
+
 ## Requirements
 
 - **Node.js 18+** — Required for the dashboard server (`rime-dashboard` command)

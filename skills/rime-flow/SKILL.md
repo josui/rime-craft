@@ -19,7 +19,7 @@ tasks.json (status: doing)
     ├─ small → 直接实现
     ├─ medium → superpowers:writing-plans → 实施
     └─ large → superpowers:brainstorming → writing-plans → 实施
-    ↓ 完成后（或 SessionEnd hook 自动检测）
+    ↓ 完成后，用户确认 OK（或 SessionEnd hook 自动检测）
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
 archive.md 写入阶段总结 + tasks.json 回收 done items
@@ -35,8 +35,9 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 
 ### 完成 task
 
-1. 将 status 更新为 `done`，写入 `completedAt`
-2. 如有 subtasks，确认全部完成
+1. 实施完成后，向用户确认结果
+2. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
+3. 如有 subtasks，确认全部完成
 
 ---
 

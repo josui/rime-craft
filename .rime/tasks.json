@@ -92,21 +92,23 @@
       "id": "#0014",
       "phase": "P2",
       "title": "每个 rime skill 添加「配合工具」section",
-      "description": "在每个 SKILL.md 中添加 ## 配合工具 段落，定义与外部 skill 的工作流衔接点（不只是推荐列表）。如 rime-flow 定义 brainstorming → tasks.json 的接口、rime-css 定义 agent-browser 验证时机、code review 发现转化为 backlog task 的路径。这是 rime × superpowers 组合工作流的实现载体",
-      "status": "todo",
+      "description": "不再需要。协作逻辑应嵌在流程细节中（如 rime-flow 的任务生命周期），不应作为独立 section。rime-flow 已在 #0011 中完成整合，其他 skill 无天然绑定点。",
+      "status": "done",
       "priority": "low",
       "difficulty": "small",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-17"
     },
     {
       "id": "#0015",
       "phase": "P2",
       "title": "README 更新：ecosystem 全局概览",
       "description": "README 中增加 ecosystem section，展示所有 rime skill/command 和推荐搭配的外部 skill 的关系表",
-      "status": "todo",
+      "status": "done",
       "priority": "low",
       "difficulty": "small",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-17"
     }
   ]
 }

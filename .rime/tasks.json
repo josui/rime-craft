@@ -61,10 +61,11 @@
       "phase": "P2",
       "title": "rime-flow 拆分为 rime-init + rime-flow",
       "description": "将 skills/rime-flow/ 拆分：场景 A（初创）+ 场景 C（迁移）→ skills/rime-init/；场景 B（过程中更新）→ skills/rime-flow/。rime-flow 保留 task/phase lifecycle、文档更新规则、编号规则、文件职责表。rime-init 包含 scaffolding、.rime/ 数据层创建、docs 骨架、AGENTS.md、工具链配置。【重要】rime-flow 要显式定义与 superpowers 的组合工作流：brainstorming 产出 → tasks.json → 逐个 session 消化，每个 task 独立决定是否需要 writing-plans。这是 rime-craft 的核心协作模式。设计文档：docs/superpowers/specs/2026-03-16-rime-craft-restructure-design.md",
-      "status": "todo",
+      "status": "done",
       "priority": "high",
       "difficulty": "large",
-      "createdAt": "2026-03-16"
+      "createdAt": "2026-03-16",
+      "completedAt": "2026-03-17"
     },
     {
       "id": "#0012",

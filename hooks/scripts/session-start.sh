@@ -107,6 +107,11 @@ if [ -n "$CAUTIONS" ]; then
   HAS_CONTENT=true
 fi
 
+# 8. tasks.json 同步提醒（固定文本，只要有 .rime/ 就输出）
+OUTPUT="$OUTPUT"$'\n'
+OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task 时将 status 更新为 doing，完成时更新为 done 并写入 completedAt。"
+HAS_CONTENT=true
+
 # 只有有内容时才输出（使用 hookSpecificOutput JSON 格式）
 if [ "$HAS_CONTENT" = true ]; then
   log "output: anchor=${LATEST_ANCHOR:-none}"

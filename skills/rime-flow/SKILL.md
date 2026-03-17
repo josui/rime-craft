@@ -19,7 +19,7 @@ tasks.json (status: doing)
     ├─ small → 直接实现
     ├─ medium → superpowers:writing-plans → 实施
     └─ large → superpowers:brainstorming → writing-plans → 实施
-    ↓ 完成后，用户确认 OK（或 SessionEnd hook 自动检测）
+    ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
 archive.md 写入阶段总结 + tasks.json 回收 done items
@@ -29,9 +29,11 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 
 用户说「做 #0011」「执行任务 xxx」等表达时：
 
-1. 读取 `.rime/tasks.json`，找到对应 item
+1. 読取 `.rime/tasks.json`，找到対応 item
 2. 将 status 更新为 `doing`
-3. 根据 difficulty 决定执行方式（见上方流程图）
+3. 読取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前対話 context，无匹配则跳过
+4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
+5. 根据 difficulty 决定执行方式（見上方流程図）
 
 ### 完成 task
 
@@ -81,7 +83,7 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 
 ### 写入约束
 
-**所有路径**（AI 手动更新、`/rime-backlog` command、SessionEnd hook）向 tasks.json 写入 item 时，必须包含以下必填字段：
+**所有路径**（AI 手动更新、`/rime-backlog` command）向 tasks.json 写入 item 时，必须包含以下必填字段：
 
 | 字段 | 格式 | 说明 |
 |------|------|------|

@@ -33,8 +33,8 @@ $FILTERED
 输出严格 JSON 格式（无 markdown 包裹、无注释、无多余文字）:
 {
   \"workedOn\": [\"#xxx\"],
-  \"subtasksCompleted\": [\"已完成的子任务标题（必须精确匹配 tasks.json 中的 subtask title）\"],
-  \"subtasksAdded\": [{\"taskId\": \"#xxx\", \"title\": \"新子任务\"}],
+  \"subtasksCompleted\": [\"本次完成的工作内容（自由描述）\"],
+  \"subtasksAdded\": [\"发现的新子任务（自由描述）\"],
   \"decisions\": [\"关键决策\"],
   \"nextSteps\": [\"下一步\"],
   \"cautions\": [{\"title\": \"踩坑标题\", \"summary\": \"详细描述（可选）\", \"tags\": [\"tag1\"]}]
@@ -42,7 +42,8 @@ $FILTERED
 
 规则:
 - workedOn 只填 tasks.json 中已存在的 task ID
-- subtasksCompleted 的标题必须和 tasks.json 中的 subtask title 完全一致
+- subtasksCompleted: 自由描述本次完成的工作（作为 session 记录，不用于自动状态变更）
+- subtasksAdded: 自由描述发现的新子任务（作为 session 记录，不用于自动状态变更）
 - 没有的字段填空数组，不要编造
 - 只输出 JSON，不要任何其他文字"
 
@@ -66,51 +67,6 @@ log "claude-p success"
 
 # 写 anchor
 echo "$RESULT" | jq --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '. + {timestamp: $ts, phase: $ph}' > "$RIME_DIR/anchors/$TIMESTAMP.json"
-
-# 更新 tasks.json — 标记完成的 subtasks
-COMPLETED_COUNT=$(echo "$RESULT" | jq '.subtasksCompleted | length' 2>/dev/null || echo "0")
-if [ "$COMPLETED_COUNT" -gt 0 ] 2>/dev/null; then
-  TMP=$(mktemp)
-  echo "$RESULT" | jq -r '.subtasksCompleted[]' 2>/dev/null | while IFS= read -r subtask; do
-    [ -z "$subtask" ] && continue
-    jq --arg st "$subtask" '
-      .items |= map(
-        .subtasks = ([(.subtasks // [])[] | if .title == $st then .status = "done" else . end])
-      )
-    ' "$RIME_DIR/tasks.json" > "$TMP" && cp "$TMP" "$RIME_DIR/tasks.json"
-  done
-  rm -f "$TMP"
-fi
-
-# 更新 tasks.json — 添加新 subtasks
-ADDED_COUNT=$(echo "$RESULT" | jq '.subtasksAdded | length' 2>/dev/null || echo "0")
-if [ "$ADDED_COUNT" -gt 0 ] 2>/dev/null; then
-  TMP=$(mktemp)
-  echo "$RESULT" | jq -c '.subtasksAdded[]' 2>/dev/null | while IFS= read -r entry; do
-    [ -z "$entry" ] && continue
-    TASK_ID=$(echo "$entry" | jq -r '.taskId')
-    TITLE=$(echo "$entry" | jq -r '.title')
-    [ -z "$TASK_ID" ] || [ -z "$TITLE" ] && continue
-    jq --arg id "$TASK_ID" --arg title "$TITLE" '
-      .items |= map(
-        if .id == $id and ([(.subtasks // [])[] | select(.title == $title)] | length == 0) then
-          .subtasks = ((.subtasks // []) + [{"title": $title, "status": "todo"}])
-        else . end
-      )
-    ' "$RIME_DIR/tasks.json" > "$TMP" && cp "$TMP" "$RIME_DIR/tasks.json"
-  done
-  rm -f "$TMP"
-fi
-
-# 检查是否有 item 所有 subtask 都 done → 标记 item done
-TMP=$(mktemp)
-jq --arg today "$TODAY" '
-  .items |= map(
-    if .status == "doing" and ((.subtasks // []) | length > 0) and ((.subtasks // []) | all(.status == "done")) then
-      .status = "done" | .completedAt = $today
-    else . end
-  )
-' "$RIME_DIR/tasks.json" > "$TMP" && mv "$TMP" "$RIME_DIR/tasks.json"
 
 # 追加 cautions
 CAUTION_COUNT=$(echo "$RESULT" | jq '.cautions | length' 2>/dev/null || echo "0")

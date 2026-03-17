@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "current": "P2",
-  "phases": [
-    { "id": "P0", "name": "核心工具", "status": "done", "completedAt": "2026-03-12" },
-    { "id": "P1", "name": "自动化与集成", "status": "done", "startedAt": "2026-03-13", "completedAt": "2026-03-16" },
-    { "id": "P2", "name": "品质改善", "status": "active", "startedAt": "2026-03-16" }
-  ]
-}

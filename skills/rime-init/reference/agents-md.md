@@ -77,7 +77,7 @@ AGENTS.md 放在项目根目录。定义 AI Agent 在此项目中的协作规则
 
 - `docs/` 在 `.gitignore` 中，不入库
 - "更新文档" = README.md + docs/ 根目录核心文档（不含子目录）
-- 详见 project-workflow skill
+- 详见 rime-flow skill
 
 ## 技术栈
 
@@ -114,7 +114,7 @@ AGENTS.md 放在项目根目录。定义 AI Agent 在此项目中的协作规则
 | Git 规范 | ✅ | 防止 AI 擅自 commit 或破坏 git 历史 |
 | 代码注释 | ✅ | 统一注释风格 |
 | AI 协作 | ✅ | 角色、沟通、禁止事项 |
-| 文档管理 | ✅ | 指向 project-workflow skill |
+| 文档管理 | ✅ | 指向 rime-flow skill |
 | 技术栈 | 推荐 | 项目特有的技术约束和偏好 |
 | Skill 使用 | 推荐 | 按技术栈保留对应 skill 规则（CSS / React 等） |
 

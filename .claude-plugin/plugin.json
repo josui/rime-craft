@@ -1,6 +1,6 @@
 {
   "name": "rime-craft",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "项目生命周期管理：task/phase 状态流转、session 自动接续、CSS 架构规范、dashboard 可视化",
   "author": { "name": "bing" }
 }

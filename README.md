@@ -10,7 +10,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 
 | Name | Description |
 | ---- | ----------- |
-| [rimeflow](skills/rimeflow/) | 项目生命周期管理（.rime/ 数据层 + docs/ 叙事层） |
+| [rime-flow](skills/rime-flow/) | 项目生命周期管理（.rime/ 数据层 + docs/ 叙事层） |
 | [rime-css](skills/rime-css/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
 
 ### Commands

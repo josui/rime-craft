@@ -59,7 +59,7 @@
     "id": "C-011",
     "title": "tasks.json 写入缺乏字段约束",
     "summary": "添加 #0006-#0010 tasks 时发现缺少 priority/difficulty/createdAt，导致手动补全。#0009 已添加以强制校验必填字段",
-    "tags": ["data-quality", "rimeflow"],
+    "tags": ["data-quality", "rime-flow"],
     "createdAt": "2026-03-16",
     "source": "session-2026-03-16T21-43"
   }

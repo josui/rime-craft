@@ -8,7 +8,7 @@ description: 快速添加 backlog 条目
 
 按以下顺序查找，使用第一个找到的：
 1. `**/.rime/tasks.json`（Glob 搜索当前项目）
-2. 找不到则提示用户：需要先用 `/rimeflow` 初始化项目
+2. 找不到则提示用户：需要先用 `/rime-flow` 初始化项目
 
 ## 输入
 

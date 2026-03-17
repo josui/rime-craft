@@ -1,5 +1,5 @@
 ---
-name: rimeflow
+name: rime-flow
 description: 项目文档与产品生命周期管理。初创项目时创建文档骨架（PRD/archive）、.rime/ 数据层、AGENTS.md；开发项目额外配置工具链。过程中管理 tasks.json 状态流转（todo → doing → done）和 phase 生命周期。触发场景：初始化项目、创建/更新文档、任务管理、阶段归档、迁移旧项目。
 ---
 
@@ -209,7 +209,7 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 
 ## 场景 C：迁移旧项目
 
-对已在使用旧版 rimeflow（markdown 表格管理状态）的项目执行一次性迁移。
+对已在使用旧版 rime-flow（markdown 表格管理状态）的项目执行一次性迁移。
 
 ### 判断是否需要迁移
 

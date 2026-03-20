@@ -196,7 +196,12 @@ es.onerror = () => {
     gap: 0.45rem;
     padding: 0.35rem 0.75rem;
     font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.12s;
   }
+
+  .ph-item:hover { background: var(--bg); }
+  .ph-item.current { background: var(--accent-soft); }
 
   .ph-item .dot {
     width: 6px;
@@ -210,6 +215,16 @@ es.onerror = () => {
   .ph-item[data-status="done"] { opacity: 0.45; }
   .ph-item .ph-id { font-weight: 700; color: var(--text-2); }
   .ph-item .ph-date { color: var(--text-3); margin-left: auto; }
+
+  /* Archive view */
+  .archive-view { padding: 0.5rem 0; }
+  .archive-empty { text-align: center; color: var(--text-3); font-size: 0.85rem; padding: 3rem 0; }
+  .archive-list { display: flex; flex-direction: column; gap: 0.35rem; }
+  .arc-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.75rem; background: var(--surface); border-radius: var(--radius); font-size: 0.9rem; cursor: pointer; transition: background 0.12s; }
+  .arc-item:hover { opacity: 0.7; }
+  .arc-item .tk-id { font-weight: 700; color: var(--text-3); font-size: 0.7rem; }
+  .arc-item .arc-title { flex: 1; color: var(--text); font-weight: 600; }
+  .arc-item .arc-date { color: var(--text-3); font-size: 0.7rem; }
 
   /* Tabs */
   .tabs {
@@ -453,11 +468,10 @@ es.onerror = () => {
     overflow: hidden;
   }
 
-  /* Done: compact — hide desc, subtasks, docs, git */
+  /* Done: compact — hide desc, subtasks, docs */
   .col[data-status="done"] .tk-desc,
   .col[data-status="done"] .subs,
-  .col[data-status="done"] .tk-docs,
-  .col[data-status="done"] .tk-git { display: none; }
+  .col[data-status="done"] .tk-docs { display: none; }
 
   .tk-meta {
     display: flex;
@@ -547,7 +561,7 @@ es.onerror = () => {
 
   .git-b {
     font-size: 0.62rem;
-    padding: 0.1rem 0.35rem;
+    padding: 0.08rem 0.25rem;
     border-radius: 2px;
     font-weight: 600;
   }
@@ -690,11 +704,12 @@ es.onerror = () => {
 
   .dw .subs {
     display: block !important;
-    margin-top: 0.6rem;
+    margin-top: 0.05rem;
   }
 
-  .dw .tk-docs { margin-top: 0.6rem; }
-  .dw .tk-git { margin-top: 0.5rem; }
+  .dw .tk-docs { margin-top: 0; border-top: none; padding-top: 0; }
+  .dw .tk-git { margin-top: 0; }
+  .dw .subs { border-top: none; padding-top: 0; }
 
   .sec-label {
     font-size: 0.65rem;
@@ -702,8 +717,9 @@ es.onerror = () => {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-3);
-    margin-top: 1rem;
-    margin-bottom: 0.35rem;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 0.5px solid var(--border);
   }
 
   /* ── Cautions ── */
@@ -860,6 +876,10 @@ es.onerror = () => {
       <div class="col-b" id="col-done"></div>
     </div>
   </section>
+  <div class="archive-view" id="archive-view" style="display:none">
+    <div class="archive-empty" id="archive-empty" style="display:none">该阶段无结构化归档数据</div>
+    <div class="archive-list" id="archive-list"></div>
+  </div>
 </div>
 
 <div class="tab-panel" data-panel="cautions">
@@ -901,13 +921,34 @@ if (cur) {
 
 phases.forEach(p => {
   const d = p.completedAt || p.startedAt || '';
-  pD.innerHTML += \`<div class="ph-item" data-status="\${p.status}">
+  const isCur = cur && p.id === cur.id;
+  pD.innerHTML += \`<div class="ph-item\${isCur ? ' current' : ''}" data-status="\${p.status}" data-phase-id="\${p.id}">
     <span class="dot"></span><span class="ph-id">\${p.id}</span><span>\${p.name}</span>
     \${d ? \`<span class="ph-date">\${d}</span>\` : ''}</div>\`;
 });
 
 pB.addEventListener('click', e => { e.stopPropagation(); pD.classList.toggle('open'); });
 document.addEventListener('click', () => pD.classList.remove('open'));
+
+pD.addEventListener('click', async e => {
+  const item = e.target.closest('.ph-item');
+  if (!item) return;
+  const phaseId = item.dataset.phaseId;
+  const status = item.dataset.status;
+
+  const ph = phases.find(p => p.id === phaseId);
+  if (ph) pB.innerHTML = \`<span class="id">\${ph.id}</span><span class="name">\${ph.name}</span>\`;
+
+  pD.querySelectorAll('.ph-item').forEach(i => i.classList.remove('current'));
+  item.classList.add('current');
+  pD.classList.remove('open');
+
+  if (status === 'active') {
+    showKanban();
+  } else {
+    await showArchive(phaseId);
+  }
+});
 
 // Labels
 const DL = { small: 'S', medium: 'M', large: 'L' };
@@ -979,12 +1020,6 @@ function renderTasks() {
             \`<a class="doc-lk" href="/file/\${encodeURIComponent(d.path)}" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6V8H5V19H16V14H18V20C18 20.5523 17.5523 21 17 21H4C3.44772 21 3 20.5523 3 20V7C3 6.44772 3.44772 6 4 6H10ZM21 3V11H19L18.9999 6.413L11.2071 14.2071L9.79289 12.7929L17.5849 5H13V3H21Z"></path></svg>\${d.type === 'spec' ? 'design spec' : d.type === 'plan' ? 'implementation plan' : d.type || 'doc'}</a>\`
           ).join('')}</div>\` : '';
 
-      const git = (t.branch || t.commits)
-        ? \`<div class="tk-git">
-            \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
-            \${t.commits ? \`<span class="git-b commits">\${t.commits.from.slice(0,7)}\u2192\${t.commits.to.slice(0,7)}</span>\` : ''}
-          </div>\` : '';
-
       const subs = (t.subtasks && t.subtasks.length)
         ? \`<div class="subs">\${t.subtasks.map(s =>
             \`<div class="sub" data-done="\${s.status === 'done'}">
@@ -997,6 +1032,7 @@ function renderTasks() {
           <span class="tk-id">\${t.id}</span>
           \${t.module ? \`<span class="tk-mod">\${t.module}</span>\` : ''}
           \${t.phase ? \`<span class="tk-ph">\${t.phase}</span>\` : ''}
+          \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
         </div>
         <div class="tk-title">\${t.title}</div>
         \${t.description ? \`<div class="tk-desc">\${t.description}</div>\` : ''}
@@ -1005,10 +1041,64 @@ function renderTasks() {
           \${t.difficulty ? \`<span class="diff \${t.difficulty}">\${DL[t.difficulty] || t.difficulty}</span>\` : ''}
           \${t.createdAt ? \`<span class="tk-date">\${t.createdAt}</span>\` : ''}
         </div>
-        \${git}\${subs}\${docs}
+        \${subs}\${docs}
       </div>\`;
     }).join('');
   });
+}
+
+const board = document.getElementById('board');
+const filtersEl = document.getElementById('filters');
+const archiveView = document.getElementById('archive-view');
+const archiveListEl = document.getElementById('archive-list');
+const archiveEmpty = document.getElementById('archive-empty');
+
+function showKanban() {
+  board.style.display = '';
+  filtersEl.style.display = '';
+  archiveView.style.display = 'none';
+  renderTasks();
+}
+
+async function showArchive(phaseId) {
+  board.style.display = 'none';
+  filtersEl.style.display = 'none';
+  archiveView.style.display = '';
+
+  try {
+    const resp = await fetch(\`/archives/\${phaseId}\`);
+    if (!resp.ok) throw new Error('not found');
+    const data = await resp.json();
+    const tasks = data.items || [];
+
+    if (!tasks.length) {
+      archiveEmpty.style.display = '';
+      archiveListEl.innerHTML = '';
+      return;
+    }
+
+    archiveEmpty.style.display = 'none';
+    archiveListEl.innerHTML = tasks.map(t => \`
+      <div class="arc-item" data-task-id="\${t.id}">
+        <span class="tk-id">\${t.id}</span>
+        <span class="arc-title">\${t.title}</span>
+        \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
+        \${t.commits ? \`<span class="git-b commits">\${t.commits.from.slice(0,7)}\u2192\${t.commits.to.slice(0,7)}</span>\` : ''}
+        \${t.completedAt ? \`<span class="arc-date">\${t.completedAt}</span>\` : ''}
+      </div>
+    \`).join('');
+
+    archiveListEl.querySelectorAll('.arc-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const t = tasks.find(x => x.id === el.dataset.taskId);
+        if (t) renderDwContent(t);
+      });
+    });
+  } catch {
+    archiveEmpty.style.display = '';
+    archiveEmpty.textContent = '该阶段无结构化归档数据';
+    archiveListEl.innerHTML = '';
+  }
 }
 
 buildFilters();
@@ -1034,10 +1124,7 @@ const dwOverlay = document.getElementById('dw-overlay');
 const dw = document.getElementById('dw');
 const dwBody = document.getElementById('dw-body');
 
-function openDw(taskId) {
-  const t = items.find(x => x.id === taskId);
-  if (!t) return;
-
+function renderDwContent(t) {
   const subs = (t.subtasks && t.subtasks.length)
     ? \`<div class="sec-label">Subtasks</div>
        <div class="subs">\${t.subtasks.map(s =>
@@ -1064,6 +1151,7 @@ function openDw(taskId) {
       <span class="tk-id">\${t.id}</span>
       \${t.module ? \`<span class="tk-mod">\${t.module}</span>\` : ''}
       \${t.phase ? \`<span class="tk-ph">\${t.phase}</span>\` : ''}
+      \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
     </div>
     <div class="tk-title">\${t.title}</div>
     \${t.description ? \`<div class="tk-desc">\${t.description}</div>\` : ''}
@@ -1077,6 +1165,12 @@ function openDw(taskId) {
 
   dwOverlay.classList.add('open');
   dw.classList.add('open');
+}
+
+function openDw(taskId) {
+  const t = items.find(x => x.id === taskId);
+  if (!t) return;
+  renderDwContent(t);
 }
 
 function closeDw() {
@@ -1498,6 +1592,19 @@ const server = createServer((req, res) => {
   if (req.url === '/' || req.url === '') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(html)
+    return
+  }
+  if (req.url.startsWith('/archives/')) {
+    const phaseId = decodeURIComponent(req.url.slice(10))
+    const archivePath = join(RIME_DIR, 'archives', `tasks.${phaseId}.json`)
+    try {
+      const data = readFileSync(archivePath, 'utf8')
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
+      res.end(data)
+    } catch {
+      res.writeHead(404, { 'Content-Type': 'application/json' })
+      res.end('{"error":"not_found"}')
+    }
     return
   }
   if (req.url.startsWith('/file/')) {

@@ -24,7 +24,7 @@ tasks.json (status: doing)
     ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
-archive.md 写入阶段总结 + tasks.json 回收 done items
+archives/tasks.P{n}.json 归档 → archive.md 叙事总结 → tasks.json 移除已归档 items
 ```
 
 ### 开始执行 task
@@ -86,11 +86,31 @@ archive.md 写入阶段总结 + tasks.json 回收 done items
 1. 提示用户是否关闭该 phase
 2. 用户确认后：
    - `phase.json`: 该 phase 的 status → `done`，记录 `completedAt`
-   - `archive.md`: 追加阶段叙事总结
-   - `tasks.json`: 删除该 phase 中 `status: done` 的 items
+   - `.rime/archives/tasks.P{n}.json`: 写入该 phase 的所有 done tasks（完整 task 对象原样保留）。归档 JSON 为关闭时的不可变快照，写入后不随其他文件变更而更新
+   - `archive.md`: 追加阶段叙事概要（不含 task 列表）
+   - `tasks.json`: 移除该 phase 的 done items
    - `anchors/`: 删除旧 anchor 文件，全局只保留最近 10 个
    - `prd.md`: 移除已归档阶段的内容
 3. 如需开始新 phase：用户在 prd.md 中定义，AI 同步更新 phase.json
+
+> P0/P1 等已关闭阶段的 archive.md 叙事保持不变，本流程从下一个关闭的 phase 起适用。
+
+### 归档 JSON 格式
+
+路径：`.rime/archives/tasks.P{n}.json`
+
+```json
+{
+  "phase": "P2",
+  "name": "品质改善",
+  "completedAt": "2026-03-20",
+  "items": [...]
+}
+```
+
+- items 保留完整 task 对象（所有字段原样保留）
+- phase/name/completedAt 从 phase.json 取值
+- `archives/` 遵循 `.rime/` 的整体 gitignore 策略
 
 ---
 

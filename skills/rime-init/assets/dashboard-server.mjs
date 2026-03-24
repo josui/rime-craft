@@ -1005,6 +1005,8 @@ function renderTasks() {
 
   const g = { todo: [], doing: [], done: [] };
   f.forEach(t => { const s = t.status || 'todo'; if (g[s]) g[s].push(t); });
+  g.todo.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  g.done.sort((a, b) => (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || ''));
 
   document.getElementById('cnt-tasks').textContent = f.length;
 

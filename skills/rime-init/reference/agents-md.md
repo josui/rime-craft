@@ -42,7 +42,7 @@ init 时根据项目技术栈自动检测并写入对应 skill 规则。
 | 检测条件 | 写入内容 |
 |----------|----------|
 | CSS / Tailwind | `CSS 架构参照 rime-css skill` |
-| React | `react-doctor` / `vercel-react-best-practices` 相关规则 |
+| React | `React 组件开发参照 rime-react skill` |
 
 > 新增 rime skill 时须同步更新此映射表。
 
@@ -128,5 +128,5 @@ execution plan 必须与 tasks.json 保持同步：
 
 ### React
 - 完成功能、修 bug、review 时运行 `react-doctor`
-- 写/重构组件时参照 `vercel-react-best-practices`
+- 写/重构组件时参照 `rime-react` skill
 ```

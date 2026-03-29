@@ -962,7 +962,12 @@ const aPrio = ['high','medium','low'].filter(p => items.some(t => t.priority ===
 const aDiff = ['small','medium','large'].filter(d => items.some(t => t.difficulty === d));
 const aMods = [...new Set(items.map(t => t.module).filter(Boolean))].sort();
 
-const flt = { phase: null, priority: null, difficulty: null, module: null };
+const STORAGE_KEY = 'rime-dashboard-filters';
+const flt = (() => {
+  try { return { phase: null, priority: null, difficulty: null, module: null, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) }; }
+  catch { return { phase: null, priority: null, difficulty: null, module: null }; }
+})();
+function saveFlt() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(flt)); } catch {} }
 
 function buildFilters() {
   const el = document.getElementById('filters');
@@ -982,13 +987,15 @@ function buildFilters() {
   el.innerHTML = h;
 
   el.querySelectorAll('.fb').forEach(btn => {
+    const k = btn.dataset.key, v = btn.dataset.value;
+    if (flt[k] === v) btn.classList.add('on');
     btn.addEventListener('click', () => {
-      const k = btn.dataset.key, v = btn.dataset.value;
       if (flt[k] === v) { flt[k] = null; btn.classList.remove('on'); }
       else {
         el.querySelectorAll(\`[data-key="\${k}"]\`).forEach(b => b.classList.remove('on'));
         flt[k] = v; btn.classList.add('on');
       }
+      saveFlt();
       renderTasks();
     });
   });

@@ -14,6 +14,19 @@ find_rime_dirs() {
     return 0
   fi
 
+  # Worktree 回溯：CWD 没有 .rime/ 时，检测是否在 git worktree 中
+  local git_dir git_common main_repo
+  git_dir=$(cd "$cwd" && git rev-parse --git-dir 2>/dev/null) || true
+  git_common=$(cd "$cwd" && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || true
+
+  if [ -n "$git_dir" ] && [ -n "$git_common" ] && [ "$git_dir" != "$git_common" ]; then
+    main_repo=$(dirname "$git_common")
+    if [ -d "$main_repo/.rime" ]; then
+      echo "$main_repo/.rime"
+      return 0
+    fi
+  fi
+
   # Monorepo：向下搜索（排除重目录，限深度 4）
   find "$cwd" -maxdepth 4 -name ".rime" -type d \
     -not -path "*/node_modules/*" \

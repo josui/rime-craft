@@ -77,6 +77,7 @@ description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ �
 | techstack | 技术选型、项目结构、阶段计划 | 推荐 |
 | interaction | 交互设计、页面状态、操作流程 | 中型以上 |
 | schema | 数据结构定义 | 中型以上 |
+| design-context | 设计 token・组件索引 | 有 UI 的项目 |
 
 文件命名 `{project}-{type}.md`。模板 → [reference/doc-templates.md](reference/doc-templates.md)
 

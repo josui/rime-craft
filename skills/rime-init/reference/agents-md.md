@@ -43,6 +43,7 @@ init 时根据项目技术栈自动检测并写入对应 skill 规则。
 |----------|----------|
 | CSS / Tailwind | `CSS 架构参照 rime-css skill` |
 | React | `React 组件开发参照 rime-react skill` |
+| 有 UI（HTML/CSS/JSX/TSX） | `UI 设计品质参照 rime-design skill` |
 
 > 新增 rime skill 时须同步更新此映射表。
 

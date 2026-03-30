@@ -13,6 +13,8 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | [rime-init](skills/rime-init/) | 项目初创 + 旧项目迁移（scaffolding / 工具链配置） |
 | [rime-flow](skills/rime-flow/) | 日常生命周期管理（task 状态流转 / phase 管理） |
 | [rime-css](skills/rime-css/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
+| [rime-design](skills/rime-design/) | UI 设计品质守护 + 外部 design skill 路由 |
+| [rime-react](skills/rime-react/) | React 组件开发规则集（21 条） |
 
 ### Commands
 
@@ -41,7 +43,8 @@ rime-craft 与外部 skill 组合使用，各司其职。
 | 日常开发 | `rime-flow` task 状态流转 | `superpowers:test-driven-development` |
 | Code review | `rime-backlog` 转化发现为 task | `superpowers:requesting-code-review` |
 | CSS 架构 | `rime-css` 方法论 | `agent-browser` 响应式验证 |
-| React 开发 | — | `vercel-react-best-practices` / `react-doctor` |
+| UI 设计品质 | `rime-design` baseline 规则 | `impeccable` 系 / `emil-design-eng` |
+| React 开发 | `rime-react` 规则集 | `react-doctor` |
 
 **核心接口**：`tasks.json` — superpowers 擅长单次 session 深度执行，rime-flow 擅长跨 session 状态追踪。
 

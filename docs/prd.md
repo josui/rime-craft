@@ -25,6 +25,7 @@ claude mcp add-from-claude-plugin rime-craft
 # 使用 skill
 /rime-flow         ← 项目文档与生命周期管理
 /rime-css          ← CSS 架构方法论
+/rime-design       ← UI 设计品质守护
 /rime-backlog      ← 快速添加 backlog 条目
 /rime-git          ← Git commit 规范化
 /rime-dashboard    ← 数据可视化

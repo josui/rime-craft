@@ -11,7 +11,7 @@ window.rimeScanExtract = function(scope = {}) {
 
   /** 将 rgba/rgb 字符串标准化为 hex，忽略透明色 */
   function normalizeColor(str) {
-    if (!str || str === 'transparent' || str === 'rgba(0, 0, 0, 0)') return null;
+    if (!str || str === 'transparent') return null;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
     const ctx = canvas.getContext('2d');
@@ -162,7 +162,7 @@ window.rimeScanExtract = function(scope = {}) {
       if (family) families.push(family);
       if (size) sizes.push(size);
       if (weight) weights.push(weight);
-      if (!isNaN(lh)) lineHeights.push(Math.round(lh * 100) / 100);
+      if (!isNaN(lh) && isFinite(lh)) lineHeights.push(Math.round(lh * 100) / 100);
     });
 
     result.extracted.typography = {

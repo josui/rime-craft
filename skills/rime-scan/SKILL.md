@@ -39,20 +39,22 @@ description: >
 • 视觉效果（canvas / WebGL / scroll effects 等）— 需要吗？[y/N]
 ```
 
+用户一次性确认后，extract.js 只运行需要的部分。**若用户原始消息中已明确提及需要的范围**（如"扫描包括表单"、"不需要视觉效果"），直接映射到对应 scope 配置，跳过确认步骤。
+
 **Step 2 — agent-browser 打开页面**
 
-使用 `agent-browser` skill 打开 URL，等待页面完全加载（至少等待 2 秒）。
+使用 `agent-browser` skill 打开 URL，等待页面完全加载（DOMContentLoaded + load 事件，必要时等待 3-5 秒确保 JS 渲染完成）。**若页面加载失败（网络错误、bot 保护、超时）：** 告知用户原因，提议切换至截图模式（用户手动提供截图），然后停止 URL 流程。
 
 **Step 3 — 注入 extract.js**
 
-通过 agent-browser 的 JS 执行能力，将 `skills/rime-scan/scripts/extract.js` 的内容注入页面，传入 scope 配置：
+先用 Read tool 读取 `skills/rime-scan/scripts/extract.js` 的完整内容，然后通过 agent-browser 的 JS 执行能力将脚本注入页面，传入 scope 配置：
 
 ```js
 // 根据用户 scope 选择配置 scope 对象，然后调用：
 const result = rimeScanExtract({ form: true, nav: false, patterns: true, effects: false });
 ```
 
-收集 `result` JSON 数据。
+收集 `result` JSON 数据。**若 `rimeScanExtract` 未定义或抛出异常**（注入失败），以 `extracted: null` 继续执行 Step 5，并在 JSON meta 中记录 `"extractionError": "inject failed"`。
 
 **Step 4 — 截图**
 

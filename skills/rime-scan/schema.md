@@ -158,7 +158,9 @@ rime-scan 的输出格式。`extracted` 为程序化提取的精确值，`analyz
       "buttons": "rounded-solid-primary",
       "cards": "subtle-shadow-white",
       "navigation": "sticky-light-border",
-      "inputs": "outlined-rounded"     // 可选，scope 包含 form 时填写
+      "inputs": "outlined-rounded"     // 可选，scope 包含 form 时填写；不包含时为 null
+      // 不含 form scope 时：
+      // "inputs": null
     },
     "motion": null
     // 有可观察动效时：
@@ -180,3 +182,5 @@ rime-scan 的输出格式。`extracted` 为程序化提取的精确值，`analyz
 ### patterns
 
 过滤规则：去除以下 Tailwind utility class 前缀的 class — `flex`、`grid`、`w-`、`h-`、`p-`、`m-`、`text-`、`font-`、`bg-`、`border-`、`rounded-`、`gap-`、`space-`、`items-`、`justify-`、`overflow-`、`relative`、`absolute`、`fixed`、`sticky`、`hidden`、`block`、`inline`、`z-`、`opacity-`、`transition`、`duration-`、`ease-`。
+
+**注意**：过滤对象是 CSS **class 选择器名称**（即 `.product-card` 的 `product-card` 部分），而非 `styles` 对象中的样式属性键。`styles` 中可以包含 `display`、`flexDirection`、`gap` 等任何 computed style 属性。

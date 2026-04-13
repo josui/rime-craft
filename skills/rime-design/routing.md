@@ -75,6 +75,13 @@ rime-design 路由的外部 skill 来自以下来源：
 3. 更新 `SKILL.md` 设计嗅觉表中对应的 skill 名称
 4. 变更记录最多保留最近 2 个版本，超出时删除最旧的
 
+## 设计上下文来源
+
+| 方式 | 说明 |
+|------|------|
+| 手动填写 | 参考 `context-template.md` 结构，在 `docs/design-context.md` 中手动记录 |
+| 从参考网站提取 | 使用 `rime-scan` skill 提取 scan JSON，需要时转化为 `design-context.md` |
+
 ## 维护规则
 
 新增或移除外部 design skill 时，更新以下 2 个文件：

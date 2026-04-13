@@ -63,6 +63,15 @@ Framework-agnostic React component development rules. Covers 4 groups, 21 rules 
 
 Framework-specific APIs (routing, data loading, middleware, etc.) are out of scope. Use context7 or official docs to look up the latest framework APIs.
 
+## Relationship with rime-js
+
+Framework-agnostic JS/TS rules live in `rime-js`. The following rime-react rules have authoritative counterparts there:
+
+- `perf-async-parallel` → `rime-js:async-parallel` (generic async concurrency)
+- `perf-bundle-imports` → `rime-js:module-no-barrels` (barrel file avoidance)
+
+The rime-react versions add React-specific context (component rendering, hydration). For non-React JS/TS code, refer to `rime-js` directly.
+
 ## Recommended Tools
 
 - **react-doctor** — React code health check (if installed). Run it and cross-reference findings with these rules.

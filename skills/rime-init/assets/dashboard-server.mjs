@@ -63,11 +63,6 @@ es.onerror = () => {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rime Dashboard</title>
 <style>
-  @font-face {
-    font-family: 'Cascadia Code';
-    src: local('Cascadia Code'), local('CascadiaCode-Regular');
-  }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -87,7 +82,7 @@ es.onerror = () => {
     --medium: #c0690b;
     --low: #7a756c;
     --radius: 5px;
-    --font: 'Cascadia Code', 'Cascadia Mono', "PingFang SC", "Hiragino Sans", system-ui, sans-serif;
+    --font: 'Inconsolata', ui-monospace, "PingFang SC", "Hiragino Sans", system-ui, sans-serif;
   }
 
   body {
@@ -153,6 +148,7 @@ es.onerror = () => {
     cursor: pointer;
     transition: background 0.15s ease-out, border-color 0.15s ease-out;
     user-select: none;
+    white-space: nowrap;
   }
 
   .phase-badge:hover {
@@ -292,6 +288,7 @@ es.onerror = () => {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-right: 0.1rem;
+    white-space: nowrap;
   }
 
   .fb {
@@ -412,6 +409,7 @@ es.onerror = () => {
     align-items: center;
     gap: 0.3rem;
     margin-bottom: 0.1rem;
+    flex-wrap: wrap;
   }
 
   .tk-id {
@@ -435,6 +433,7 @@ es.onerror = () => {
     background: #d0d6f0;
     color: var(--accent);
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .tk-ph {
@@ -443,6 +442,7 @@ es.onerror = () => {
     border-radius: 2px;
     background: var(--bg);
     color: var(--text-2);
+    white-space: nowrap;
   }
 
   .tk-title {
@@ -489,6 +489,7 @@ es.onerror = () => {
     border-radius: 3px;
     font-size: 0.68rem;
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .badge .dot {
@@ -510,6 +511,7 @@ es.onerror = () => {
     font-weight: 600;
     padding: 0.08rem 0.35rem;
     border-radius: 2px;
+    white-space: nowrap;
   }
 
   .diff.small { background: #d4eddb; color: var(--done); }
@@ -564,6 +566,7 @@ es.onerror = () => {
     padding: 0.08rem 0.25rem;
     border-radius: 2px;
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .git-b.branch { background: var(--done-soft); color: var(--done); }
@@ -720,6 +723,7 @@ es.onerror = () => {
     margin-top: 0.8rem;
     padding-top: 0.8rem;
     border-top: 0.5px solid var(--border);
+    white-space: nowrap;
   }
 
   /* ── Cautions ── */
@@ -796,6 +800,7 @@ es.onerror = () => {
     background: #fbe5a0;
     color: #7c3a06;
     font-weight: 500;
+    white-space: nowrap;
   }
 
   .ctn-meta {
@@ -1377,11 +1382,6 @@ function fileViewerHtml(fileName, relPath, content) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${fileName}</title>
 <style>
-  @font-face {
-    font-family: 'Cascadia Code';
-    src: local('Cascadia Code'), local('CascadiaCode-Regular');
-  }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -1393,7 +1393,7 @@ function fileViewerHtml(fileName, relPath, content) {
     --border: #e7e5e4;
     --accent: #3b82f6;
     --code-bg: #f5f5f4;
-    --font: 'Cascadia Code', 'SF Mono', ui-monospace, monospace;
+    --font: 'Inconsolata', ui-monospace, monospace;
   }
 
   body {

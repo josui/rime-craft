@@ -85,11 +85,13 @@ Skill 加载时:
 
 | 信号 | 建议 Skill | 未安装时的 Fallback |
 |------|-----------|-------------------|
-| 3+ 处相似组件实现 | /extract | 手动提取提示 |
-| 元素间距混乱、视觉节奏不统一 | /arrange | baseline spacing-scale 规则 |
+| 编码前需要 UX/UI 规划 | /shape | 手动列出用户场景和设计方向 |
+| 构建新 UI 页面/组件 | /impeccable 或 /frontend-design | baseline 全量 + 上下文 |
+| 3+ 处相似组件实现 | /impeccable extract | 手动提取提示 |
+| 元素间距混乱、视觉节奏不统一 | /layout | baseline spacing-scale 规则 |
 | 错误提示/标签/空状态文案含糊 | /clarify | 直接改善 |
 | 功能完成但界面元素过多 | /distill | 直接精简建议 |
-| 新用户首次进入/空数据状态 | /onboard | 直接设计空状态 |
+| 新用户首次进入/空数据状态 | /harden | 直接设计空状态 |
 | 界面功能 OK 但缺乏个性 | /delight | 跳过 |
 | 设计太安全/平淡 | /bolder | 跳过 |
 | 设计太吵/视觉过载 | /quieter | 跳过 |
@@ -97,10 +99,9 @@ Skill 加载时:
 | 需要跨端/跨屏适配 | /adapt | 直接处理 |
 | 长文本溢出/i18n/边缘数据 | /harden | baseline 健壮性规则 |
 | 加载慢/动画卡顿/bundle 大 | /optimize | 直接处理 |
-| 偏离项目设计系统 | /normalize | baseline 锚定类规则 |
+| 偏离项目设计系统 | /polish | baseline 锚定类规则 |
 | 需要全面质量检查 | /audit 或 /critique | baseline 全量检查 |
 | 动画实现需要 review | /emil-design-eng | baseline motion 规则 |
-| 构建新 UI 页面/组件 | /frontend-design | baseline 全量 + 上下文 |
 
 详细路由映射 → [routing.md](routing.md)
 上下文模板 → [context-template.md](context-template.md)

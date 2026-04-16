@@ -65,7 +65,7 @@ rime-design 路由的外部 skill 来自以下来源：
 
 | 来源 | 同步版本 | 同步日期 |
 |------|---------|---------|
-| impeccable | v2.1.7 | 2026-04-13 |
+| impeccable | v2.1.7 | 2026-04-16 |
 | emil-design-eng | — | — |
 | shadcn | — | — |
 

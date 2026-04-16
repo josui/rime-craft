@@ -86,9 +86,12 @@ Skill 加载时:
 | 信号 | 建议 Skill | 未安装时的 Fallback |
 |------|-----------|-------------------|
 | 编码前需要 UX/UI 规划 | /shape | 手动列出用户场景和设计方向 |
-| 构建新 UI 页面/组件 | /impeccable 或 /frontend-design | baseline 全量 + 上下文 |
+| 构建新 UI 页面/组件（完整流程） | /shape → /impeccable craft | /impeccable 或 /frontend-design |
+| 构建新 UI 页面/组件（快速） | /impeccable 或 /frontend-design | baseline 全量 + 上下文 |
 | 3+ 处相似组件实现 | /impeccable extract | 手动提取提示 |
 | 元素间距混乱、视觉节奏不统一 | /layout | baseline spacing-scale 规则 |
+| 排版层级混乱、字体选择不当 | /typeset | baseline typography-hierarchy 规则 |
+| 色彩策略薄弱、界面色调单调 | /colorize | baseline 色彩底线规则 |
 | 错误提示/标签/空状态文案含糊 | /clarify | 直接改善 |
 | 功能完成但界面元素过多 | /distill | 直接精简建议 |
 | 新用户首次进入/空数据状态 | /harden | 直接设计空状态 |

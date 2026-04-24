@@ -15,6 +15,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | [rime-css](skills/rime-css/) | CSS 架构方法论（CUBE CSS / BEM / Tailwind） |
 | [rime-design](skills/rime-design/) | UI 设计品质守护 + 外部 design skill 路由 |
 | [rime-scan](skills/rime-scan/) | 从参考网站/截图提取设计语言（程序化 token + AI 视觉分析） |
+| [rime-imagen](skills/rime-imagen/) | 生图 prompt 撰写辅助（gpt-image-2 / Nano Banana Pro，只产出 prompt 文本） |
 | [rime-js](skills/rime-js/) | JS/TS 通用规则集（21 条：Type Safety / Module / Error & Async / Performance） |
 | [rime-react](skills/rime-react/) | React 组件开发規則集（21 条） |
 
@@ -48,6 +49,7 @@ rime-craft 与外部 skill 组合使用，各司其职。
 | CSS 架构 | `rime-css` 方法论 | `agent-browser` 响应式验证 |
 | UI 设计品质 | `rime-design` baseline 规则 | `impeccable` 系 / `emil-design-eng` |
 | 设计语言提取 | `rime-scan` 结构化 scan JSON | `agent-browser` 程序化提取 + AI 视觉分析 |
+| 生图 prompt 撰写 | `rime-imagen` 写 prompt 文本 | 外部工具 ChatGPT Web / Gemini / AI Studio（复制使用）|
 | JS/TS 开发 | `rime-js` 规则集 | `typescript-eslint` |
 | React 开发 | `rime-react` 规则集 | `react-doctor` |
 

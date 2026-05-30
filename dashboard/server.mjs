@@ -458,6 +458,7 @@ es.onerror = () => {
     color: var(--text-2);
     line-height: 1.55;
     margin-bottom: 0.25rem;
+    white-space: pre-wrap;
   }
 
   /* Todo: truncate desc */
@@ -695,6 +696,7 @@ es.onerror = () => {
     -webkit-line-clamp: unset !important;
     overflow: visible !important;
     margin-bottom: 0.6rem;
+    white-space: pre-wrap;
   }
 
   .dw .tk-meta { margin-bottom: 0.6rem; }
@@ -771,6 +773,7 @@ es.onerror = () => {
     font-weight: 600;
     line-height: 1.45;
     margin-bottom: 0.15rem;
+    white-space: pre-wrap;
   }
 
   .ctn-field {
@@ -778,6 +781,7 @@ es.onerror = () => {
     line-height: 1.55;
     color: var(--text-2);
     margin-bottom: 0.1rem;
+    white-space: pre-wrap;
   }
 
   .ctn-field strong {
@@ -895,6 +899,8 @@ es.onerror = () => {
 const TASKS = __TASKS_DATA__;
 const PHASE = __PHASE_DATA__;
 const CAUTIONS = __CAUTIONS_DATA__;
+
+const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 document.getElementById('ts').textContent = new Date().toLocaleString('ja-JP');
 
@@ -1038,18 +1044,18 @@ function renderTasks() {
         ? \`<div class="subs">\${t.subtasks.map(s =>
             \`<div class="sub" data-done="\${s.status === 'done'}">
               <span class="ck">\${s.status === 'done' ? '\u2713' : ''}</span>
-              <span>\${s.title}</span></div>\`
+              <span>\${esc(s.title)}</span></div>\`
           ).join('')}</div>\` : '';
 
       return \`<div class="tk" data-task-id="\${t.id}" style="animation-delay:\${i * 25}ms">
         <div class="tk-head">
           <span class="tk-id">\${t.id}</span>
-          \${t.module ? \`<span class="tk-mod">\${t.module}</span>\` : ''}
+          \${t.module ? \`<span class="tk-mod">\${esc(t.module)}</span>\` : ''}
           \${t.phase ? \`<span class="tk-ph">\${t.phase}</span>\` : ''}
           \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
         </div>
-        <div class="tk-title">\${t.title}</div>
-        \${t.description ? \`<div class="tk-desc">\${t.description}</div>\` : ''}
+        <div class="tk-title">\${esc(t.title)}</div>
+        \${t.description ? \`<div class="tk-desc">\${esc(t.description)}</div>\` : ''}
         <div class="tk-meta">
           \${t.priority ? \`<span class="badge \${t.priority}"><span class="dot"></span>\${PL[t.priority] || t.priority}</span>\` : ''}
           \${t.difficulty ? \`<span class="diff \${t.difficulty}">\${DL[t.difficulty] || t.difficulty}</span>\` : ''}
@@ -1095,7 +1101,7 @@ async function showArchive(phaseId) {
     archiveListEl.innerHTML = tasks.map(t => \`
       <div class="arc-item" data-task-id="\${t.id}">
         <span class="tk-id">\${t.id}</span>
-        <span class="arc-title">\${t.title}</span>
+        <span class="arc-title">\${esc(t.title)}</span>
         \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
         \${t.commits ? \`<span class="git-b commits">\${t.commits.from.slice(0,7)}\u2192\${t.commits.to.slice(0,7)}</span>\` : ''}
         \${t.completedAt ? \`<span class="arc-date">\${t.completedAt}</span>\` : ''}
@@ -1144,7 +1150,7 @@ function renderDwContent(t) {
        <div class="subs">\${t.subtasks.map(s =>
         \`<div class="sub" data-done="\${s.status === 'done'}">
           <span class="ck">\${s.status === 'done' ? '\u2713' : ''}</span>
-          <span>\${s.title}</span></div>\`
+          <span>\${esc(s.title)}</span></div>\`
       ).join('')}</div>\` : '';
 
   const docs = (t.docs && t.docs.length)
@@ -1163,12 +1169,12 @@ function renderDwContent(t) {
   dwBody.innerHTML = \`
     <div class="tk-head">
       <span class="tk-id">\${t.id}</span>
-      \${t.module ? \`<span class="tk-mod">\${t.module}</span>\` : ''}
+      \${t.module ? \`<span class="tk-mod">\${esc(t.module)}</span>\` : ''}
       \${t.phase ? \`<span class="tk-ph">\${t.phase}</span>\` : ''}
       \${t.branch ? \`<span class="git-b branch">\${t.branch}</span>\` : ''}
     </div>
-    <div class="tk-title">\${t.title}</div>
-    \${t.description ? \`<div class="tk-desc">\${t.description}</div>\` : ''}
+    <div class="tk-title">\${esc(t.title)}</div>
+    \${t.description ? \`<div class="tk-desc">\${esc(t.description)}</div>\` : ''}
     <div class="tk-meta">
       \${t.priority ? \`<span class="badge \${t.priority}"><span class="dot"></span>\${PL[t.priority] || t.priority}</span>\` : ''}
       \${t.difficulty ? \`<span class="diff \${t.difficulty}">\${DL[t.difficulty] || t.difficulty}</span>\` : ''}
@@ -1218,13 +1224,13 @@ if (!CAUTIONS.length) {
     cList.innerHTML += \`<div class="ctn" style="animation-delay:\${i * 25}ms">
       <div class="ctn-head">
         <span class="ctn-id">\${c.id || ''}</span>
-        \${c.module ? \`<span class="tk-mod">\${c.module}</span>\` : ''}
+        \${c.module ? \`<span class="tk-mod">\${esc(c.module)}</span>\` : ''}
       </div>
-      <div class="ctn-title">\${title}</div>
-      \${summary ? \`<div class="ctn-field"><strong>Summary</strong>\${summary}</div>\` : ''}
-      \${c.solution ? \`<div class="ctn-field"><strong>Solution</strong>\${c.solution}</div>\` : ''}
-      \${c.reference ? \`<div class="ctn-field"><strong>Ref</strong>\${c.reference}</div>\` : ''}
-      \${(c.tags && c.tags.length) ? \`<div class="ctn-tags">\${c.tags.map(t => \`<span class="ctn-tag">\${t}</span>\`).join('')}</div>\` : ''}
+      <div class="ctn-title">\${esc(title)}</div>
+      \${summary ? \`<div class="ctn-field"><strong>Summary</strong>\${esc(summary)}</div>\` : ''}
+      \${c.solution ? \`<div class="ctn-field"><strong>Solution</strong>\${esc(c.solution)}</div>\` : ''}
+      \${c.reference ? \`<div class="ctn-field"><strong>Ref</strong>\${esc(c.reference)}</div>\` : ''}
+      \${(c.tags && c.tags.length) ? \`<div class="ctn-tags">\${c.tags.map(t => \`<span class="ctn-tag">\${esc(t)}</span>\`).join('')}</div>\` : ''}
       <div class="ctn-meta">
         \${c.createdAt || c.discoveredAt ? \`<span>\${c.createdAt || c.discoveredAt}</span>\` : ''}
         \${c.source ? \`<span>\${c.source}</span>\` : ''}
@@ -1253,334 +1259,6 @@ if (ONCE) {
   console.log(`Dashboard: ${outPath}`)
   openBrowser(outPath)
   process.exit(0)
-}
-
-// Lightweight markdown → HTML renderer
-function esc(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
-function renderMarkdown(src) {
-  const lines = src.split('\n')
-  let out = ''
-  let inCode = false
-  let inTable = false
-  let inList = false
-  let codeLang = ''
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    // 代码块
-    if (line.startsWith('```')) {
-      if (!inCode) {
-        if (inList) { out += '</ul>'; inList = false }
-        if (inTable) { out += '</table>'; inTable = false }
-        codeLang = esc(line.slice(3).trim())
-        out += `<div class="code-block">${codeLang ? `<span class="code-lang">${codeLang}</span>` : ''}<pre><code>`
-        inCode = true
-      } else {
-        out += '</code></pre></div>'
-        inCode = false
-      }
-      continue
-    }
-
-    if (inCode) {
-      out += esc(line) + '\n'
-      continue
-    }
-
-    // 空行
-    if (line.trim() === '') {
-      if (inList) { out += '</ul>'; inList = false }
-      if (inTable) { out += '</table>'; inTable = false }
-      continue
-    }
-
-    // 标题
-    const hMatch = line.match(/^(#{1,6})\s+(.+)/)
-    if (hMatch) {
-      if (inList) { out += '</ul>'; inList = false }
-      if (inTable) { out += '</table>'; inTable = false }
-      const level = hMatch[1].length
-      out += `<h${level}>${inlineFormat(esc(hMatch[2]))}</h${level}>`
-      continue
-    }
-
-    // 水平线
-    if (/^-{3,}$/.test(line.trim()) || /^\*{3,}$/.test(line.trim())) {
-      if (inList) { out += '</ul>'; inList = false }
-      if (inTable) { out += '</table>'; inTable = false }
-      out += '<hr>'
-      continue
-    }
-
-    // 表格
-    if (line.includes('|') && line.trim().startsWith('|')) {
-      const cells = line.split('|').slice(1, -1).map(c => c.trim())
-      // 分隔行跳过
-      if (cells.every(c => /^[-:]+$/.test(c))) continue
-      if (!inTable) {
-        if (inList) { out += '</ul>'; inList = false }
-        out += '<table>'
-        // 判断是否是表头（下一行是分隔行）
-        const next = lines[i + 1] || ''
-        const isHeader = next.includes('|') && next.split('|').slice(1, -1).every(c => /^[-:\s]+$/.test(c.trim()))
-        const tag = isHeader ? 'th' : 'td'
-        out += `<tr>${cells.map(c => `<${tag}>${inlineFormat(esc(c))}</${tag}>`).join('')}</tr>`
-        inTable = true
-      } else {
-        out += `<tr>${cells.map(c => `<td>${inlineFormat(esc(c))}</td>`).join('')}</tr>`
-      }
-      continue
-    }
-
-    if (inTable && !line.includes('|')) {
-      out += '</table>'
-      inTable = false
-    }
-
-    // 列表
-    const listMatch = line.match(/^(\s*)[-*]\s+(.+)/)
-    if (listMatch) {
-      if (!inList) { out += '<ul>'; inList = true }
-      out += `<li>${inlineFormat(esc(listMatch[2]))}</li>`
-      continue
-    }
-
-    // 引用
-    if (line.startsWith('>')) {
-      if (inList) { out += '</ul>'; inList = false }
-      out += `<blockquote>${inlineFormat(esc(line.replace(/^>\s*/, '')))}</blockquote>`
-      continue
-    }
-
-    // 段落
-    if (inList) { out += '</ul>'; inList = false }
-    out += `<p>${inlineFormat(esc(line))}</p>`
-  }
-
-  if (inCode) out += '</code></pre></div>'
-  if (inList) out += '</ul>'
-  if (inTable) out += '</table>'
-  return out
-}
-
-function inlineFormat(s) {
-  return s
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code class="inline">$1</code>')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-}
-
-function fileViewerHtml(fileName, relPath, content) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${fileName}</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #fafaf9;
-    --surface: #fff;
-    --text: #1c1917;
-    --text-2: #78716c;
-    --text-3: #a8a29e;
-    --border: #e7e5e4;
-    --accent: #3b82f6;
-    --code-bg: #f5f5f4;
-    --font: 'Inconsolata', ui-monospace, monospace;
-  }
-
-  body {
-    font-family: var(--font);
-    -webkit-font-smoothing: antialiased;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    line-height: 1.75;
-  }
-
-  .viewer {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 3rem 2rem 6rem;
-  }
-
-  .breadcrumb {
-    font-size: 11px;
-    color: var(--text-3);
-    letter-spacing: 0.02em;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .breadcrumb span { color: var(--text-2); }
-
-  /* Typography */
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.3;
-    margin: 2.5rem 0 1rem;
-    color: var(--text);
-  }
-
-  h1:first-child { margin-top: 0; }
-
-  h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.4;
-    margin: 2.5rem 0 0.75rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border);
-  }
-
-  h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.4;
-    margin: 2rem 0 0.5rem;
-    color: var(--text);
-  }
-
-  h4, h5, h6 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 1.5rem 0 0.4rem;
-    color: var(--text-2);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  p {
-    margin: 0.5rem 0;
-    color: var(--text);
-  }
-
-  strong { font-weight: 600; }
-
-  hr {
-    border: none;
-    height: 1px;
-    background: var(--border);
-    margin: 2rem 0;
-  }
-
-  /* Lists */
-  ul {
-    margin: 0.5rem 0;
-    padding-left: 1.25rem;
-    list-style: none;
-  }
-
-  li {
-    position: relative;
-    margin: 0.25rem 0;
-    padding-left: 0.25rem;
-  }
-
-  li::before {
-    content: '\u00b7';
-    position: absolute;
-    left: -1rem;
-    color: var(--text-3);
-    font-weight: 700;
-  }
-
-  /* Code */
-  code.inline {
-    font-family: var(--font);
-    font-size: 0.92em;
-    background: var(--code-bg);
-    padding: 0.1rem 0.35rem;
-    border-radius: 3px;
-    color: #b45309;
-  }
-
-  .code-block {
-    position: relative;
-    margin: 1rem 0;
-    background: var(--code-bg);
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-
-  .code-block .code-lang {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 10px;
-    color: var(--text-3);
-    padding: 0.35rem 0.6rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-  }
-
-  .code-block pre {
-    padding: 1rem 1.25rem;
-    overflow-x: auto;
-    font-size: 12px;
-    line-height: 1.6;
-  }
-
-  .code-block code {
-    font-family: var(--font);
-  }
-
-  /* Tables */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-    font-size: 12px;
-  }
-
-  th {
-    text-align: left;
-    font-weight: 600;
-    padding: 0.5rem 0.75rem;
-    border-bottom: 2px solid var(--border);
-    color: var(--text-2);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  td {
-    padding: 0.45rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  tr:last-child td { border-bottom: none; }
-
-  /* Blockquote */
-  blockquote {
-    margin: 1rem 0;
-    padding: 0.5rem 1rem;
-    border-left: 3px solid var(--accent);
-    color: var(--text-2);
-    background: #f8fafc;
-    border-radius: 0 4px 4px 0;
-  }
-</style>
-</head>
-<body>
-<div class="viewer">
-  <div class="breadcrumb">${relPath.split('/').slice(0, -1).join(' / ')} / <span>${fileName}</span></div>
-  ${content}
-</div>
-</body>
-</html>`
 }
 
 // Watch mode (default) - HTTP server + SSE + fs.watch
@@ -1626,11 +1304,12 @@ const server = createServer((req, res) => {
       return
     }
     try {
-      const raw = readFileSync(filePath, 'utf8')
-      const fileName = relPath.split('/').pop()
-      const rendered = renderMarkdown(raw)
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-      res.end(fileViewerHtml(fileName, relPath, rendered))
+      const raw = readFileSync(filePath)
+      const ext = relPath.slice(relPath.lastIndexOf('.') + 1).toLowerCase()
+      const TYPES = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', json: 'application/json', svg: 'image/svg+xml' }
+      const type = TYPES[ext] || 'text/plain'
+      res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` })
+      res.end(raw)
     } catch {
       res.writeHead(404)
       res.end('File not found')

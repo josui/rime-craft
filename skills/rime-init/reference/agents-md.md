@@ -48,6 +48,23 @@ init 时根据项目技术栈自动检测并写入对应 skill 规则。
 
 > 新增 rime skill 时须同步更新此映射表。
 
+### CLAUDE.md 桥接
+
+Claude Code 只原生读取 `CLAUDE.md`，**不读 `AGENTS.md`**。生成 AGENTS.md 后必须建桥，否则规则不会被加载：
+
+- 项目**无** `CLAUDE.md` → 新建 `CLAUDE.md`，内容仅一行 `@AGENTS.md`（import 语法，session 启动时就地展开加载 AGENTS.md）
+- 项目**已有** `CLAUDE.md` → 检查是否已含 `@AGENTS.md`，没有则在文件**顶部追加**该行，绝不改动用户原有内容
+- **不用软链**（`ln -s`）：`@import` 跨平台一致（Windows 软链需管理员/开发者模式），且对协作者透明
+- `CLAUDE.md` 的入库策略**跟随 AGENTS.md**（同入库或同 gitignore），避免「桥在、被链文件不在」的断链
+
+### 文档地图
+
+AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 agent 一个统一入口：
+
+- **仅列实际创建的文档**（A5 创建了哪些就列哪些，跳过的不写）
+- 扁平列表，每个文档一行：`- [类型](相对路径) — 一句话用途`
+- 在 **A5 创建 docs/ 文档之后**写入（A2 生成 AGENTS.md 时 docs 尚未存在）
+
 ---
 
 ## 模板正文
@@ -131,4 +148,22 @@ execution plan 必须与 tasks.json 保持同步：
 ### React
 - 完成功能、修 bug、review 时运行 `react-doctor`
 - 写/重构组件时参照 `rime-react` skill
+```
+
+**文档地图**（A5 创建文档后生成，按实际产出列出，未创建的不写）：
+
+```markdown
+## 文档
+
+- [prd](docs/myapp-prd.md) — 产品定位与功能规划
+- [techstack](docs/myapp-techstack.md) — 技术选型与项目结构
+- [design-context](docs/design-context.md) — 设计 token 与组件索引
+```
+
+### CLAUDE.md（桥接文件，与 AGENTS.md 同目录）
+
+无 CLAUDE.md 时新建，内容仅一行；已有则在顶部追加这一行：
+
+```markdown
+@AGENTS.md
 ```

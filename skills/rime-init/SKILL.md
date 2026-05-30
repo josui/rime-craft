@@ -22,7 +22,7 @@ description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ �
 
 后续步骤根据类型有所不同，标注 `[开发]` 的步骤内容项目跳过。
 
-### A2. 创建 AGENTS.md
+### A2. 创建 AGENTS.md + CLAUDE.md
 
 项目根目录，定义 AI 协作规则。完整生成指南和模板 → [reference/agents-md.md](reference/agents-md.md)
 
@@ -33,6 +33,7 @@ description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ �
 3. **可选交互**：一次展示语言设置（AI 沟通 / 代码注释 / UI 文案）+ 验证方式，用户逐一回答或跳过
 4. **技术栈 Skill 自动映射** `[开发]`：扫描 package.json + 配置文件，自动写入对应 skill 规则
 5. **生成 AGENTS.md**：固定内容 + 用户选择/检测结果的动态内容
+6. **CLAUDE.md 桥接**：Claude Code 只读 `CLAUDE.md` 不读 `AGENTS.md`，必须建桥。无 `CLAUDE.md` → 新建含一行 `@AGENTS.md`；已有 → 顶部去重追加（不动原内容）。详见 [reference/agents-md.md](reference/agents-md.md)
 
 创建后不在日常中修改，除非协作规则本身需要调整
 
@@ -44,6 +45,8 @@ description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ �
 - `docs/`（文档层默认不入库，用户可覆盖）
 
 `.rime/` 和 `docs/` 深度绑定，入库策略应保持一致。
+
+`CLAUDE.md` 跟随 `AGENTS.md` 的入库决定（同入库或同 gitignore）：若 AGENTS.md 进 `.gitignore` 而 CLAUDE.md 入库，协作者 clone 后 `@AGENTS.md` 会断链。
 
 ### A4. 创建 .rime/ 数据层
 
@@ -82,6 +85,8 @@ description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ �
 文件命名 `{project}-{type}.md`。模板 → [reference/doc-templates.md](reference/doc-templates.md)
 
 **PRD 优先**：先写 PRD 再动手。
+
+创建文档后，将「文档地图」写入 AGENTS.md 底部（仅列实际创建的文档）。详见 [reference/agents-md.md](reference/agents-md.md)
 
 ### A6. 配置开发工具链 `[开发]`
 

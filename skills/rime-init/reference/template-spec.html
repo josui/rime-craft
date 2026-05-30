@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spec — {功能名}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: oklch(22.95% 0.0049 325.73deg);
+        --ink-2: oklch(40% 0.01 325deg);
+        --ink-3: oklch(55% 0.012 325deg);
+        --ink-4: oklch(68% 0.01 325deg);
+        --paper: oklch(100% 0 0);
+        --bg: oklch(98% 0.002 325deg);
+        --muted: oklch(97.5% 0.003 325deg);
+        --muted-2: oklch(95.8% 0.004 325deg);
+        --line: oklch(90% 0.004 325deg);
+        --code-bg: oklch(95.5% 0.005 325deg);
+        --accent: oklch(45% 0.13 162deg);
+        --amber: oklch(50% 0.13 65deg);
+        --rose: oklch(48% 0.14 25deg);
+
+        --sidebar-w: 280px;
+        --content-max: 920px;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: 'Jost', 'Hiragino Sans', 'Noto Sans CJK SC', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.65;
+        font-feature-settings: 'palt';
+      }
+      code, pre { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace; font-size: 14px; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* ===== Sidebar ===== */
+      .r-nav {
+        position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
+        background: var(--paper); border-right: 1px solid var(--line);
+        padding: 40px 28px 32px; overflow-y: auto; z-index: 10;
+      }
+      .r-nav__brand { font-size: 13px; font-weight: 700; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+      .r-nav__title { font-size: 19px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+      .r-nav__meta { font-size: 13px; color: var(--ink-4); font-family: 'JetBrains Mono', monospace; margin-bottom: 28px; }
+      .r-nav__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+      .r-nav__list a { display: block; padding: 4px 12px; font-size: 15px; color: var(--ink-2); font-weight: 500; border-radius: 8px; }
+      .r-nav__list a:hover { background: var(--muted); color: var(--ink); text-decoration: none; }
+
+      /* ===== Main ===== */
+      .r-main { margin-left: var(--sidebar-w); padding: 56px 64px 96px; }
+      .r-content { max-width: var(--content-max); margin: 0 auto; }
+
+      /* ===== Section ===== */
+      .r-section { margin-bottom: 72px; scroll-margin-top: 24px; }
+      .r-section__num { font-size: 12px; font-weight: 700; color: var(--ink-4); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+      .r-section__title { font-size: 30px; font-weight: 700; line-height: 1.2; margin: 0 0 10px; letter-spacing: -0.01em; }
+      .r-section__lede { font-size: 16px; color: var(--ink-2); margin: 0 0 32px; line-height: 1.7; }
+
+      h3.r-h3 { font-size: 19px; font-weight: 700; margin: 40px 0 14px; line-height: 1.35; }
+      h3.r-h3:first-of-type { margin-top: 0; }
+      h4.r-h4 { font-size: 14px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; margin: 24px 0 10px; }
+      p, ul, ol { margin: 0 0 14px; }
+      ul, ol { padding-left: 22px; } li { margin-bottom: 6px; }
+      strong { font-weight: 700; color: var(--ink); }
+
+      /* ===== Note（无 border-left） ===== */
+      .r-note { background: var(--muted-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; font-size: 15px; color: var(--ink-2); margin: 16px 0; line-height: 1.65; }
+      .r-note__lede { color: var(--ink); font-weight: 700; }
+
+      /* ===== User story ===== */
+      .r-stories { display: grid; gap: 12px; margin: 8px 0 16px; }
+      .r-story { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+      .r-story__role { font-size: 12.5px; font-weight: 700; color: var(--ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+      .r-story__text { font-size: 15.5px; color: var(--ink); line-height: 1.55; }
+      .r-story__text strong { background: linear-gradient(transparent 65%, var(--muted-2) 65%); padding: 0 2px; }
+
+      /* ===== Decision table ===== */
+      .r-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14.5px; margin: 10px 0 24px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+      .r-table th, .r-table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      .r-table th { font-size: 12.5px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; background: var(--paper); }
+      .r-table tr:last-child td { border-bottom: none; }
+      .r-table .col-k { width: 22%; font-weight: 600; }
+      .r-table .col-v { width: 26%; color: var(--accent); font-weight: 600; }
+
+      /* ===== Phone-frame mock（mobile-first） ===== */
+      .r-views { display: flex; flex-direction: column; gap: 56px; margin-top: 24px; }
+      .r-view { display: grid; grid-template-columns: 375px 1fr; gap: 36px; align-items: start; }
+      .r-view__label { font-size: 12.5px; font-weight: 700; color: var(--ink-4); letter-spacing: 0.08em; text-transform: uppercase; }
+      .r-view__name { font-size: 20px; font-weight: 700; margin: 4px 0 6px; line-height: 1.3; }
+      .r-view__sub { font-size: 14.5px; color: var(--ink-3); margin-bottom: 10px; }
+      /* 占位手机框：可整段替换为 <iframe class="r-phone" src="mock.html"> */
+      .r-phone { display: flex; align-items: center; justify-content: center; width: 375px; height: 720px; border: 1px solid var(--line); border-radius: 18px; background: var(--muted); color: var(--ink-4); font-size: 13px; font-family: 'JetBrains Mono', monospace; text-align: center; padding: 16px; }
+      .r-view__notes { font-size: 15px; color: var(--ink-2); padding-top: 4px; }
+      .r-view__notes ul { margin: 0; padding-left: 20px; } .r-view__notes li { margin-bottom: 8px; }
+      @media (max-width: 760px) { .r-view { grid-template-columns: 1fr; } .r-phone { width: 100%; max-width: 375px; } }
+
+      /* ===== Desktop/wide mock（桌面端用：浏览器窗口框，notes 放下方） ===== */
+      .r-view--wide { display: block; }
+      .r-view--wide .r-view__notes { padding-top: 16px; max-width: 64ch; }
+      .r-screen { width: 100%; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--paper); margin-top: 4px; }
+      .r-screen__bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--muted); }
+      .r-screen__dot { width: 11px; height: 11px; border-radius: 50%; background: var(--muted-2); }
+      .r-screen__url { margin-left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-4); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 3px 12px; flex: 1; max-width: 340px; }
+      .r-screen__body { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; color: var(--ink-4); font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center; background: var(--muted); }
+      /* 真 mock：把 .r-screen__body 整段换成 <iframe style="display:block;width:100%;aspect-ratio:16/10;border:0"> */
+
+      /* ===== Code ===== */
+      pre.r-code { background: oklch(24% 0.006 325deg); color: oklch(92% 0.008 85deg); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin: 10px 0 20px; }
+      code.r-inline { background: oklch(24% 0.006 325deg); color: oklch(92% 0.008 85deg); padding: 2px 7px; border-radius: 4px; font-size: 13.5px; }
+
+      /* ===== 不做的事 ===== */
+      .r-skip { list-style: none; padding-left: 0; }
+      .r-skip li { margin-bottom: 8px; color: var(--ink-3); padding-left: 22px; position: relative; }
+      .r-skip li::before { content: '✕'; position: absolute; left: 0; color: var(--rose); font-weight: 700; }
+      .r-skip li strong { color: var(--ink-2); }
+
+      /* ===== 小屏 fallback ===== */
+      @media (max-width: 880px) {
+        .r-nav { position: static; width: auto; border-right: none; border-bottom: 1px solid var(--line); padding: 28px 24px; }
+        .r-nav__list { flex-flow: row wrap; }
+        .r-main { margin-left: 0; padding: 36px 24px 80px; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="r-nav">
+      <div class="r-nav__brand">{模块} · Spec</div>
+      <div class="r-nav__title">{功能名}</div>
+      <div class="r-nav__meta">#0000 · draft · 2026-05-31</div>
+      <ul class="r-nav__list">
+        <li><a href="#overview">1. 概览</a></li>
+        <li><a href="#decisions">2. 决策记录</a></li>
+        <li><a href="#ui">3. 界面</a></li>
+        <li><a href="#flow">4. 交互 / 状态</a></li>
+        <li><a href="#schema">5. 数据结构</a></li>
+        <li><a href="#scope">6. 边界 · 不做</a></li>
+      </ul>
+    </aside>
+
+    <main class="r-main">
+      <div class="r-content">
+        <!-- 1. 概览 -->
+        <section class="r-section" id="overview">
+          <div class="r-section__num">01 · Overview</div>
+          <h2 class="r-section__title">概览</h2>
+          <p class="r-section__lede">
+            一两句说清这个功能解决什么问题、为谁解决、做完长什么样。背景 / 动机写这里，不写实现细节。
+          </p>
+
+          <h3 class="r-h3">用户故事</h3>
+          <div class="r-stories">
+            <div class="r-story">
+              <div class="r-story__role">作为「想……的」用户</div>
+              <div class="r-story__text">我希望<strong>做某操作</strong>，就能<strong>得到某结果</strong>，不需要……</div>
+            </div>
+            <div class="r-story">
+              <div class="r-story__role">作为「想……的」用户</div>
+              <div class="r-story__text">我希望……</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 决策记录 -->
+        <section class="r-section" id="decisions">
+          <div class="r-section__num">02 · Decisions</div>
+          <h2 class="r-section__title">决策记录</h2>
+          <p class="r-section__lede">
+            grill 逼问后钉死的关键取舍，连同<strong>理由</strong>与放弃的方案 —— 半年后回看仍知道当初为什么这么定。
+          </p>
+          <table class="r-table">
+            <thead><tr><th class="col-k">决策点</th><th class="col-v">结论</th><th>理由 / 放弃的方案</th></tr></thead>
+            <tbody>
+              <tr><td>数据来源</td><td>方案 A</td><td>B 需额外依赖；A 复用现有 store</td></tr>
+              <tr><td>……</td><td>……</td><td>……</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 3. 界面 -->
+        <section class="r-section" id="ui">
+          <div class="r-section__num">03 · UI</div>
+          <h2 class="r-section__title">界面</h2>
+          <p class="r-section__lede">
+            按主流程逐屏展示。下面两种框<strong>按目标设备二选一</strong>，删掉用不到的那种：
+            手机端用 <code class="r-inline">.r-view</code>（phone-frame，左屏右 notes）；
+            桌面端用 <code class="r-inline">.r-view--wide</code>（浏览器窗口框，notes 在下方）。
+            需要精度时把占位框换成 <code class="r-inline">&lt;iframe src="mock.html"&gt;</code>。
+          </p>
+
+          <h3 class="r-h3">手机端 — phone-frame</h3>
+          <div class="r-views">
+            <div class="r-view">
+              <div class="r-phone">375 × 720<br />手机线框占位<br />（换成 iframe mock）</div>
+              <div>
+                <div class="r-view__label">View 1 · 主流程</div>
+                <div class="r-view__name">屏幕名</div>
+                <div class="r-view__sub">一句话说明这屏是什么</div>
+                <div class="r-view__notes">
+                  <ul>
+                    <li><strong>区块 A</strong> — 作用 / 数据来源 / 交互</li>
+                    <li><strong>区块 B</strong> — ……</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="r-h3">桌面端 — screen-frame</h3>
+          <div class="r-views">
+            <div class="r-view r-view--wide">
+              <div class="r-view__label">View 1 · 主界面</div>
+              <div class="r-view__name">页面名</div>
+              <div class="r-view__sub">一句话说明这个宽屏页面是什么</div>
+              <div class="r-screen">
+                <div class="r-screen__bar">
+                  <span class="r-screen__dot"></span><span class="r-screen__dot"></span><span class="r-screen__dot"></span>
+                  <span class="r-screen__url">app.example.com/page</span>
+                </div>
+                <div class="r-screen__body">1280 × 800 宽屏线框占位<br />（换成 iframe mock）</div>
+              </div>
+              <div class="r-view__notes">
+                <ul>
+                  <li><strong>侧栏 / 顶栏 / 主区</strong> — 桌面布局的区块划分与作用</li>
+                  <li><strong>响应式断点</strong> — 宽屏 → 窄屏如何降级</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. 交互 / 状态 -->
+        <section class="r-section" id="flow">
+          <div class="r-section__num">04 · Flow</div>
+          <h2 class="r-section__title">交互 / 状态</h2>
+          <ul>
+            <li><strong>默认态</strong>：……</li>
+            <li><strong>加载 / 空 / 错误态</strong>：……</li>
+            <li><strong>关键操作</strong>：点击 X → 发生 Y</li>
+          </ul>
+          <div class="r-note">
+            <span class="r-note__lede">状态机：</span>用 r-note 记录"常驻视图 + 弹层"这类结构约束，或边界条件。
+          </div>
+        </section>
+
+        <!-- 5. 数据结构（可选） -->
+        <section class="r-section" id="schema">
+          <div class="r-section__num">05 · Schema</div>
+          <h2 class="r-section__title">数据结构</h2>
+          <p class="r-section__lede">涉及数据的功能才写。TS 类型 / 接口形状，前后端对齐用。</p>
+          <pre class="r-code">interface Example {
+  id: string
+  name: string        // UI 直接显示
+  status: 'a' | 'b'   // 驱动渲染分支
+}</pre>
+        </section>
+
+        <!-- 6. 边界 -->
+        <section class="r-section" id="scope">
+          <div class="r-section__num">06 · Scope</div>
+          <h2 class="r-section__title">边界 · 不做的事</h2>
+          <ul class="r-skip">
+            <li><strong>本期不做 1</strong> —— 砍掉的理由</li>
+            <li><strong>本期不做 2</strong></li>
+          </ul>
+
+          <h3 class="r-h3">开放问题</h3>
+          <ol><li>还没拍板、需后续确认的点……</li></ol>
+        </section>
+
+        <div style="margin-top: 96px; padding-top: 28px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-4);">
+          关联资料：<a href="#">mock.html</a> · 任务 #0000
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

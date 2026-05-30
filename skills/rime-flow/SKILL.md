@@ -13,26 +13,53 @@ description: 日常生命周期管理。管理 tasks.json 状态流转（todo �
 
 ```
 用户定义功能 → tasks.json (status: todo)
-    ↓ 用户说「做 #xxx」「执行任务 xxx」「头脑风暴 #xxx」等
-tasks.json (status: doing)  ← brainstorming 阶段即进入 doing
+    ↓ 用户说「做 #xxx」「执行 #xxx」「grill #xxx」等
+tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
     ↓ 根据 difficulty 决定执行方式
-    ├─ small → 直接实现
-    ├─ medium → superpowers:writing-plans → 实施
-    └─ large → superpowers:brainstorming → writing-plans → 实施
-    ⚠ plan 的每个 task 完成后必须更新 tasks.json 中对应 subtask 的 status
-    ⚠ brainstorming/writing-plans 产出 spec/plan 文件后，将路径写入 task 的 docs 字段
+    ├─ small  → 直接实现
+    ├─ medium → grill-me 收敛设计 → spec → 实施（subtasks 当活计划，边做边改）
+    └─ large  → grill-me → spec → 可选 superpowers:writing-plans + subagent（多文件可并行时）
+    ⚠ spec 锁设计意图；tasks.json subtasks 是自适应执行清单，发现偏离预期就直接增删
+    ⚠ 方向开放、需要发散探索时，才显式用 superpowers:brainstorming（默认走 grill-me 收敛）
+    ⚠ 产出 spec/plan 文件后，将路径写入 task 的 docs 字段
     ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
 archives/tasks.P{n}.json 归档 → archive.md 叙事总结 → tasks.json 移除已归档 items
 ```
 
+## 设计阶段：grill-me
+
+medium / large 任务动手前先收敛设计、产出 **spec**。默认用 grill-me 式逐题逼问：
+
+> Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+>
+> Ask the questions one at a time.
+>
+> If a question can be answered by exploring the codebase, explore the codebase instead.
+
+> grill-me 原文取自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT License）。
+
+- **grill-me（收敛）是默认**：用户带着方向来时，逼问钉死决策树的每个分支。
+- **brainstorming（发散）是兜底**：仅当连方向都没有、需要探索可能性时，才显式用 `superpowers:brainstorming`。
+- 收敛结束写 **spec**，固化关键决策 + 理由 + 放弃的方案——spec 比 implementation plan 更耐久。
+
+### spec 格式
+
+- 默认 **Markdown**（`docs/.../specs/*.md`）。
+- 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
+
+### 实施
+
+- spec 定稿后，把执行步骤映射到 tasks.json **subtasks，边做边更新**（不写重型 plan 文档）。subtasks 就是自适应的执行清单。
+- 仅 **large 且多文件可并行**时，才用 `superpowers:writing-plans` + subagent，换取「自动分配模型 + 计划追踪」。
+
 ### 开始执行 task
 
-用户说「做 #0011」「执行任务 xxx」「头脑风暴 #xxx」等表达时（包括开始 brainstorming/spec 阶段）：
+用户说「做 #0011」「执行任务 xxx」「grill #xxx」等表达时（包括开始 grill/设计阶段）：
 
 1. 读取 `.rime/tasks.json`，找到对应 item
-2. 将 status 更新为 `doing`（brainstorming 即算开始，不必等到写代码）
+2. 将 status 更新为 `doing`（grill/设计 即算开始，不必等到写代码）
 3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
 4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
 5. 根据 difficulty 决定执行方式（见上方流程图）
@@ -167,4 +194,4 @@ archives/tasks.P{n}.json 归档 → archive.md 叙事总结 → tasks.json 移�
 | `branch` | string, 可选 | doing 时用户确认后 | 关联分支名 |
 | `commitFrom` | string, 可选 | doing 时自动（每次覆写） | HEAD hash，commit range 起点 |
 | `commits` | object, 可选 | done 时自动 | `{ "from": "...", "to": "..." }` |
-| `docs` | array, 可选 | brainstorming/writing-plans 产出后 | `[{ "type": "spec\|plan", "path": "相对路径" }]` |
+| `docs` | array, 可选 | grill→spec / writing-plans 产出后 | `[{ "type": "spec\|plan", "path": "相对路径" }]` |

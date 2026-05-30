@@ -18,3 +18,12 @@
 | [template-techstack.md](template-techstack.md) | 技术选型、项目结构、阶段计划 |
 | [template-interaction.md](template-interaction.md) | 交互设计、页面状态、操作流程 |
 | [template-schema.md](template-schema.md) | 数据结构定义 |
+
+## 设计阶段（spec）
+
+medium / large 任务 grill 收敛后产出 spec，固化决策 + 理由 + 边界：
+
+| 格式 | 说明 |
+|------|------|
+| Markdown（自由格式） | 非 UI spec —— 决策记录 + 交互 + 边界，放 `docs/.../specs/*.md` |
+| [template-spec.html](template-spec.html) | UI spec —— sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框，dashboard `/file` 原生渲染 |

@@ -39,6 +39,7 @@
 | createdAt | string | ✓ | ISO 日期 `YYYY-MM-DD` |
 | completedAt | string? | | 完成日期，仅 done 时填写 |
 | subtasks | array | | AI 自动拆解的子任务 `[{title, status}]` |
+| dependsOn | array | | 依赖的 task ID 列表 `["#0017"]`，构成 DAG（无环）；单向，反向 `blockedBy` 由 dashboard 计算 |
 
 ## 状态流转
 
@@ -50,6 +51,12 @@ todo → doing → done
 - AI 开始处理某个 item 时，将 status 改为 `doing` 并拆出 subtasks
 - 所有 subtask 完成后，SessionEnd hook 自动将 status 改为 `done`
 - Phase 关闭时，`done` 的 items 被回收（archive.md 保留叙事记录）
+
+### 依赖语义（dependsOn）
+
+- `dependsOn` 表达「本 task 依赖于哪些 task」，**单向**——只声明谁是前置，不反向回写
+- 被依赖的 task 完成（status 变 `done`）即视为该依赖已满足
+- Phase 关闭归档时，除回收该 phase 的 done items 外，还需扫描所有剩余 task 的 `dependsOn`，**自动移除指向已归档 ID 的引用**，避免 active 区残留悬空引用；这与上面「done items 被回收」的清理规则一致
 
 ## 编号规则
 

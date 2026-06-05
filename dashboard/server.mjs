@@ -554,6 +554,31 @@ es.onerror = () => {
     flex-shrink: 0;
   }
 
+  /* Dependency footnote (depends-on badge) */
+  .tk-deps {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin-top: 0.3rem;
+    font-size: 0.68rem;
+    color: var(--text-3);
+  }
+
+  .tk-deps .dep-lb {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .tk-deps .dep-id {
+    font-weight: 700;
+    color: var(--text-2);
+  }
+
+  /* Blocked todo card — unmet dependencies */
+  .col[data-status="todo"] .tk[data-blocked="true"] { opacity: 0.55; }
+  .col[data-status="todo"] .tk[data-blocked="true"]:hover { opacity: 0.8; }
+
   /* Git info */
   .tk-git {
     display: flex;
@@ -716,6 +741,40 @@ es.onerror = () => {
   .dw .tk-git { margin-top: 0; }
   .dw .subs { border-top: none; padding-top: 0; }
 
+  /* Modal: dependency rows */
+  .dw-deps { margin-top: 0.05rem; }
+
+  .dep-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-2);
+    padding: 0.08rem 0;
+  }
+
+  .dep-row .dep-dir {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-3);
+    flex-shrink: 0;
+    min-width: 4.5rem;
+  }
+
+  .dep-row .dep-id { font-weight: 700; color: var(--text-2); }
+
+  .dep-st {
+    font-size: 0.62rem;
+    padding: 0.06rem 0.3rem;
+    border-radius: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dep-st.done { background: var(--done-soft); color: var(--done); }
+  .dep-st.doing { background: var(--doing-soft); color: var(--doing); }
+  .dep-st.todo { background: var(--bg); color: var(--text-3); }
+
   .sec-label {
     font-size: 0.65rem;
     font-weight: 700;
@@ -828,8 +887,12 @@ es.onerror = () => {
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .tk { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) both; }
-  .ctn { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+  /* backwards (not both): fill the pre-delay 'from' frame so staggered cards
+     stay hidden, but release opacity after the run so [data-blocked] / done
+     dimming (0.55) win the cascade instead of being pinned to the keyframe's
+     opacity:1. The .tk opacity transition smooths the post-animation settle. */
+  .tk { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) backwards; }
+  .ctn { animation: up 0.25s cubic-bezier(0.16,1,0.3,1) backwards; }
 
   @media (max-width: 768px) {
     body { padding: 0.75rem; }
@@ -967,6 +1030,50 @@ const PL = { high: 'High', medium: 'Med', low: 'Low' };
 
 const items = TASKS.items || [];
 
+// id -> status lookup across all active tasks (for dependency resolution)
+const statusById = new Map(items.map(t => [t.id, t.status || 'todo']));
+
+// A task's dependency is satisfied iff every dependsOn id resolves to a done
+// task. Ids that don't exist in items (e.g. already archived) count as ready.
+function depsSatisfied(t) {
+  const deps = t.dependsOn;
+  if (!deps || !deps.length) return true;
+  return deps.every(id => !statusById.has(id) || statusById.get(id) === 'done');
+}
+
+// Order the todo column: ready tasks first, blocked tasks sink to the bottom.
+// "Blocked" = depsSatisfied() is false (any dependsOn id, in- or out-of-column,
+// that isn't done). Ready tasks can't depend on another todo (that would make
+// them blocked), so they have no in-column edges → plain date-desc. The blocked
+// group is topologically layered by its internal dependsOn edges (Kahn) so a
+// dependency chain reads parent-before-child; within a layer, date-desc. A cheap
+// iteration cap guards against cycles from hand-edited JSON — on overflow that
+// group degrades to plain date-desc and never loops forever.
+function sortTodo(todo) {
+  const byDate = (a, b) => (b.createdAt || '').localeCompare(a.createdAt || '');
+  const ready = todo.filter(t => depsSatisfied(t)).sort(byDate);
+  const blocked = todo.filter(t => !depsSatisfied(t));
+
+  const inGroup = new Set(blocked.map(t => t.id));
+  const remaining = new Map(
+    blocked.map(t => [t.id, (t.dependsOn || []).filter(id => inGroup.has(id))])
+  );
+  const placed = new Set();
+  const layered = [];
+  let guard = blocked.length + 1;
+
+  while (placed.size < blocked.length && guard-- > 0) {
+    const r = blocked
+      .filter(t => !placed.has(t.id) && remaining.get(t.id).every(id => placed.has(id)))
+      .sort(byDate);
+    if (!r.length) break; // cycle / stuck — bail to fallback
+    r.forEach(t => { layered.push(t); placed.add(t.id); });
+  }
+
+  const sortedBlocked = placed.size < blocked.length ? [...blocked].sort(byDate) : layered;
+  return [...ready, ...sortedBlocked];
+}
+
 // Filters
 const aPhases = [...new Set(items.map(t => t.phase).filter(Boolean))].sort();
 const aPrio = ['high','medium','low'].filter(p => items.some(t => t.priority === p));
@@ -1023,7 +1130,7 @@ function renderTasks() {
 
   const g = { todo: [], doing: [], done: [] };
   f.forEach(t => { const s = t.status || 'todo'; if (g[s]) g[s].push(t); });
-  g.todo.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  g.todo = sortTodo(g.todo);
   g.done.sort((a, b) => (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || ''));
 
   document.getElementById('cnt-tasks').textContent = f.length;
@@ -1047,7 +1154,13 @@ function renderTasks() {
               <span>\${esc(s.title)}</span></div>\`
           ).join('')}</div>\` : '';
 
-      return \`<div class="tk" data-task-id="\${t.id}" style="animation-delay:\${i * 25}ms">
+      const deps = (t.dependsOn && t.dependsOn.length)
+        ? \`<div class="tk-deps"><span class="dep-lb">\u4f9d\u8d56</span>\${t.dependsOn.map(id =>
+            \`<span class="dep-id">\${esc(id)}</span>\`).join('')}</div>\` : '';
+
+      const blocked = status === 'todo' && !depsSatisfied(t);
+
+      return \`<div class="tk" data-task-id="\${t.id}"\${blocked ? ' data-blocked="true"' : ''} style="animation-delay:\${i * 25}ms">
         <div class="tk-head">
           <span class="tk-id">\${t.id}</span>
           \${t.module ? \`<span class="tk-mod">\${esc(t.module)}</span>\` : ''}
@@ -1061,7 +1174,7 @@ function renderTasks() {
           \${t.difficulty ? \`<span class="diff \${t.difficulty}">\${DL[t.difficulty] || t.difficulty}</span>\` : ''}
           \${t.createdAt ? \`<span class="tk-date">\${t.createdAt}</span>\` : ''}
         </div>
-        \${subs}\${docs}
+        \${subs}\${docs}\${deps}
       </div>\`;
     }).join('');
   });
@@ -1166,6 +1279,21 @@ function renderDwContent(t) {
          \${t.commits ? \`<span class="git-b commits">\${t.commits.from.slice(0,7)} \u2192 \${t.commits.to.slice(0,7)}</span>\` : ''}
        </div>\` : '';
 
+  // Dependencies: forward dependsOn (\u2192) + reverse blockedBy (\u2190, live-computed).
+  const stLabel = s => s === 'done' ? '\u2713 done' : s === 'doing' ? 'doing' : 'todo';
+  const dependsOn = (t.dependsOn || []);
+  const blockedBy = items.filter(x => (x.dependsOn || []).includes(t.id)).map(x => x.id);
+  const depFwd = dependsOn.map(id => {
+    const s = statusById.has(id) ? statusById.get(id) : 'todo';
+    return \`<div class="dep-row"><span class="dep-dir">\u4f9d\u8d56\u4e8e \u2192</span><span class="dep-id">\${esc(id)}</span><span class="dep-st \${s}">\${stLabel(s)}</span></div>\`;
+  }).join('');
+  const depRev = blockedBy.map(id =>
+    \`<div class="dep-row"><span class="dep-dir">\u88ab\u4f9d\u8d56 \u2190</span><span class="dep-id">\${esc(id)}</span></div>\`
+  ).join('');
+  const deps = (dependsOn.length || blockedBy.length)
+    ? \`<div class="sec-label">Dependencies</div><div class="dw-deps">\${depFwd}\${depRev}</div>\`
+    : '';
+
   dwBody.innerHTML = \`
     <div class="tk-head">
       <span class="tk-id">\${t.id}</span>
@@ -1180,7 +1308,7 @@ function renderDwContent(t) {
       \${t.difficulty ? \`<span class="diff \${t.difficulty}">\${DL[t.difficulty] || t.difficulty}</span>\` : ''}
       \${t.completedAt ? \`<span class="tk-date">Completed \${t.completedAt}</span>\` : t.createdAt ? \`<span class="tk-date">\${t.createdAt}</span>\` : ''}
     </div>
-    \${docs}\${git}\${subs}
+    \${docs}\${git}\${deps}\${subs}
   \`;
 
   dwOverlay.classList.add('open');

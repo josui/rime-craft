@@ -62,14 +62,15 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 2. 将 status 更新为 `doing`（grill/设计 即算开始，不必等到写代码）
 3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
 4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
-5. 根据 difficulty 决定执行方式（见上方流程图）
-6. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
-7. **Branch 建议**（仅文字建议，用户自行决定）:
+5. **依赖软警告**（仅文字提示，用户自行决定）：读取 task 的 `dependsOn`，逐个查依赖 task 的 status，若有非 `done` 项，列出这些依赖（id + status），提示用户「以下依赖尚未完成，是否仍要现在开始？」。不阻止状态流转，用户自决
+6. 根据 difficulty 决定执行方式（见上方流程图）
+7. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
+8. **Branch 建议**（仅文字建议，用户自行决定）:
    - `small` → 不建议
    - `medium` → 可选建议："这个任务可以考虑新建分支 `feature/xxx`，也可以直接在当前分支开发"
    - `large` → 强烈建议："建议为这个任务创建独立分支 `feature/xxx`"
    - 命名格式: `feature/xxx` / `fix/xxx`，描述性，不含 task ID
-8. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
+9. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
 
 ### 完成 task
 
@@ -115,7 +116,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
    - `phase.json`: 该 phase 的 status → `done`，记录 `completedAt`
    - `.rime/archives/tasks.P{n}.json`: 写入该 phase 的所有 done tasks（完整 task 对象原样保留）。归档 JSON 为关闭时的不可变快照，写入后不随其他文件变更而更新
    - `archive.md`: 追加阶段叙事概要（不含 task 列表）
-   - `tasks.json`: 移除该 phase 的 done items
+   - `tasks.json`: 移除该 phase 的 done items；移除后扫描剩余所有 task 的 `dependsOn`，删除指向已归档 ID 的引用（依赖满足即消解，active 区不留悬空引用，详情回 archive 查）
    - `anchors/`: 删除旧 anchor 文件，全局只保留最近 10 个
    - `prd.md`: 移除已归档阶段的内容
 3. 如需开始新 phase：用户在 prd.md 中定义，AI 同步更新 phase.json
@@ -158,6 +159,8 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 缺失必填字段时**中止写入并报错**，不允许写入不完整的 item。
 
+向 task 写入 `dependsOn` 前必须做 **DFS 检环**：把待写入的依赖纳入现有依赖图，若与现有依赖构成环（含指向自身的自依赖）则**拒绝写入**。tasks.json 的 `dependsOn` 图始终保持 DAG 不变量。
+
 ### 编号规则
 
 所有功能项使用**全局递增编号** `#0001`、`#0002`...：
@@ -195,3 +198,4 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 | `commitFrom` | string, 可选 | doing 时自动（每次覆写） | HEAD hash，commit range 起点 |
 | `commits` | object, 可选 | done 时自动 | `{ "from": "...", "to": "..." }` |
 | `docs` | array, 可选 | grill→spec / writing-plans 产出后 | `[{ "type": "spec\|plan", "path": "相对路径" }]` |
+| `dependsOn` | array, 可选 | backlog 录入 / 手动维护 | 单向依赖 task ID 列表，构成 DAG；反向 `blockedBy` 由 dashboard 计算 |

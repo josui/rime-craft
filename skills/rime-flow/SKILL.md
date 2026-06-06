@@ -41,13 +41,15 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 > grill-me 原文取自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT License）。
 
 - **grill-me（收敛）是默认**：用户带着方向来时，逼问钉死决策树的每个分支。
-- **brainstorming（发散）是兜底**：仅当连方向都没有、需要探索可能性时，才显式用 `superpowers:brainstorming`。
+- **brainstorming（发散）是兜底**：仅当连方向都没有、需要探索可能性时，才显式用 `superpowers:brainstorming`。它在遇到视觉问题时会 offer visual companion（浏览器预览）——**不接受**，改走下方 HTML spec。
 - 收敛结束写 **spec**，固化关键决策 + 理由 + 放弃的方案——spec 比 implementation plan 更耐久。
+- **逼问中冒出视觉问题**（光靠文字说不清的 layout / UI 外观 / 方案对比）：**先问用户**要不要启用 **HTML 格式 spec** 把 mock 画出来讨论，用户同意可创建 HTML spec（详见下方「spec 格式」）。
 
 ### spec 格式
 
 - 默认 **Markdown**（`docs/.../specs/*.md`）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
+- **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**不要**用 superpowers 的 visual companion。**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看，无需另起 companion 服务。
 
 ### 实施
 

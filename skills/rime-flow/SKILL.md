@@ -50,6 +50,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 - 默认 **Markdown**（`docs/.../specs/*.md`）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
 - **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**不要**用 superpowers 的 visual companion。**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看，无需另起 companion 服务。
+- **验证记录区**：task 完成、用户验证通过后，在 spec 末尾追加 `## 验证记录`（验证清单逐条 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
 
 ### 实施
 
@@ -76,15 +77,23 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ### 完成 task
 
-1. 实施完成后，向用户确认结果
-2. **收集 commit range**（标记 done 之前）:
+1. 实施完成后，**生成并呈现验证清单**（让用户自己确认做对了，而非 AI 自说做完）:
+   - 基于 task 的 title + description + 本次 commit diff 即时生成；有 spec 时对照 spec 的设计意图，把验收点翻译成用户当下能跑/能点的**具体步骤**
+   - 给出**可操作**的步骤（跑哪条命令、开哪个页面点哪里、看到什么算通过），不是泛泛的「检查一下」
+   - 呈现格式:「你可以这样验证: ① …  ② …  ③ …」
+2. **用户实际验证**——等用户跑完反馈，不替用户判定通过
+3. 验证通过后，**沉淀验证记录**:
+   - **有 spec（medium / large）** → 在 spec 文件末尾追加 `## 验证记录` 区（验证清单逐条 + 通过日期）；spec 由此闭环:开头是设计意图，结尾是验证证据
+   - **无 spec（small）** → 仅对话呈现，不落盘（small 本就轻量，口头闭环即可）
+   - ⚠ 验证内容**不写入 tasks.json**——tasks.json 是状态机，验证属意图层，只活在 spec 与对话里
+4. **收集 commit range**（标记 done 之前）:
    - 检查 task 是否有 `commitFrom`，为空则跳过
    - 获取当前 `git rev-parse HEAD` 作为 `commitTo`
    - 若 `commitFrom` === `commitTo`（零 commit），跳过写入
    - 否则写入 `commits: { "from": "<commitFrom>", "to": "<HEAD>" }`
    - 多个 task 同时 doing 时，各自范围可能重叠，属预期行为
-3. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
-4. 如有 subtasks，确认全部完成
+5. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
+6. 如有 subtasks，确认全部完成
 
 ---
 

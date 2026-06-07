@@ -25,5 +25,5 @@ medium / large 任务 grill 收敛后产出 spec，固化决策 + 理由 + 边�
 
 | 格式 | 说明 |
 |------|------|
-| Markdown（自由格式） | 非 UI spec —— 决策记录 + 交互 + 边界，放 `docs/.../specs/*.md` |
+| Markdown（自由格式） | 非 UI spec —— 决策记录 + 交互 + 边界，放与 Claude Code `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`） |
 | [template-spec.html](template-spec.html) | UI spec —— sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框，dashboard `/file` 原生渲染 |

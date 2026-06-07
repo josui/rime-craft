@@ -47,7 +47,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ### spec 格式
 
-- 默认 **Markdown**（`docs/.../specs/*.md`）。
+- 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
 - **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**不要**用 superpowers 的 visual companion。**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看，无需另起 companion 服务。
 - **验证记录区**：task 完成、用户验证通过后，在 spec 末尾追加 `## 验证记录`（验证清单逐条 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
@@ -56,6 +56,13 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 - spec 定稿后，把执行步骤映射到 tasks.json **subtasks，边做边更新**（不写重型 plan 文档）。subtasks 就是自适应的执行清单。
 - 仅 **large 且多文件可并行**时，才用 `superpowers:writing-plans` + subagent，换取「自动分配模型 + 计划追踪」。
+
+> **⚠ 文档落点（配置驱动，覆盖 superpowers 默认值）**
+> superpowers 的 `brainstorming` / `writing-plans` 默认写到 `docs/superpowers/specs|plans/`——**不要跟这个默认值**。落点由 **Claude Code `plansDirectory` 配置** 驱动（项目 skill 优先级高于第三方 skill 默认值）：
+> - **plan** → 读 Claude Code 配置 `plansDirectory`（项目 `.claude/settings.json` 优先，否则 `~/.claude/settings.json`）所指目录；**未配置则走默认：项目根目录下 `docs/plans/`**。文件名 `YYYY-MM-DD-<feature>.md`
+> - **spec** → 与 `plansDirectory` **同级**的 `specs/`（例：`plansDirectory` 为 `./docs/plans` → spec 落 `./docs/specs/`）；**未配置则走默认：项目根目录下 `docs/specs/`**。文件名 `YYYY-MM-DD-<topic>-design.md`
+>
+> 调用上述 superpowers skill 前，先解析 `plansDirectory` 定出 plan 落点、取其同级 `specs/` 定出 spec 落点，**禁止**新建 `docs/superpowers/` 子目录。
 
 ### 开始执行 task
 
@@ -184,8 +191,8 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 - `.rime/` 和 `docs/` 默认不入库（用户可覆盖，两者入库策略应一致）
 - 根目录放核心文档（prd, archive, techstack 等）
-- 子目录名用**复数形式**（researches, designs, plans）
-- `plans/` 仅放临时计划
+- 子目录名用**复数形式**（specs, plans, researches, designs）
+- `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：plan 落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/plans/` 与 `docs/specs/`**。**不**嵌套到 `docs/superpowers/` 下
 - `product/` 放详细仕様書（复杂功能的讨论结果）
 
 ---

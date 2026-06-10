@@ -51,6 +51,23 @@ while IFS= read -r RIME_DIR; do
     HAS_CONTENT=true
   fi
 
+  # doing task 的未完成 subtask 活清单（可见性 → 提高即时同步率）
+  DOING_LIST=""
+  if [ -f "$RIME_DIR/tasks.json" ]; then
+    DOING_LIST=$(jq -r '
+      (.items // [])[]
+      | select(.status == "doing")
+      | "- \(.id) \(.title)" +
+        ((.subtasks // []) | map(select(.status != "done")) |
+          if length > 0 then "\n" + (map("  - [ ] " + .title) | join("\n")) else "" end)
+    ' "$RIME_DIR/tasks.json" 2>/dev/null || echo "")
+  fi
+
+  if [ -n "$DOING_LIST" ]; then
+    OUTPUT="$OUTPUT"$'\n'"**进行中**:"$'\n'"$DOING_LIST"
+    HAS_CONTENT=true
+  fi
+
   # 读取最新 anchor
   LATEST_ANCHOR=""
   if [ -d "$RIME_DIR/anchors" ]; then
@@ -82,7 +99,7 @@ done <<< "$RIME_DIRS"
 
 # 4. tasks.json 同步提醒
 OUTPUT="$OUTPUT"$'\n'
-OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task 时将 status 更新为 doing，完成时更新为 done 并写入 completedAt。"
+OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task 时将 status 更新为 doing；**每完成一个 subtask 立即将其 status 改为 done**（dashboard 依赖此数据，不要攒到最后）；task 完成时更新为 done 并写入 completedAt。"
 HAS_CONTENT=true
 
 # 5. 输出

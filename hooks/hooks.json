@@ -9,6 +9,12 @@
       {
         "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh" }]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "TaskUpdate|TodoWrite",
+        "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-task-remind.sh" }]
+      }
     ]
   }
 }

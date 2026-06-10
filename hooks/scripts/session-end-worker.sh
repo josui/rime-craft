@@ -44,7 +44,7 @@ $FILTERED
 
 规则:
 - workedOn 只填 tasks.json 中已存在的 task ID
-- subtasksCompleted: 自由描述本次完成的工作（作为 session 记录，不用于自动状态变更）
+- subtasksCompleted: 本次完成的工作。若对应某个 doing task 的 subtask，**原样复述该 subtask 的 title**（系统会据此自动对账翻 done）；其余自由描述
 - subtasksAdded: 自由描述发现的新子任务（作为 session 记录，不用于自动状态变更）
 - 没有的字段填空数组，不要编造
 - 只输出 JSON，不要任何其他文字"
@@ -72,6 +72,36 @@ log "claude-p success"
 
 # 写 anchor
 echo "$RESULT" | jq --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{schemaVersion: 1} + . + {timestamp: $ts, phase: $ph}' > "$RIME_DIR/anchors/$TIMESTAMP.json"
+
+# subtask 保守对账：仅限 workedOn 的 task，subtasksCompleted 与 subtask title
+# 精确相等或互为子串时翻 done（只翻不回翻）。语义见 rime-flow/data-contract.md
+WORKED=$(echo "$RESULT" | jq -c '.workedOn // []' 2>/dev/null || echo "[]")
+COMPLETED=$(echo "$RESULT" | jq -c '.subtasksCompleted // []' 2>/dev/null || echo "[]")
+if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'length')" -gt 0 ]; then
+  TMP2=$(mktemp)
+  if jq --argjson worked "$WORKED" --argjson completed "$COMPLETED" '
+    if (.items | type) == "array" then
+      .items |= map(
+        if ((.id as $id | $worked | index($id)) != null) and ((.subtasks | type) == "array") then
+          .subtasks |= map(
+            if .status != "done" and (.title as $t |
+              $completed | any(. == $t or contains($t) or ($t | contains(.)))) then
+              .status = "done"
+            else . end)
+        else . end)
+    else . end
+  ' "$RIME_DIR/tasks.json" > "$TMP2" 2>/dev/null; then
+    if ! cmp -s "$TMP2" "$RIME_DIR/tasks.json"; then
+      mv "$TMP2" "$RIME_DIR/tasks.json"
+      log "subtask reconcile: tasks.json updated"
+    else
+      rm -f "$TMP2"
+    fi
+  else
+    rm -f "$TMP2"
+    log "subtask reconcile: jq failed, skipped"
+  fi
+fi
 
 # 追加 cautions
 CAUTION_COUNT=$(echo "$RESULT" | jq '.cautions | length' 2>/dev/null || echo "0")

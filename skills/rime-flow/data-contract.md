@@ -144,7 +144,7 @@ session 记录，每次 SessionEnd 自动生成。**gitignore，不入库**；ph
 | timestamp | string | ISO 8601 含时区 |
 | phase | string | 写入时 phase.json 的 `current` |
 | workedOn | array | 涉及的 task ID（仅 tasks.json 中已存在的） |
-| subtasksCompleted | array | 本次完成的工作（自由描述，仅作记录，不驱动状态变更） |
+| subtasksCompleted | array | 本次完成的工作。**驱动保守对账**：仅限 workedOn 中的 task，条目与 subtask title 精确相等或互为子串时，worker 自动将该 subtask 翻 done（只翻不回翻）；不匹配的条目仅作记录 |
 | subtasksAdded | array | 发现的新子任务（自由描述，仅作记录） |
 | decisions | array | 关键决策 |
 | nextSteps | array | 下一步 |

@@ -7,6 +7,9 @@ log() { echo "[$(date +%H:%M:%S)] session-end: $*" >> "$LOG"; }
 # 0. 递归检测：worker 调用的 claude -p 退出时也会触发 SessionEnd hook
 if [ "${RIME_HOOK_WORKER:-}" = "1" ]; then exit 0; fi
 
+# 依赖预检：jq 缺失时整条管线无法工作，留痕后退出
+command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
+
 # 1. 读取 stdin（必须在前台完成，stdin 只能读一次）
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
@@ -24,7 +27,7 @@ if [ -z "$RIME_DIRS" ]; then log "exit: no .rime/ found under $CWD"; exit 0; fi
 log "found .rime dirs: $(echo "$RIME_DIRS" | tr '\n' ' ')"
 
 # 3. 时间戳
-TIMESTAMP=$(date +%Y-%m-%dT%H-%M)
+TIMESTAMP=$(date +%Y-%m-%dT%H-%M-%S)
 TIMESTAMP_ISO=$(date +%Y-%m-%dT%H:%M:%S%z)
 TODAY=$(date +%Y-%m-%d)
 
@@ -83,7 +86,7 @@ while IFS= read -r RIME_DIR; do
   if [ -z "$FILTERED" ] || [ "$FILTERED_LINES" -lt 2 ]; then
     log "minimal anchor: $RIME_DIR (filtered_lines=$FILTERED_LINES)"
     jq -n --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{
-      timestamp: $ts, phase: $ph,
+      schemaVersion: 1, timestamp: $ts, phase: $ph,
       workedOn: [], subtasksCompleted: [], subtasksAdded: [],
       decisions: [], nextSteps: [], cautions: []
     }' > "$RIME_DIR/anchors/$TIMESTAMP.json"

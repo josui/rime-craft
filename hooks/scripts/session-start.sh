@@ -4,6 +4,9 @@ set -euo pipefail
 LOG="$HOME/.rime-hook.log"
 log() { echo "[$(date +%H:%M:%S)] session-start: $*" >> "$LOG"; }
 
+# 依赖预检：jq 缺失时上下文注入无法工作，留痕后退出
+command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
+
 # 1. 读取 stdin 获取 cwd
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')

@@ -53,8 +53,14 @@ rime_matches_changes() {
   fi
 
   # 子目录的 .rime → 检查变更文件是否在该子目录下
+  # 纯 shell 前缀比较，避免路径中的 . 等字符被当正则解释（如 tools.old 误匹配 toolsXold/）
   local rel_parent="${parent#$cwd/}"
-  echo "$changed" | grep -q "^${rel_parent}/" && return 0
+  local line
+  while IFS= read -r line; do
+    case "$line" in
+      "$rel_parent"/*) return 0 ;;
+    esac
+  done <<< "$changed"
   return 1
 }
 

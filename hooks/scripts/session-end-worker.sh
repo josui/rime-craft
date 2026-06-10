@@ -14,6 +14,8 @@ WORK_DIR="$6"
 LOG="$HOME/.rime-hook.log"
 log() { echo "[$(date +%H:%M:%S)] session-end[bg]: $*" >> "$LOG"; }
 
+command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
+
 # 清理临时文件
 cleanup() { rm -rf "$WORK_DIR"; }
 trap cleanup EXIT
@@ -47,7 +49,10 @@ $FILTERED
 - 没有的字段填空数组，不要编造
 - 只输出 JSON，不要任何其他文字"
 
-RAW=$(RIME_HOOK_WORKER=1 claude -p --model haiku <<< "$PROMPT" 2>/dev/null || echo "")
+# perl alarm 做超时（macOS 无 GNU timeout）：超时收到 SIGALRM 退出，降级走 minimal anchor
+CLAUDE_TIMEOUT="${RIME_CLAUDE_TIMEOUT:-120}"
+RAW=$(RIME_HOOK_WORKER=1 perl -e 'alarm shift @ARGV; exec @ARGV' "$CLAUDE_TIMEOUT" \
+  claude -p --model haiku <<< "$PROMPT" 2>/dev/null || echo "")
 
 # 从模型输出中提取 JSON（可能被 markdown 代码块包裹）
 RESULT=$(echo "$RAW" | sed -n '/^```/,/^```/{ /^```/d; p; }' 2>/dev/null)
@@ -57,7 +62,7 @@ RESULT=$(echo "$RAW" | sed -n '/^```/,/^```/{ /^```/d; p; }' 2>/dev/null)
 if [ -z "$RESULT" ] || ! echo "$RESULT" | jq . >/dev/null 2>&1; then
   log "fallback: invalid JSON: $(echo "$RAW" | head -1)"
   jq -n --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{
-    timestamp: $ts, phase: $ph,
+    schemaVersion: 1, timestamp: $ts, phase: $ph,
     workedOn: [], subtasksCompleted: [], subtasksAdded: [],
     decisions: [], nextSteps: [], cautions: []
   }' > "$RIME_DIR/anchors/$TIMESTAMP.json"
@@ -66,7 +71,7 @@ fi
 log "claude-p success"
 
 # 写 anchor
-echo "$RESULT" | jq --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '. + {timestamp: $ts, phase: $ph}' > "$RIME_DIR/anchors/$TIMESTAMP.json"
+echo "$RESULT" | jq --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{schemaVersion: 1} + . + {timestamp: $ts, phase: $ph}' > "$RIME_DIR/anchors/$TIMESTAMP.json"
 
 # 追加 cautions
 CAUTION_COUNT=$(echo "$RESULT" | jq '.cautions | length' 2>/dev/null || echo "0")

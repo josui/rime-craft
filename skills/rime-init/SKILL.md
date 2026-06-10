@@ -1,6 +1,6 @@
 ---
 name: rime-init
-description: 项目初创 + 旧项目迁移。创建 .rime/ 数据层、docs/ 文档骨架、AGENTS.md，配置开发工具链。触发场景：初始化新项目、迁移旧格式项目。
+description: Use when initializing a new project or migrating an old project to the rime workflow. 项目初创 + 旧项目迁移：创建 .rime/ 数据层、docs/ 文档骨架、AGENTS.md，配置开发工具链。触发场景：初始化新项目、迁移旧格式项目。
 ---
 
 # 项目初创与迁移

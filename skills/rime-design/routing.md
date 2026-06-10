@@ -22,6 +22,33 @@ rime-design 路由的外部 skill 来自以下来源：
 
 未安装时 fallback 到 rime-design baseline 规则（见 SKILL.md）。
 
+## 设计嗅觉表
+
+开发过程中观察到信号时的路由依据（嗅觉行为说明见 SKILL.md，本表为唯一来源）：
+
+| 信号 | 建议 Skill | 未安装时的 Fallback |
+|------|-----------|-------------------|
+| 编码前需要 UX/UI 规划 | /shape | 手动列出用户场景和设计方向 |
+| 构建新 UI 页面/组件（完整流程） | /shape → /impeccable craft | /impeccable 或 /frontend-design |
+| 构建新 UI 页面/组件（快速） | /impeccable 或 /frontend-design | baseline 全量 + 上下文 |
+| 3+ 处相似组件实现 | /impeccable extract | 手动提取提示 |
+| 元素间距混乱、视觉节奏不统一 | /layout | baseline spacing-scale 规则 |
+| 排版层级混乱、字体选择不当 | /typeset | baseline typography-hierarchy 规则 |
+| 色彩策略薄弱、界面色调单调 | /colorize | baseline 色彩底线规则 |
+| 错误提示/标签/空状态文案含糊 | /clarify | 直接改善 |
+| 功能完成但界面元素过多 | /distill | 直接精简建议 |
+| 新用户首次进入/空数据状态 | /harden | 直接设计空状态 |
+| 界面功能 OK 但缺乏个性 | /delight | 跳过 |
+| 设计太安全/平淡 | /bolder | 跳过 |
+| 设计太吵/视觉过载 | /quieter | 跳过 |
+| 准备发布前最后一遍 | /polish | baseline 检查 |
+| 需要跨端/跨屏适配 | /adapt | 直接处理 |
+| 长文本溢出/i18n/边缘数据 | /harden | baseline 健壮性规则 |
+| 加载慢/动画卡顿/bundle 大 | /optimize | 直接处理 |
+| 偏离项目设计系统 | /polish | baseline 锚定类规则 |
+| 需要全面质量检查 | /audit 或 /critique | baseline 全量检查 |
+| 动画实现需要 review | /emil-design-eng | baseline motion 规则 |
+
 ## 外部 Skill 注册表
 
 | Skill | 类型 | 覆盖维度 | 来源 |
@@ -72,7 +99,7 @@ rime-design 路由的外部 skill 来自以下来源：
 同步时操作：
 1. 对比当前注册表与外部 skill 实际列表，更新增删
 2. 更新同步版本和日期
-3. 更新 `SKILL.md` 设计嗅觉表中对应的 skill 名称
+3. 更新本文件设计嗅觉表中对应的 skill 名称
 4. 变更记录最多保留最近 2 个版本，超出时删除最旧的
 
 ## 设计上下文来源
@@ -84,7 +111,4 @@ rime-design 路由的外部 skill 来自以下来源：
 
 ## 维护规则
 
-新增或移除外部 design skill 时，更新以下 2 个文件：
-
-1. 本文件（`routing.md`）的注册表和版本追踪
-2. `SKILL.md` 的设计嗅觉表
+新增或移除外部 design skill 时，只更新**本文件**（注册表、设计嗅觉表、版本追踪）。SKILL.md 只持有指针，不复述路由细节。

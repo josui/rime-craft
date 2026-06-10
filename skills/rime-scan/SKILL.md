@@ -1,7 +1,8 @@
 ---
 name: rime-scan
 description: >
-  从参考网站或截图中提取设计语言。提供 URL 时通过 agent-browser 程序化提取精确 token（颜色、
+  Use when extracting design language from a reference website or screenshot.
+  提供 URL 时通过 agent-browser 程序化提取精确 token（颜色、
   字体、间距、组件样式）并结合 AI 视觉分析补充定性判断；提供截图时纯 AI 视觉分析（降级模式）。
   输出结构化 scan JSON，可按需转化为 design-context.md 或 HTML design sheet。
 ---

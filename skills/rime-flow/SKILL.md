@@ -1,6 +1,6 @@
 ---
 name: rime-flow
-description: 日常生命周期管理。管理 tasks.json 状态流转（todo → doing → done）、phase 生命周期、文档更新规则。触发场景：执行/开始 tasks.json 中的任务、任务状态更新、阶段归档、文档维护。
+description: Use when starting or executing a task from tasks.json, updating task status, closing a phase, or maintaining project docs. 日常生命周期管理：tasks.json 状态流转（todo → doing → done）、phase 生命周期、文档更新规则。触发场景：执行/开始 tasks.json 中的任务、任务状态更新、阶段归档、文档维护。
 ---
 
 # 日常生命周期管理

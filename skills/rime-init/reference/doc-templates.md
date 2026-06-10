@@ -7,7 +7,6 @@
 | 模板 | 说明 |
 |------|------|
 | [template-prd.md](template-prd.md) | PRD — 当前阶段需求、编号追踪 |
-| [template-backlog.md](template-backlog.md) | Backlog — 改善点和 Feature Ideas 池 |
 | [template-archive.md](template-archive.md) | Archive — 已完成功能归档 |
 | [template-cautions.md](template-cautions.md) | 踩坑记录、关键约束 |
 

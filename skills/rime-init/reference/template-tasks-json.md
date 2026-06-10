@@ -1,8 +1,10 @@
-# Tasks.json 模板
+# .rime/ 初始模板
 
 `.rime/tasks.json` 是任务状态的 source of truth。
 
-## 初始模板
+> **字段定义、枚举、ID 格式、写入约束等完整 schema 见权威契约：rime-flow skill 的 [data-contract.md](../../rime-flow/data-contract.md)。本文件只提供初始化骨架。**
+
+## tasks.json
 
 ```json
 {
@@ -24,48 +26,7 @@
 }
 ```
 
-## Item Schema
-
-| 字段 | 类型 | 必须 | 说明 |
-|------|------|------|------|
-| id | string | ✓ | `#0001` 格式，4 位补零 |
-| module | string | | 功能模块（对应 segments 的 key） |
-| title | string | ✓ | 功能标题（大颗粒，人定义） |
-| description | string | | 详细说明 |
-| status | enum | ✓ | `todo` / `doing` / `done` |
-| phase | string | ✓ | 所属阶段 `P0`, `P1`, ... |
-| priority | enum | ✓ | `high` / `medium` / `low` |
-| difficulty | enum | | `small`(🟢 半小时内) / `medium`(🟡 半天) / `large`(🔴 1天+) |
-| createdAt | string | ✓ | ISO 日期 `YYYY-MM-DD` |
-| completedAt | string? | | 完成日期，仅 done 时填写 |
-| subtasks | array | | AI 自动拆解的子任务 `[{title, status}]` |
-| dependsOn | array | | 依赖的 task ID 列表 `["#0017"]`，构成 DAG（无环）；单向，反向 `blockedBy` 由 dashboard 计算 |
-
-## 状态流转
-
-```
-todo → doing → done
-       ↑ 开始工作时手动或 AI 自动变更
-```
-
-- AI 开始处理某个 item 时，将 status 改为 `doing` 并拆出 subtasks
-- 所有 subtask 完成后，SessionEnd hook 自动将 status 改为 `done`
-- Phase 关闭时，`done` 的 items 被回收（archive.md 保留叙事记录）
-
-### 依赖语义（dependsOn）
-
-- `dependsOn` 表达「本 task 依赖于哪些 task」，**单向**——只声明谁是前置，不反向回写
-- 被依赖的 task 完成（status 变 `done`）即视为该依赖已满足
-- Phase 关闭归档时，除回收该 phase 的 done items 外，还需扫描所有剩余 task 的 `dependsOn`，**自动移除指向已归档 ID 的引用**，避免 active 区残留悬空引用；这与上面「done items 被回收」的清理规则一致
-
-## 编号规则
-
-- `nextId` 是纯数字，生成 id 时补零 4 位: `nextId: 5` → `"#0005"`
-- 编号全局唯一，不回收不复用
-- 新增 item 后 nextId 自增
-- 有 `segments` 时，按 module 对应区间分配编号
-
-## Phase.json 初始模板
+## phase.json
 
 ```json
 {
@@ -77,35 +38,14 @@ todo → doing → done
 }
 ```
 
-## Cautions.json 初始模板
+## cautions.json
 
 ```json
 []
 ```
 
-Caution 由 SessionEnd hook 自动提取或手动追加。append-only，不设 status 字段。
+裸数组（无 schemaVersion，理由见契约文档），append-only。由 SessionEnd hook 自动提取或手动追加。
 
-### Schema
+## anchors/ 与 archives/
 
-| 字段 | 类型 | 必须 | 说明 |
-|------|------|------|------|
-| id | string | ✓ | `C-001` 格式（连字符 + 3 位补零） |
-| title | string | ✓ | 简短标题 |
-| summary | string | | 详细描述 |
-| tags | array | | 分类标签 |
-| reference | string | | commit hash / 文件路径 / 链接 |
-| createdAt | string | ✓ | `YYYY-MM-DD` |
-| source | string | | session 来源（hook 自动填） |
-
-### 收录标准
-
-只收录**可能再发生**的教训和约束：
-
-- ✅ 平台/工具的隐性限制（API 行为、配置陷阱）
-- ✅ 架构决策的副作用（容易忘记的约束）
-- ✅ 反复出现的模式错误
-- ❌ 已修复的一次性 bug（修复在代码里，不需要记录）
-- ❌ 一次性迁移/版本问题（过后不再相关）
-- ❌ 文档已覆盖的内容（避免重复）
-
-定期清理：不再相关的条目直接删除。
+均为运行时自动生成，初始化时只需创建空的 `anchors/` 目录（archives/ 由 phase 关闭流程按需创建）。文件格式见契约文档。

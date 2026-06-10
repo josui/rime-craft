@@ -143,20 +143,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ### 归档 JSON 格式
 
-路径：`.rime/archives/tasks.P{n}.json`
-
-```json
-{
-  "phase": "P2",
-  "name": "品质改善",
-  "completedAt": "2026-03-20",
-  "items": [...]
-}
-```
-
-- items 保留完整 task 对象（所有字段原样保留）
-- phase/name/completedAt 从 phase.json 取值
-- `archives/` 遵循 `.rime/` 的整体 gitignore 策略
+路径与字段见 [data-contract.md](data-contract.md) 的 archives 一节。要点：不可变快照、items 保留完整 task 对象、phase/name/completedAt 从 phase.json 取值。
 
 ---
 
@@ -164,20 +151,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ### 写入约束
 
-**所有路径**（AI 手动更新、`/rime-backlog` command）向 tasks.json 写入 item 时，必须包含以下必填字段：
-
-| 字段 | 格式 | 说明 |
-|------|------|------|
-| id | `#0001`（4 位补零） | 由 nextId 生成 |
-| title | 非空字符串 | — |
-| status | `todo` / `doing` / `done` | — |
-| priority | `high` / `medium` / `low` | 不确定时询问用户 |
-| createdAt | `YYYY-MM-DD` | — |
-| phase | `P0`, `P1`, ... | 从 phase.json current 获取 |
-
-缺失必填字段时**中止写入并报错**，不允许写入不完整的 item。
-
-向 task 写入 `dependsOn` 前必须做 **DFS 检环**：把待写入的依赖纳入现有依赖图，若与现有依赖构成环（含指向自身的自依赖）则**拒绝写入**。tasks.json 的 `dependsOn` 图始终保持 DAG 不变量。
+**所有路径**（AI 手动更新、`/rime-backlog` command）向 tasks.json 写入 item 时，必须满足 [data-contract.md](data-contract.md) 的「写入约束」：必填字段齐全（缺失则**中止写入并报错**）、`dependsOn` 先过 DFS 检环（构成环则**拒绝写入**，图恒为 DAG）、空 `dependsOn` 省略 key。
 
 ### 编号规则
 
@@ -199,21 +173,14 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ## 数据层参考
 
-| 文件 | 职责 | 内容 |
-|------|------|------|
-| `.rime/tasks.json` | 任务状态 source of truth | todo/doing/done items + subtasks |
-| `.rime/phase.json` | 阶段信息 | 当前 phase、历史 phases |
-| `.rime/cautions.json` | 踩坑记录 | append-only，SessionEnd hook 自动提取 |
-| `.rime/anchors/` | session 记录 | 每次 session 结束自动生成，gitignore |
-| `docs/prd.md` | 产品定位和规格 | 叙事文档，用 #ID 引用 tasks.json |
-| `docs/archive.md` | 阶段叙事归档 | phase 关闭时写入总结 |
+**`.rime/` 五类文件的字段、枚举、ID 格式、读写归属的权威定义：[data-contract.md](data-contract.md)。** 涉及字段细节时先读它。
 
-### tasks.json 可选字段
-
-| 字段 | 类型 | 写入时机 | 说明 |
-|------|------|----------|------|
-| `branch` | string, 可选 | doing 时用户确认后 | 关联分支名 |
-| `commitFrom` | string, 可选 | doing 时自动（每次覆写） | HEAD hash，commit range 起点 |
-| `commits` | object, 可选 | done 时自动 | `{ "from": "...", "to": "..." }` |
-| `docs` | array, 可选 | grill→spec / writing-plans 产出后 | `[{ "type": "spec\|plan", "path": "相对路径" }]` |
-| `dependsOn` | array, 可选 | backlog 录入 / 手动维护 | 单向依赖 task ID 列表，构成 DAG；反向 `blockedBy` 由 dashboard 计算 |
+| 文件 | 职责 |
+|------|------|
+| `.rime/tasks.json` | 任务状态 source of truth（items + subtasks + dependsOn） |
+| `.rime/phase.json` | 当前 phase、历史 phases |
+| `.rime/cautions.json` | 踩坑记录，append-only，SessionEnd hook 自动提取 |
+| `.rime/anchors/` | session 记录，自动生成，gitignore |
+| `.rime/archives/` | phase 关闭时的不可变 task 快照 |
+| `docs/prd.md` | 产品定位和规格，叙事文档，用 #ID 引用 tasks.json |
+| `docs/archive.md` | 阶段叙事归档，phase 关闭时写入总结 |

@@ -4,6 +4,8 @@ description: 快速添加 backlog 条目
 
 向当前项目的 `.rime/tasks.json` 添加一条新任务（status: todo）。
 
+> 字段、枚举与写入约束的权威定义在 rime-flow skill 的 `data-contract.md`；本命令内嵌的校验步骤与之保持一致，冲突时以契约为准。
+
 ## 定位 tasks.json
 
 按以下顺序查找，使用第一个找到的：

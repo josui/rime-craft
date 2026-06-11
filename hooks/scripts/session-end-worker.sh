@@ -85,7 +85,8 @@ if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'l
         if ((.id as $id | $worked | index($id)) != null) and ((.subtasks | type) == "array") then
           .subtasks |= map(
             if .status != "done" and (.title as $t |
-              $completed | any(. == $t or contains($t) or ($t | contains(.)))) then
+              $completed | any(. as $c | ($c | length) > 0 and
+                ($c == $t or ($t | contains($c)) or ($c | contains($t))))) then
               .status = "done"
             else . end)
         else . end)

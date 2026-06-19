@@ -1,5 +1,5 @@
 ---
-description: Open the .rime/ data-visualization dashboard
+description: Open the current project's .rime/ kanban dashboard — tasks, phases, and cautions. Project task tracking, NOT AI usage/spend/billing.
 ---
 
 在浏览器中打开当前项目的 `.rime/` dashboard。

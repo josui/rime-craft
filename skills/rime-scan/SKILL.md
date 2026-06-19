@@ -102,7 +102,7 @@ You can:
 
 ## 与 rime-design 的关系
 
-- rime-scan 输出的 JSON 可按需转化为 `docs/DESIGN.md`（rime-design 的设计上下文，google-labs DESIGN.md 格式）
+- rime-scan 输出的 JSON 可按需转化为 `docs/DESIGN.md`（rime-design 的设计上下文，google-labs DESIGN.md 格式）；字段映射见 rime-design 的 `design-template.md`「从 scan JSON 填充」
 - 转化不自动发生，用户明确要求时执行
 - schema 参见 `schema.md`
 

@@ -17,6 +17,7 @@
 | [template-techstack.md](template-techstack.md) | 技术选型、项目结构、阶段计划 |
 | [template-interaction.md](template-interaction.md) | 交互设计、页面状态、操作流程 |
 | [template-schema.md](template-schema.md) | 数据结构定义 |
+| [DESIGN.md（rime-design skill）](../../rime-design/design-template.md) | 设计系统 token + rationale（google-labs/design.md 格式）。模板与生成流程在 rime-design skill，不在本目录 |
 
 ## 设计阶段（spec）
 

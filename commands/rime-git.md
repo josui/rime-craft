@@ -1,5 +1,5 @@
 ---
-description: 当用户请求 commit、提交代码、git commit 时触发。自动分析变更并生成规范的提交信息，支持多 commit 拆分。
+description: Triggers when the user asks to commit / commit code / git commit. Analyzes changes and generates a conventional commit message, with support for splitting into multiple commits.
 ---
 
 自动分析变更内容，生成符合规范的提交信息。无 `.rime/` 依赖，任何项目都能用。

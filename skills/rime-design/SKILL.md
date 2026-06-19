@@ -7,17 +7,75 @@ description: >
   Applies to any frontend project.
 ---
 
-# Design Skill — UI 品质与 Token 一致性
+# Design Skill — UI 品质守护
 
-UI/前端开发时的设计品质守护。内嵌 baseline 规则 + 外部 design skill 场景化路由。
+三件事：**路由**（外部 design skill 指针）、**token 定义**（DESIGN.md 加载与生成）、**设计检测**（baseline rules + AI slop 防御）。
 
 ---
 
-## Baseline Rules
+## 路由
 
-以下规则始终适用，不依赖外部 skill。
+### 外部 Skill
 
-### 锚定类 — 遵循项目定义
+| 来源 | 安装方式 | 定位 | 何时用 |
+|------|---------|------|--------|
+| frontend-design | Claude Code 内置 | **设计哲学**（从 0 到 1）：像设计总监，给项目不可错认的视觉身份。关注 aesthetic direction、typography pairing、signature element、copywriting。无命令、无 detector | 新项目定设计方向、hero 设计、字体配对、视觉风险决策 |
+| impeccable | `npx impeccable install` | **工具链**（从 1 到 production）：23 命令 + 44 deterministic detector rules + hook 自动检测 + live browser iteration + DESIGN.md 生成 | 设计检测、迭代打磨、a11y/perf audit、生产化 |
+| emil-design-eng | 独立安装 | 动效哲学：Emil Kowalski 动效决策 + 实现 review | 动效方向决策、实现需要 review |
+| transitions-dev | 独立安装（Jakub Antalík / transitions.dev） | 动效实现库：常见 UI 模式的 production-ready CSS 过渡 recipe（dropdown / modal / tabs / toast / skeleton / icon swap / staggered reveal / shake 等），copy-paste 即用 | 需要具体过渡 / 微交互的现成实现 |
+| gsap（`gsap-core` 入口 + `gsap-*` 系） | 独立安装 | JS 动画库：timeline 编排、scroll-driven（ScrollTrigger）、SVG / 物理 / 复杂序列；按需 `gsap-scrolltrigger` / `gsap-timeline` / `gsap-react` / `gsap-plugins` | CSS 过渡不够用——复杂编排 / 滚动驱动 / SVG / 时间轴 |
+| text-to-lottie | 独立安装 | 矢量动画：生成 Lottie (Bodymovin) JSON，本地 skia 播放 | 插画级 / 装饰性矢量动画 |
+| shadcn | 独立安装 | shadcn/ui 组件管理 | shadcn 项目 |
+
+> **frontend-design 与 impeccable 的关系**：前者是思维方法（"怎么想、怎么定方向"），后者是工具链（"怎么检测、怎么迭代"）。两者可共存——frontend-design 定方向，impeccable 检测和打磨。impeccable 自述"started from frontend-design"，但在命令系统、detector、DESIGN.md 生成上远超官方版。
+>
+> **动效工具怎么选**（方向永远先问 `emil-design-eng`：该不该动、怎么动、动得对不对）：
+> - 简单 UI 过渡 / 微交互（dropdown / modal / toast / tabs / skeleton…）→ `transitions-dev`（现成 CSS recipe）
+> - 复杂编排 / 滚动驱动 / SVG / 时间轴 → `gsap`（`gsap-core` 入口，按需 `gsap-scrolltrigger` / `gsap-timeline` / `gsap-react`）
+> - 矢量插画 / 装饰性动画 → `text-to-lottie`（生成 Lottie JSON）
+
+### 检测逻辑
+
+AI 无法在运行时动态检测已安装的 skill 列表。采用「尝试调用 → 失败则 fallback」策略：
+
+- 建议使用某 skill 时，直接尝试调用
+- skill 不存在时 Claude 会报错，此时执行 fallback（下方设计检测 baseline）
+- 一次 session 内记住哪些 skill 不可用，不重复尝试
+
+### 设计嗅觉 — 开发过程中主动提示
+
+在 UI 相关开发过程中，持续观察设计信号（间距混乱、文案含糊、缺乏个性、视觉过载等）。
+
+**装了 impeccable 时**：impeccable 自带 routing rules（意图→命令映射 + context-signals 脚本驱动），让 impeccable 处理路由。rime-design 不重复维护命令映射表——impeccable 自己的注册表是单一来源，抄一遍只会过期。
+
+**未装 impeccable 时**：发现设计信号用一句话建议对应改善方向（基于下方设计检测 baseline），用户同意则直接改善，不反复提醒同一信号。
+
+---
+
+## Token 定义
+
+### 加载
+
+1. 检查 `docs/DESIGN.md` 是否存在
+2. **存在** → 读取 YAML frontmatter 获取 token 值（colors / typography / rounded / spacing / components），读取 prose 获取设计 rationale
+3. **不存在** → 提示用户：「项目缺少 DESIGN.md，要现在生成吗？」
+
+### 生成
+
+用户同意后，优先用外部命令；不可用则手动扫描：
+
+| 方式 | 说明 |
+|------|------|
+| `/impeccable init` | 交互式采集设计上下文，自动写 PRODUCT.md + DESIGN.md |
+| `/impeccable document` | 从现有项目代码自动生成 DESIGN.md |
+| 手动扫描 | 扫描项目（CSS 变量、Tailwind config、theme 文件、组件源码等）提取实际 token 值 → 用 `design-template.md` 模板生成 `docs/DESIGN.md` → 用户确认 → 如有 `npx @google/design.md lint` 可用则运行验证 |
+| 从参考网站提取 | 使用 `rime-scan` skill 提取 scan JSON，需要时转化为 `DESIGN.md` |
+
+> DESIGN.md 采用 [google-labs/design.md](https://github.com/google-labs-code/design.md) 格式（Apache-2.0）。模板见 [design-template.md](design-template.md)。
+
+### 锚定类规则 — 遵循项目定义
+
+读取 token 后，以下规则始终适用：
 
 | Rule | Description |
 |------|-------------|
@@ -28,9 +86,15 @@ UI/前端开发时的设计品质守护。内嵌 baseline 规则 + 外部 design
 | **color-palette** | 只用色板中的颜色，需要新色时先确认 |
 | **responsive-breakpoints** | 遵循项目断点体系，不自创断点 |
 
-**适用方式**: `docs/design-context.md` 存在时，按索引路径读取源文件。不存在时，在项目中搜索 token 定义。
+---
 
-### AI Slop 防御 — 避免以下模式
+## 设计检测
+
+以下规则始终适用，不依赖外部 skill。装了 impeccable 时，impeccable 自带更详细的同类规则（44 deterministic detector rules + absolute bans），以 impeccable 为准；未装时以下为 fallback。
+
+### AI Slop 防御
+
+避免以下模式——装了 impeccable 时其 detector 会自动检测，未装时人工对照：
 
 - 不用 cyan/purple 渐变、glassmorphism、neon accent
 - 不用 gradient text、bounce/elastic easing
@@ -43,7 +107,9 @@ UI/前端开发时的设计品质守护。内嵌 baseline 规则 + 外部 design
 - 不把所有元素居中
 - 不给每个 heading 上方放大圆角 icon
 
-### Motion Base — 动画决策框架
+### Motion Base
+
+> 实现动效时按上方「动效工具怎么选」route 到对应 skill（CSS 过渡 → transitions-dev / 复杂编排 → gsap / 矢量 → text-to-lottie / 决策与 review → emil-design-eng）。以下为无外部 skill 时的 baseline。
 
 1. 先判断是否需要动画（高频操作 100+/天 → 不动画）
 2. 只动画 `transform` + `opacity`（GPU 加速），不动画 layout 属性
@@ -62,26 +128,3 @@ UI/前端开发时的设计品质守护。内嵌 baseline 规则 + 外部 design
 - 长文本 overflow 处理（`overflow-wrap: anywhere`）
 - 空状态必须有引导（不留空白页面）
 - 响应 `prefers-reduced-motion` / `prefers-color-scheme`
-
----
-
-## 设计上下文加载
-
-Skill 加载时:
-
-1. 检查 `docs/design-context.md` 是否存在
-2. **存在** → 读取索引，按路径读取源文件（token 定义、组件目录等）
-3. **不存在** → 提示用户：「项目缺少设计上下文索引，要现在扫描生成吗？」
-4. 用户同意 → 扫描项目（CSS 文件、Tailwind config、组件目录等）自动填充路径 → 用 `context-template.md` 模板生成 `docs/design-context.md` → 用户确认
-
----
-
-## 设计嗅觉 — 开发过程中主动提示
-
-在 UI 相关开发过程中，持续观察设计信号（间距混乱、文案含糊、缺乏个性、视觉过载等）。
-发现时查 [routing.md](routing.md) 的**设计嗅觉表**，用一句话建议：「注意到 [信号]，要不要考虑使用 /[skill]？」
-
-用户同意则调用，不同意则继续。不要反复提醒同一个信号。skill 未安装时按嗅觉表的 fallback 列处理。
-
-嗅觉表与外部 skill 注册表统一维护在 [routing.md](routing.md)（单一来源）。
-上下文模板 → [context-template.md](context-template.md)

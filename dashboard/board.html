@@ -731,8 +731,9 @@
 
   /* ── Cautions ── */
   .caution-list {
-    columns: 3;
-    column-gap: 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
   }
 
   .ctn {
@@ -740,8 +741,6 @@
     border-radius: var(--radius);
     background: var(--surface);
     transition: box-shadow 0.12s ease-out;
-    break-inside: avoid;
-    margin-bottom: 0.6rem;
   }
 
   .ctn:hover {
@@ -1292,10 +1291,10 @@ const cList = document.getElementById('caution-list');
 if (!CAUTIONS.length) {
   cList.innerHTML = '<div class="empty">—</div>';
 } else {
-  CAUTIONS.forEach((c, i) => {
+  cList.innerHTML = CAUTIONS.map((c, i) => {
     const title = c.title || c.summary || '';
     const summary = c.title ? (c.summary || '') : '';
-    cList.innerHTML += `<div class="ctn" style="animation-delay:${i * 25}ms">
+    return `<div class="ctn" style="animation-delay:${Math.min(i * 25, 600)}ms">
       <div class="ctn-head">
         <span class="ctn-id">${c.id || ''}</span>
         ${c.module ? `<span class="tk-mod">${esc(c.module)}</span>` : ''}
@@ -1310,7 +1309,7 @@ if (!CAUTIONS.length) {
         ${c.source ? `<span>${c.source}</span>` : ''}
       </div>
     </div>`;
-  });
+  }).join('');
 }
 </script>
 </body>

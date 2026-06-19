@@ -1,6 +1,6 @@
 ---
 name: rime-flow
-description: Use when starting or executing a task from tasks.json, updating task status, closing a phase, or maintaining project docs. 日常生命周期管理：tasks.json 状态流转（todo → doing → done）、phase 生命周期、文档更新规则。触发场景：执行/开始 tasks.json 中的任务、任务状态更新、阶段归档、文档维护。
+description: Use when starting or executing a task from tasks.json, updating task status, closing a phase, or maintaining project docs. Daily lifecycle management — tasks.json status flow (todo → doing → done), phase lifecycle, and doc-update rules. Triggers: executing or starting a tasks.json task, updating task status, archiving a phase, maintaining docs.
 ---
 
 # 日常生命周期管理
@@ -18,10 +18,9 @@ tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
     ↓ 根据 difficulty 决定执行方式
     ├─ small  → 直接实现
     ├─ medium → grill-me 收敛设计 → spec → 实施（subtasks 当活计划，边做边改）
-    └─ large  → grill-me → spec → 可选 superpowers:writing-plans + subagent（多文件可并行时）
+    └─ large  → grill-me → spec（含 ## Task N 段落）→ rime-sdd 编排执行（subagent per task + per-task review）
     ⚠ spec 锁设计意图；tasks.json subtasks 是自适应执行清单，发现偏离预期就直接增删
-    ⚠ 方向开放、需要发散探索时，才显式用 superpowers:brainstorming（默认走 grill-me 收敛）
-    ⚠ 产出 spec/plan 文件后，将路径写入 task 的 docs 字段
+    ⚠ 产出 spec 文件后，将路径写入 task 的 docs 字段
     ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
@@ -40,8 +39,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 > grill-me 原文取自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT License）。
 
-- **grill-me（收敛）是默认**：用户带着方向来时，逼问钉死决策树的每个分支。
-- **brainstorming（发散）是兜底**：仅当连方向都没有、需要探索可能性时，才显式用 `superpowers:brainstorming`。它在遇到视觉问题时会 offer visual companion（浏览器预览）——**不接受**，改走下方 HTML spec。
+- **grill-me（收敛）是默认**：用户带着方向来时，逼问钉死决策树的每个分支。需要同时产出 ADR / glossary 时用 `grill-with-docs`。
 - 收敛结束写 **spec**，固化关键决策 + 理由 + 放弃的方案——spec 比 implementation plan 更耐久。
 - **逼问中冒出视觉问题**（光靠文字说不清的 layout / UI 外观 / 方案对比）：**先问用户**要不要启用 **HTML 格式 spec** 把 mock 画出来讨论，用户同意可创建 HTML spec（详见下方「spec 格式」）。
 
@@ -49,20 +47,18 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 - 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
-- **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**不要**用 superpowers 的 visual companion。**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看，无需另起 companion 服务。
+- **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看。
 - **验证记录区**：task 完成、用户验证通过后，在 spec 末尾追加 `## 验证记录`（验证清单逐条 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
 
 ### 实施
 
 - spec 定稿后，把执行步骤映射到 tasks.json **subtasks，边做边更新**（不写重型 plan 文档）。subtasks 就是自适应的执行清单。
-- 仅 **large 且多文件可并行**时，才用 `superpowers:writing-plans` + subagent，换取「自动分配模型 + 计划追踪」。
+- **large** 任务的 spec 应包含 `## Task N` 段落（每个 task 一段：需求、接口约束、验收标准），定稿后用 `rime-sdd` 编排执行——每 task 派 fresh implementer subagent + per-task spec/quality review gate + final whole-branch review。medium 任务直接按 subtasks 顺序实施。
 
-> **⚠ 文档落点（配置驱动，覆盖 superpowers 默认值）**
-> superpowers 的 `brainstorming` / `writing-plans` 默认写到 `docs/superpowers/specs|plans/`——**不要跟这个默认值**。落点由 **Claude Code `plansDirectory` 配置** 驱动（项目 skill 优先级高于第三方 skill 默认值）：
-> - **plan** → 读 Claude Code 配置 `plansDirectory`（项目 `.claude/settings.json` 优先，否则 `~/.claude/settings.json`）所指目录；**未配置则走默认：项目根目录下 `docs/plans/`**。文件名 `YYYY-MM-DD-<feature>.md`
+> **⚠ 文档落点（配置驱动）**
+> 落点由 **Claude Code `plansDirectory` 配置** 驱动：
 > - **spec** → 与 `plansDirectory` **同级**的 `specs/`（例：`plansDirectory` 为 `./docs/plans` → spec 落 `./docs/specs/`）；**未配置则走默认：项目根目录下 `docs/specs/`**。文件名 `YYYY-MM-DD-<topic>-design.md`
->
-> 调用上述 superpowers skill 前，先解析 `plansDirectory` 定出 plan 落点、取其同级 `specs/` 定出 spec 落点，**禁止**新建 `docs/superpowers/` 子目录。
+> - **plan**（如需）→ 读 Claude Code 配置 `plansDirectory`（项目 `.claude/settings.json` 优先，否则 `~/.claude/settings.json`）所指目录；**未配置则走默认：项目根目录下 `docs/plans/`**。文件名 `YYYY-MM-DD-<feature>.md`
 
 ### 开始执行 task
 
@@ -166,7 +162,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 - `.rime/` 和 `docs/` 默认不入库（用户可覆盖，两者入库策略应一致）
 - 根目录放核心文档（prd, archive, techstack 等）
 - 子目录名用**复数形式**（specs, plans, researches, designs）
-- `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：plan 落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/plans/` 与 `docs/specs/`**。**不**嵌套到 `docs/superpowers/` 下
+- `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/specs/`**（plan 目录 `docs/plans/` 如需）
 - `product/` 放详细仕様書（复杂功能的讨论结果）
 
 ---

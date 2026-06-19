@@ -46,7 +46,7 @@
 | id | string | ✓ | `#0001` 格式 |
 | module | string | | 功能模块（对应 segments 的 key） |
 | title | string | ✓ | 功能标题（大颗粒，人定义） |
-| description | string | | 详细说明 |
+| description | string | | 详细说明；**多行书写**——背景/目标/约束/验收点分行或分段（`\n` 分隔），不要挤成一行长文本，便于人类扫读与 dashboard 渲染 |
 | status | enum | ✓ | `todo` / `doing` / `done` |
 | phase | string | ✓ | 所属阶段，从 phase.json `current` 获取 |
 | priority | enum | ✓ | `high` / `medium` / `low` |

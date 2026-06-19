@@ -2,9 +2,11 @@
 name: rime-scan
 description: >
   Use when extracting design language from a reference website or screenshot.
-  提供 URL 时通过 agent-browser 程序化提取精确 token（颜色、
-  字体、间距、组件样式）并结合 AI 视觉分析补充定性判断；提供截图时纯 AI 视觉分析（降级模式）。
-  输出结构化 scan JSON，可按需转化为 design-context.md 或 HTML design sheet。
+  For a URL, uses agent-browser to programmatically extract precise tokens
+  (colors, typography, spacing, component styles) and complements them with AI
+  visual analysis; for a screenshot, uses AI visual analysis only (degraded mode).
+  Outputs structured scan JSON, optionally converted to DESIGN.md
+  (google-labs/design.md format) or an HTML design sheet.
 ---
 
 # rime-scan
@@ -31,13 +33,13 @@ description: >
 **Step 1 — Scope 确认**（打开页面前询问用户）
 
 ```
-扫描范围确认（直接回车 = 仅基础 token）：
-• 基础 token（颜色 / 字体 / 间距 / 圆角 / 阴影）— 始终提取
-• button / link 样式 — 始终提取
-• 表单元素（input / select / textarea）— 需要吗？[y/N]
-• 导航 / 头部（nav / header）— 需要吗？[y/N]
-• 重复组件 pattern（频率 ≥ 3 次的 class）— 需要吗？[y/N]
-• 视觉效果（canvas / WebGL / scroll effects 等）— 需要吗？[y/N]
+Scan scope (press Enter = base tokens only):
+• Base tokens (colors / type / spacing / radius / shadows) — always extracted
+• button / link styles — always extracted
+• Form elements (input / select / textarea) — include? [y/N]
+• Navigation / header (nav / header) — include? [y/N]
+• Repeated component patterns (classes appearing ≥ 3×) — include? [y/N]
+• Visual effects (canvas / WebGL / scroll effects, etc.) — include? [y/N]
 ```
 
 用户一次性确认后，extract.js 只运行需要的部分。**若用户原始消息中已明确提及需要的范围**（如"扫描包括表单"、"不需要视觉效果"），直接映射到对应 scope 配置，跳过确认步骤。
@@ -51,7 +53,7 @@ description: >
 先用 Read tool 读取 `skills/rime-scan/scripts/extract.js` 的完整内容，然后通过 agent-browser 的 JS 执行能力将脚本注入页面，传入 scope 配置：
 
 ```js
-// 根据用户 scope 选择配置 scope 对象，然后调用：
+// Configure the scope object per the user's selection, then call:
 const result = rimeScanExtract({ form: true, nav: false, patterns: true, effects: false });
 ```
 
@@ -82,31 +84,31 @@ Step 1 Scope 确认 → 跳过 Step 2-3 → Step 4 用用户提供的截图 → 
 扫描完成后，统一格式输出：
 
 ```
-✅ Scan 完成 — [URL or 截图]
+✅ Scan complete — [URL or screenshot]
 
-提取结果：
-• 颜色：N 个（N 背景 / N 文字 / N 强调）
-• 字体族：N 个（列出名称）
-• 间距值：N 个（base unit: Npx）
-• UI 组件：button / link [/ input / select 等，按实际提取的列出]
-• Pattern：N 个（列出 selector × count）[scope 包含 patterns 时]
+Extracted:
+• Colors: N (N background / N text / N accent)
+• Font families: N (list names)
+• Spacing values: N (base unit: Npx)
+• UI components: button / link [/ input / select, etc. — list what was actually extracted]
+• Patterns: N (list selector × count) [when scope includes patterns]
 
-你可以：
-• 保存为 JSON 文件归档参考
-• 让我基于这个 JSON 生成 design-context.md（rime-design 使用）
-• 让我基于这个 JSON 生成可视化 HTML design sheet
-• 直接开始新项目，我会参考这些 token
+You can:
+• Save as a JSON file for reference
+• Have me generate DESIGN.md from this JSON (used by rime-design)
+• Have me generate a visual HTML design sheet from this JSON
+• Start a new project directly — I'll reference these tokens
 ```
 
 ## 与 rime-design 的关系
 
-- rime-scan 输出的 JSON 可按需转化为 `docs/design-context.md`（rime-design 的设计上下文）
+- rime-scan 输出的 JSON 可按需转化为 `docs/DESIGN.md`（rime-design 的设计上下文，google-labs DESIGN.md 格式）
 - 转化不自动发生，用户明确要求时执行
 - schema 参见 `schema.md`
 
 ## 不做的事
 
-- 不自动生成 design-context.md
+- 不自动生成 DESIGN.md
 - 不做 Markdown 分析报告（复用性低）
 - 不做多页对比（多页时多次调用）
 - 不做自有项目审计（#0027 rime-design 扩展）

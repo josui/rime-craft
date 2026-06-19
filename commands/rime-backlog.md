@@ -1,5 +1,5 @@
 ---
-description: 快速添加 backlog 条目
+description: Quickly add a backlog entry
 ---
 
 向当前项目的 `.rime/tasks.json` 添加一条新任务（status: todo）。

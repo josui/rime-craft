@@ -1,5 +1,5 @@
 ---
-description: 打开 .rime/ 数据可视化 dashboard
+description: Open the .rime/ data-visualization dashboard
 ---
 
 在浏览器中打开当前项目的 `.rime/` dashboard。

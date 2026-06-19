@@ -1,6 +1,6 @@
 ---
 name: rime-imagen
-description: Use when user explicitly asks for help writing an image-generation prompt to be pasted into an external tool (ChatGPT Web / Gemini / AI Studio). Triggers: "帮我写个生图 prompt", "给我一段 gpt-image / nano banana prompt", "写段 image prompt 我去 ChatGPT 用". Produces copy-ready prompt text ONLY — does NOT generate images or call any image API. If the user wants an actual image rendered, route to a proper image-generation tool instead.
+description: Use when the user explicitly asks for help writing an image-generation prompt to be pasted into an external tool (ChatGPT Web / Gemini / AI Studio). Triggers: "help me write an image-gen prompt", "give me a gpt-image / nano banana prompt", "write an image prompt I'll use in ChatGPT". Produces copy-ready prompt text ONLY — does NOT generate images or call any image API. If the user wants an actual image rendered, route to a proper image-generation tool instead.
 ---
 
 # rime-imagen — 生图 Prompt 辅助
@@ -42,14 +42,14 @@ description: Use when user explicitly asks for help writing an image-generation 
 |----------|--------------|
 | prompt 文本（粘到外部工具生图） | **rime-imagen**（本 skill）|
 | 直接渲染出图片 | 生图工具 / 生图 skill（不是本 skill）|
-| 改 React / CSS 实现新 layout | `impeccable:layout` / `frontend-design` |
-| 系统化规划整体 UX 方向（讨论层） | `impeccable:shape` |
+| 改 React / CSS 实现新 layout | `/impeccable layout` |
+| 系统化规划整体 UX 方向（讨论层） | `/impeccable shape` |
 | 从参考站提取 design token | `rime-scan` |
 
 ## Don't use when
 
 - 用户只是讨论图像内容或分析现有图（用正常对话回答）
-- 用户做设计评审、UI 评论（用 `rime-design` / `impeccable:critique`）
+- 用户做设计评审、UI 评论（用 `rime-design` / `/impeccable critique`）
 - 用户聊图像相关的技术话题（模型架构、diffusion 原理等）
 - **代码库图标需求** — Heroicons / Lucide / Tabler / Font Awesome 等，直接用前端组件库
 - **真实数据图表** — 柱状图 / 折线图 / 饼图等数据可视化，用 Recharts / D3 / Chart.js 实现

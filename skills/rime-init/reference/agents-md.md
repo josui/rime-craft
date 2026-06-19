@@ -8,9 +8,17 @@
 
 ### 前置检测
 
-- 检测 superpowers 是否安装（rime-flow 依赖 superpowers 处理 L3 任务）
-- 未安装时提醒用户：rime-flow 的 L3 任务处理能力将受限
-- 提醒后继续生成完整模板（superpowers 可随时安装，不影响模板内容）
+rime 工作流依赖以下外部 skill（mattpocock/skills，MIT License），未安装则对应能力受限：
+
+| 外部 skill | 用途 | 缺失影响 |
+|------------|------|----------|
+| `grill-me` / `grill-with-docs` | medium / large 任务设计收敛 | 退化为纯对话式设计，无结构化逼问 |
+| `tdd` | rime-sdd implementer 遵循 TDD | rime-sdd 的 subagent 无 TDD 约束 |
+| `review` | rime-sdd final whole-branch review（Standards + Spec 两轴） | large 任务缺最终质量闸门 |
+
+- 检测方式：按 skill 安装位置（`~/.agents/skills/`、项目 `.agents/skills/` 或对应工具的 skill 目录）检查是否存在同名 skill
+- 未安装时提醒用户：上述能力将受限，可从 [mattpocock/skills](https://github.com/mattpocock/skills) 安装
+- 提醒后继续生成完整模板（外部 skill 可随时安装，不影响模板内容）
 
 ### 入库选择
 
@@ -81,9 +89,9 @@ AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 age
 
 | 层级 | 场景 | 做法 |
 |------|------|------|
-| L1 | 单文件改动、小 bug | 直接动手，不讨论 |
-| L2 | 目标明确但路径需确认 | 搜索 best practice → 简短沟通 → 执行 |
-| L3 | 多文件变更、新功能、架构调整、技术选型 | grill-me 收敛设计 → spec → 用户决定后续（执行 / 分解 task / 仅讨论） |
+| small | 单文件改动、小 bug | 直接动手，不讨论 |
+| medium | 目标明确但路径需确认 | grill-me 收敛设计 → spec → subtasks 边做边改 |
+| large | 多文件变更、新功能、架构调整、技术选型 | grill-me 收敛设计 → spec（含 ## Task N 段落）→ rime-sdd 编排执行 |
 
 ### Evidence First
 
@@ -102,10 +110,10 @@ AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 age
 
 ### Rime 对齐规则
 
-execution plan 必须与 tasks.json 保持同步：
-- writing-plans 阶段将 plan 步骤映射到 tasks.json（新增/拆分 subtask）
-- implementation plan 中每个步骤必须注明：完成后更新对应 subtask status
-- plan 开始前确认 task status 为 `doing`，全部完成后询问用户可否标记 `done`
+执行必须与 tasks.json 保持同步：
+- spec 定稿后将执行步骤映射到 tasks.json subtasks（新增/拆分）
+- 每完成一个 subtask 即更新其 status
+- 开始执行前确认 task status 为 `doing`，全部完成后询问用户可否标记 `done`
 - 执行中发现 task 需要调整（复杂度变化、需要拆分）时，立刻更新 tasks.json 再继续
 
 ## Git
@@ -114,7 +122,7 @@ execution plan 必须与 tasks.json 保持同步：
 
 ## 约束
 
-- 不使用 EnterPlanMode（复杂任务走 Superpowers）
+- 不使用 EnterPlanMode（复杂任务走 grill-me → spec → rime-sdd）
 ```
 
 ### 动态内容（按检测/交互结果生成）
@@ -157,7 +165,7 @@ execution plan 必须与 tasks.json 保持同步：
 
 - [prd](docs/myapp-prd.md) — 产品定位与功能规划
 - [techstack](docs/myapp-techstack.md) — 技术选型与项目结构
-- [design-context](docs/design-context.md) — 设计 token 与组件索引
+- [DESIGN.md](docs/DESIGN.md) — 设计系统（token + rationale，google-labs DESIGN.md 格式）
 ```
 
 ### CLAUDE.md（桥接文件，与 AGENTS.md 同目录）

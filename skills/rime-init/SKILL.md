@@ -1,6 +1,6 @@
 ---
 name: rime-init
-description: Use when initializing a new project or migrating an old project to the rime workflow. 项目初创 + 旧项目迁移：创建 .rime/ 数据层、docs/ 文档骨架、AGENTS.md，配置开发工具链。触发场景：初始化新项目、迁移旧格式项目。
+description: Use when initializing a new project or migrating an old project to the rime workflow. New-project scaffolding + legacy migration — create the .rime/ data layer, docs/ skeleton, and AGENTS.md, and configure the dev toolchain. Triggers: initializing a new project, migrating a legacy-format project.
 ---
 
 # 项目初创与迁移
@@ -28,7 +28,7 @@ description: Use when initializing a new project or migrating an old project to 
 
 流程：
 
-1. **前置检测**：检测 superpowers 是否安装，未安装则提醒（不阻断）
+1. **前置检测**：检测 rime 工作流依赖的外部 skill 是否安装，未安装则提醒（不阻断，详见 [reference/agents-md.md](reference/agents-md.md) 的前置检测）
 2. **入库选择**：询问用户（入库 = 团队共享；加入 `.gitignore` = 不公开）
 3. **可选交互**：一次展示语言设置（AI 沟通 / 代码注释 / UI 文案）+ 验证方式，用户逐一回答或跳过
 4. **技术栈 Skill 自动映射** `[开发]`：扫描 package.json + 配置文件，自动写入对应 skill 规则
@@ -80,9 +80,11 @@ description: Use when initializing a new project or migrating an old project to 
 | techstack | 技术选型、项目结构、阶段计划 | 推荐 |
 | interaction | 交互设计、页面状态、操作流程 | 中型以上 |
 | schema | 数据结构定义 | 中型以上 |
-| design-context | 设计 token・组件索引 | 有 UI 的项目 |
+| DESIGN.md | 设计系统（token + rationale，[google-labs/design.md](https://github.com/google-labs-code/design.md) 格式） | 有 UI 的项目 |
 
-文件命名 `{project}-{type}.md`。模板 → [reference/doc-templates.md](reference/doc-templates.md)
+文件命名 `{project}-{type}.md`。例外：`DESIGN.md` 采用 [google-labs/design.md](https://github.com/google-labs-code/design.md) 标准格式名，不加 project prefix。模板 → [reference/doc-templates.md](reference/doc-templates.md)（DESIGN.md 的模板与生成流程在 `rime-design` skill）
+
+> DESIGN.md 是团队共享的设计契约。若 `docs/` 默认进 `.gitignore`（见 A3），有团队协作时建议单独 `git add -f docs/DESIGN.md` 或将其移出忽略范围，否则协作者 clone 后拿不到设计系统。
 
 **PRD 优先**：先写 PRD 再动手。
 

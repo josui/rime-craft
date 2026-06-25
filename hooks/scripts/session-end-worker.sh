@@ -8,20 +8,48 @@ RIME_DIR="$1"
 TIMESTAMP="$2"
 TIMESTAMP_ISO="$3"
 TODAY="$4"
-PHASE="$5"
-WORK_DIR="$6"
+TRANSCRIPT="$5"
 
 LOG="$HOME/.rime-hook.log"
 log() { echo "[$(date +%H:%M:%S)] session-end[bg]: $*" >> "$LOG"; }
 
 command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
+[ -f "$TRANSCRIPT" ] || { log "exit: transcript missing: $TRANSCRIPT"; exit 0; }
 
-# 清理临时文件
-cleanup() { rm -rf "$WORK_DIR"; }
-trap cleanup EXIT
+PHASE=$(jq -r '.current // "unknown"' "$RIME_DIR/phase.json" 2>/dev/null || echo "unknown")
+mkdir -p "$RIME_DIR/anchors"
 
-FILTERED=$(cat "$WORK_DIR/filtered.txt")
-TASKS=$(cat "$WORK_DIR/tasks.json")
+write_minimal_anchor() {
+  jq -n --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{
+    schemaVersion: 1, timestamp: $ts, phase: $ph,
+    workedOn: [], subtasksCompleted: [], subtasksAdded: [],
+    decisions: [], nextSteps: [], cautions: []
+  }' > "$RIME_DIR/anchors/$TIMESTAMP.json"
+}
+
+# transcript 过滤（重活下放后台，避免前台被 hook 超时杀）
+FILTERED=$(jq -r '
+  if .type == "user" then
+    (.message.content // "" | if type == "array" then map(select(.type == "text") | .text) | join("\n") else . end) as $t |
+    if ($t | length) > 0 then "User: \($t)" else empty end
+  elif .type == "assistant" then
+    ([.message.content[]? | select(.type == "text") | .text] | join("\n")) as $t |
+    if ($t | length) > 0 then "Assistant: \($t)" else empty end
+  else
+    empty
+  end
+' "$TRANSCRIPT" 2>/dev/null || echo "")
+
+FILTERED_LINES=$(echo "$FILTERED" | grep -c '.' 2>/dev/null || echo "0")
+
+# 空对话 → minimal anchor，无需调 claude -p
+if [ -z "$FILTERED" ] || [ "$FILTERED_LINES" -lt 2 ]; then
+  log "minimal anchor: $RIME_DIR (filtered_lines=$FILTERED_LINES)"
+  write_minimal_anchor
+  exit 0
+fi
+
+TASKS=$(cat "$RIME_DIR/tasks.json")
 
 # 调用 claude -p
 PROMPT="你是一个 session 总结助手。分析以下对话内容，结合当前任务列表，提取关键信息。
@@ -61,11 +89,7 @@ RESULT=$(echo "$RAW" | sed -n '/^```/,/^```/{ /^```/d; p; }' 2>/dev/null)
 # 无效 JSON → 降级为 minimal anchor
 if [ -z "$RESULT" ] || ! echo "$RESULT" | jq . >/dev/null 2>&1; then
   log "fallback: invalid JSON: $(echo "$RAW" | head -1)"
-  jq -n --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{
-    schemaVersion: 1, timestamp: $ts, phase: $ph,
-    workedOn: [], subtasksCompleted: [], subtasksAdded: [],
-    decisions: [], nextSteps: [], cautions: []
-  }' > "$RIME_DIR/anchors/$TIMESTAMP.json"
+  write_minimal_anchor
   exit 0
 fi
 log "claude-p success"

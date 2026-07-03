@@ -6,7 +6,7 @@
 
 | 文件 | 写入方 | 读取方 |
 |------|--------|--------|
-| `tasks.json` | `/rime-backlog`（新增 item）、rime-flow / AI（状态流转、归档清理） | hooks（session-end 传给 worker）、dashboard、rime-flow |
+| `tasks.json` | `/rime-backlog`（别名 `/rime-task`，新增 item）、rime-flow / AI（状态流转、归档清理） | hooks（session-end 传给 worker）、dashboard、rime-flow |
 | `phase.json` | rime-init（创建）、rime-flow（phase 关闭 / 新 phase） | hooks（session-start/end 读 current）、dashboard、`/rime-backlog`（取 current） |
 | `cautions.json` | SessionEnd worker（自动追加）、手动 | rime-flow（开始 task 时匹配注入）、dashboard |
 | `anchors/{ts}.json` | session-end.sh（minimal）/ worker（完整） | session-start.sh（读最新一个注入上下文） |

@@ -12,8 +12,8 @@ description: Use when starting or executing a task from tasks.json, updating tas
 ## 任务生命周期
 
 ```
-用户定义功能 → tasks.json (status: todo)
-    ↓ 用户说「做 #xxx」「执行 #xxx」「grill #xxx」等
+用户定义功能 → /rime-backlog（别名 /rime-task）→ tasks.json (status: todo)
+    ↓ 用户说「做 #xxx」「执行 #xxx」「grill #xxx」等（没有对应 task 则先建 task，见下方步骤 0）
 tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
     ↓ 根据 difficulty 决定执行方式
     ├─ small  → 直接实现
@@ -64,6 +64,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 用户说「做 #0011」「执行任务 xxx」「grill #xxx」等表达时（包括开始 grill/设计阶段）：
 
+0. **没有对应 task 时先建 task**：若用户给的 ID 在 tasks.json 中不存在，或用户直接描述了一件尚未登记的工作（如「帮我做 XX 功能」），先走 `/rime-backlog`（别名 `/rime-task`）流程创建 task 拿到编号，再从第 1 步继续。所有进入执行流程的工作都必须先在 tasks.json 有对应 item
 1. 读取 `.rime/tasks.json`，找到对应 item
 2. 将 status 更新为 `doing`（grill/设计 即算开始，不必等到写代码）
 3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
@@ -104,7 +105,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 | 时机 | 更新内容 |
 |------|----------|
-| 发现改善点 / 新想法 | 用 `/rime-backlog` 添加到 tasks.json（status: todo） |
+| 发现改善点 / 新想法 | 用 `/rime-backlog`（别名 `/rime-task`）添加到 tasks.json（status: todo） |
 | 阶段完成，开始下一阶段 | 触发 Phase 关闭流程（见下方） |
 | 新增依赖 / 改技术选型 `[开发]` | 更新 techstack.md |
 | 交互行为变更 `[开发]` | 更新 interaction.md 对应章节 |

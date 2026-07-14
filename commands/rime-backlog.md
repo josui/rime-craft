@@ -46,13 +46,14 @@ description: Quickly add a backlog entry
    - `createdAt`: `YYYY-MM-DD` 格式
    - `phase`: 非空字符串
    - `dependsOn`（可选）：若存在，须为 task ID 数组，且已通过第 7、8 步的存在性 + 无环校验；为空时不写该 key
+   - `description`（可选）：若填写，须**多行书写**——背景/目标/约束/验收点用 `\n` 分行或分段，**不得挤成一行长文本**
 10. 追加 item（`dependsOn` 仅当非空时加入，无依赖则省略该 key）：
     ```json
     {
       "id": "#0001",
       "module": "模块名（有 segments 时推断，否则可选）",
       "title": "用户提供的内容",
-      "description": "",
+      "description": "背景：为什么要做\n目标：做成什么样\n验收：怎么算完成",
       "status": "todo",
       "phase": "从解析或 phase.json 获取",
       "priority": "判断结果",
@@ -62,5 +63,8 @@ description: Quickly add a backlog entry
       "subtasks": []
     }
     ```
+
+    ⚠ `description` 有内容时必须如上例**多行书写**（`\n` 分隔），一行长文本难以扫读、dashboard 渲染也差。
+
 11. `nextId` 自增
 12. 显示添加结果：编号、标题、module、difficulty（🟢/🟡/🔴）、phase

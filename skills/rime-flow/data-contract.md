@@ -66,6 +66,7 @@
 - `dependsOn` 写入前必须做 **DFS 检环**（含自依赖）：构成环则拒绝写入，`dependsOn` 图恒为 DAG
 - `dependsOn` 为空时**省略该 key**，不写 `"dependsOn": []`
 - 新增 item 后 `nextId` 自增
+- `description` 若填写须**多行书写**（`\n` 分隔背景/目标/约束/验收点，见上方字段表），不得挤成一行长文本
 
 ### 状态机
 

@@ -16,10 +16,12 @@ description: Use when starting or executing a task from tasks.json, updating tas
     ↓ 用户说「做 #xxx」「执行 #xxx」「grill #xxx」等（没有对应 task 则先建 task，见下方步骤 0）
 tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
     ↓ 根据 difficulty 决定执行方式
-    ├─ small  → 直接实现
-    ├─ medium → grill-me 收敛设计 → spec → 实施（subtasks 当活计划，边做边改）
+    ├─ trivial → 主线程直接实现（唯一例外，判据见 dispatch.md）
+    ├─ small  → 派 1 个 implementer subagent 一次完成（模型按 dispatch.md）
+    ├─ medium → grill-me 收敛设计 → spec → 按 subtasks 派发 implementer 实施（subtasks 当活计划，边做边改）
     └─ large  → grill-me → spec（含 ## Task N 段落）→ rime-sdd 编排执行（subagent per task + per-task review）
     ⚠ spec 锁设计意图；tasks.json subtasks 是自适应执行清单，发现偏离预期就直接增删
+    ⚠ 执行分配（subagent + model）规则见 dispatch.md：主线程只做调度，实现工作派 subagent 并显式指定模型档位
     ⚠ 产出 spec 文件后，将路径写入 task 的 docs 字段
     ↓ 完成后，用户确认 OK
 tasks.json (status: done, completedAt: 今天)
@@ -52,8 +54,10 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 
 ### 实施
 
+spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md](dispatch.md) 派发 subagent 并**显式指定 model**（fable/session 模型不下放）；medium 按 subtasks 逐段串行派发、主线程逐段审 diff；仅 **trivial** 改动主线程直接做。
+
 - spec 定稿后，把执行步骤映射到 tasks.json **subtasks，边做边更新**（不写重型 plan 文档）。subtasks 就是自适应的执行清单。
-- **large** 任务的 spec 应包含 `## Task N` 段落（每个 task 一段：需求、接口约束、验收标准），定稿后用 `rime-sdd` 编排执行——每 task 派 fresh implementer subagent + per-task spec/quality review gate + final whole-branch review。medium 任务直接按 subtasks 顺序实施。
+- **large** 任务的 spec 应包含 `## Task N` 段落（每个 task 一段：需求、接口约束、验收标准），定稿后用 `rime-sdd` 编排执行——每 task 派 fresh implementer subagent + per-task spec/quality review gate + final whole-branch review。medium 任务按 subtasks 顺序逐段派发实施。
 
 > **⚠ 文档落点（配置驱动）**
 > 落点由 **Claude Code `plansDirectory` 配置** 驱动：
@@ -70,7 +74,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
 4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
 5. **依赖软警告**（仅文字提示，用户自行决定）：读取 task 的 `dependsOn`，逐个查依赖 task 的 status，若有非 `done` 项，列出这些依赖（id + status），提示用户「以下依赖尚未完成，是否仍要现在开始？」。不阻止状态流转，用户自决
-6. 根据 difficulty 决定执行方式（见上方流程图）
+6. 根据 difficulty 决定执行方式（见上方流程图），执行分配规则见 [dispatch.md](dispatch.md)
 7. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
 8. **Branch 建议**（仅文字建议，用户自行决定）:
    - `small` → 不建议
@@ -171,6 +175,8 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 ## 数据层参考
 
 **`.rime/` 五类文件的字段、枚举、ID 格式、读写归属的权威定义：[data-contract.md](data-contract.md)。** 涉及字段细节时先读它。
+
+执行分配（subagent + model 档位）的权威定义：[dispatch.md](dispatch.md)。
 
 | 文件 | 职责 |
 |------|------|

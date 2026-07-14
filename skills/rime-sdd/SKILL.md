@@ -97,6 +97,8 @@ for conflicts that only emerge from implementation.
 
 ## Model Selection
 
+Tier alignment: cheap tier → haiku, standard tier → sonnet, most capable tier → opus; the session model (fable) stays with the controller and is never dispatched to subagents. The authoritative tier table lives in rime-flow's `dispatch.md`; when the two disagree, `dispatch.md` governs.
+
 Use the least powerful model that can handle each role to conserve cost and increase speed.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the spec is well-specified.

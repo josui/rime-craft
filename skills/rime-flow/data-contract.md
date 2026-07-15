@@ -58,7 +58,7 @@
 | branch | string | | doing 时用户确认后写入的关联分支名 |
 | commitFrom | string | | doing 时自动写入 HEAD hash（每次覆写），commit range 起点 |
 | commits | object | | done 时自动写入 `{ "from": "...", "to": "..." }` |
-| docs | array | | spec/plan 产出后写入 `[{ "type": "spec\|plan", "path": "相对路径" }]` |
+| docs | array | | spec/plan 等产出后写入 `[{ "type": "spec\|plan\|prototype\|reference\|blueprint", "path": "相对路径" }]` |
 
 ### 写入约束（所有写入路径必须遵守）
 
@@ -67,6 +67,7 @@
 - `dependsOn` 为空时**省略该 key**，不写 `"dependsOn": []`
 - 新增 item 后 `nextId` 自增
 - `description` 若填写须**多行书写**（`\n` 分隔背景/目标/约束/验收点，见上方字段表），不得挤成一行长文本
+- item **仅允许写入本文件字段表列出的字段**；需要新字段时必须先修订本契约（连同 schemaVersion 演进评估），消费方（dashboard/hooks）以字段表为白名单
 
 ### 状态机
 

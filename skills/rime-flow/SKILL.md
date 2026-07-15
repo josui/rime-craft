@@ -76,12 +76,13 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
 5. **依赖软警告**（仅文字提示，用户自行决定）：读取 task 的 `dependsOn`，逐个查依赖 task 的 status，若有非 `done` 项，列出这些依赖（id + status），提示用户「以下依赖尚未完成，是否仍要现在开始？」。不阻止状态流转，用户自决
 6. 根据 difficulty 决定执行方式（见上方流程图），执行分配规则见 [dispatch.md](dispatch.md)
 7. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
-8. **Branch 建议**（仅文字建议，用户自行决定）:
+8. **回填 docs**：grill/设计阶段产出的 spec/prototype/正式文档落盘后，立即写入 task 的 `docs` 字段（`[{type, path}]`，type 见 data-contract 枚举），不要等 task 完成时补
+9. **Branch 建议**（仅文字建议，用户自行决定）:
    - `small` → 不建议
    - `medium` → 可选建议："这个任务可以考虑新建分支 `feature/xxx`，也可以直接在当前分支开发"
    - `large` → 强烈建议："建议为这个任务创建独立分支 `feature/xxx`"
    - 命名格式: `feature/xxx` / `fix/xxx`，描述性，不含 task ID
-9. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
+10. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
 
 ### 完成 task
 

@@ -99,7 +99,7 @@ done <<< "$RIME_DIRS"
 
 # 4. tasks.json 同步提醒
 OUTPUT="$OUTPUT"$'\n'
-OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task 时将 status 更新为 doing；**每完成一个 subtask 立即将其 status 改为 done**（dashboard 依赖此数据，不要攒到最后）；task 完成时更新为 done 并写入 completedAt。"
+OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task（含 grill/设计阶段）→ status=doing 并覆写 commitFrom（git rev-parse HEAD）；**每完成一个 subtask 立即改 done**（dashboard 依赖，不要攒）；spec/prototype 等产出落盘 → 立即回填 docs:[{type,path}]；task 完成 → done + completedAt + commits{from,to}。只允许写 data-contract.md 字段表列出的字段，禁止发明新字段；拿不准先加载 rime-flow skill。"
 HAS_CONTENT=true
 
 # 5. 输出

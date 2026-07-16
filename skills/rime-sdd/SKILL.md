@@ -5,7 +5,7 @@ description: Use when executing a spec with independent `## Task N` sections via
 
 # Subagent-Driven Development
 
-> 本 skill 原文取自 [obra/superpowers](https://github.com/obra/superpowers) 的 `subagent-driven-development`（MIT License），移植时替换了全部 superpowers 依赖为 rime-flow + mattpocock skills（`tdd` / `review`），工作目录从 `.superpowers/sdd/` 改为 `.rime/sdd/`。
+> 本 skill 原文取自 [obra/superpowers](https://github.com/obra/superpowers) 的 `subagent-driven-development`（MIT License），移植时替换了全部 superpowers 依赖为 rime-flow + mattpocock skills（`tdd` / `review`），工作目录从 `.superpowers/sdd/` 改为 `.rime/sdd/<task-id>/`（按 rime task 编号分目录，多次 large 任务互不覆盖）。
 
 Execute a spec by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
@@ -42,6 +42,14 @@ digraph when_to_use {
 - Controller curates context, preserving own capacity for coordination
 
 ## The Process
+
+**Workspace:** at skill start, take the executing rime task's id from
+`.rime/tasks.json` (`#0042` → `0042`) and `export SDD_SLUG=0042` for the
+whole run. Every sdd script resolves its output directory through
+`scripts/sdd-workspace` to `.rime/sdd/<slug>/`, and the progress ledger
+lives there too — one directory per large task, so successive sdd runs in
+the same working tree never overwrite each other's briefs, reports, or
+ledger. The scripts fail loudly if the slug is missing.
 
 ```dot
 digraph process {
@@ -250,9 +258,11 @@ sequences — the single most expensive failure observed. Track progress in
 a ledger file, not only in todos.
 
 - At skill start, check for a ledger:
-  `cat "$(git rev-parse --show-toplevel)/.rime/sdd/progress.md"`. Tasks listed there
-  as complete are DONE — do not re-dispatch them; resume at the first task
-  not marked complete.
+  `cat "$(git rev-parse --show-toplevel)/.rime/sdd/$SDD_SLUG/progress.md"`.
+  Tasks listed there as complete are DONE — do not re-dispatch them; resume
+  at the first task not marked complete. The per-task-id directory means a
+  leftover ledger from a different large task can never masquerade as this
+  run's progress.
 - When a task's review comes back clean, append one line to the ledger in
   the same message as your other bookkeeping:
   `Task N: complete (commits <base7>..<head7>, review clean)`.

@@ -3,6 +3,13 @@
 # artifacts: task briefs, implementer reports, review packages, and the
 # progress ledger. Print the directory's absolute path.
 #
+# Artifacts are grouped per rime task (.rime/sdd/<slug>/) so successive
+# large-task runs in the same working tree never overwrite each other's
+# briefs, reports, or progress ledger. SLUG is the rime task id without
+# '#' (tasks.json "#0042" -> "0042"); a leading '#' is stripped if present.
+# Missing slug is a hard error rather than a silent fall-back to a shared
+# flat directory.
+#
 # The workspace lives in the working tree (not under .git/) because Claude Code
 # treats .git/ as a protected path and denies agent writes there — which blocks
 # an implementer subagent from writing its report file. A self-ignoring
@@ -12,11 +19,18 @@
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
 #
-# Usage: sdd-workspace
+# Usage: sdd-workspace [SLUG]   (falls back to $SDD_SLUG)
 set -euo pipefail
 
+slug="${1:-${SDD_SLUG:-}}"
+slug="${slug#\#}"
+if [ -z "$slug" ]; then
+  echo "sdd-workspace: missing slug — pass as arg or export SDD_SLUG (rime task id, e.g. 0042)" >&2
+  exit 2
+fi
+
 root=$(git rev-parse --show-toplevel)
-dir="$root/.rime/sdd"
-mkdir -p "$dir"
-printf '*\n' > "$dir/.gitignore"
-cd "$dir" && pwd
+base="$root/.rime/sdd"
+mkdir -p "$base/$slug"
+printf '*\n' > "$base/.gitignore"
+cd "$base/$slug" && pwd

@@ -48,7 +48,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 ### spec 格式
 
 - 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
-- 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。
+- 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。正文字体按 spec 语言指定：中文 `'Noto Sans CJK SC', system-ui`，日文 `'Noto Sans CJK JP', system-ui`，不要在前面叠拉丁 webfont（Jost 等），否则中日文粗细大小不一。
 - **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看。
 - **验证记录区**：task 完成、用户验证通过后，在 spec 末尾追加 `## 验证记录`（验证清单逐条 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
 

@@ -336,10 +336,6 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
-  .tk:active {
-    transform: scale(0.98);
-  }
-
   .col[data-status="todo"] .tk,
   .col[data-status="done"] .tk { cursor: pointer; }
 
@@ -1076,6 +1072,10 @@ function renderTasks() {
   const g = { todo: [], doing: [], done: [] };
   f.forEach(t => { const s = t.status || 'todo'; if (g[s]) g[s].push(t); });
   g.todo = sortTodo(g.todo);
+  // doing: 新任务在上。契约无 startedAt（白名单明确拦截），用 createdAt 倒序近似，同日期按 id 倒序
+  g.doing.sort((a, b) =>
+    (b.createdAt || '').localeCompare(a.createdAt || '') ||
+    (b.id || '').localeCompare(a.id || ''));
   g.done.sort((a, b) => (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || ''));
 
   document.getElementById('cnt-tasks').textContent = f.length;

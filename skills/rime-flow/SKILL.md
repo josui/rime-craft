@@ -50,7 +50,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 - 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。正文字体按 spec 语言指定：中文 `'Noto Sans CJK SC', system-ui`，日文 `'Noto Sans CJK JP', system-ui`，不要在前面叠拉丁 webfont（Jost 等），否则中日文粗细大小不一。
 - **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看。
-- **验证记录区**：task 完成、用户验证通过后，在 spec 末尾追加 `## 验证记录`（验证清单逐条 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
+- **验证记录区**：task 完成、**向用户呈现验证清单的同时**就在 spec 末尾追加 `## 验证记录`（清单逐条落盘，待验证态 `- [ ]`），防止对话丢失后验证点找不回；用户验证反馈后回填结果（通过项打勾 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
 
 ### 实施
 
@@ -90,9 +90,10 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
    - 基于 task 的 title + description + 本次 commit diff 即时生成；有 spec 时对照 spec 的设计意图，把验收点翻译成用户当下能跑/能点的**具体步骤**
    - 给出**可操作**的步骤（跑哪条命令、开哪个页面点哪里、看到什么算通过），不是泛泛的「检查一下」
    - 呈现格式:「你可以这样验证: ① …  ② …  ③ …」
+   - **有 spec（medium / large）→ 呈现的同时就写入 spec**：在 spec 末尾追加 `## 验证记录` 区，清单逐条落盘、标记为待验证（如 `- [ ]`）。对话窗口随时可能丢，验证点不能只活在对话里
 2. **用户实际验证**——等用户跑完反馈，不替用户判定通过
-3. 验证通过后，**沉淀验证记录**:
-   - **有 spec（medium / large）** → 在 spec 文件末尾追加 `## 验证记录` 区（验证清单逐条 + 通过日期）；spec 由此闭环:开头是设计意图，结尾是验证证据
+3. 用户反馈结果后，**回填验证记录**:
+   - **有 spec（medium / large）** → 更新 spec `## 验证记录` 区已落盘的清单：通过项打勾 + 通过日期，未通过项记录问题与后续处理；spec 由此闭环:开头是设计意图，结尾是验证证据
    - **无 spec（small）** → 仅对话呈现，不落盘（small 本就轻量，口头闭环即可）
    - ⚠ 验证内容**不写入 tasks.json**——tasks.json 是状态机，验证属意图层，只活在 spec 与对话里
 4. **收集 commit range**（标记 done 之前）:

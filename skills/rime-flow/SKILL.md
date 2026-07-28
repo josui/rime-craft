@@ -104,6 +104,12 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
    - 多个 task 同时 doing 时，各自范围可能重叠，属预期行为
 5. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
 6. 如有 subtasks，确认全部完成
+7. **增量 cautions GC**：读取 `.rime/cautions.json`，只筛出该 task 进行期间新增的条目（`createdAt` ≥ task 进入 doing 的日期；doing 日期用 `git show -s --format=%cs <commitFrom>` 取得，无 `commitFrom` 则以 task 的 `createdAt` 近似。通常只有几条），逐条判定，**不做全量扫描**：
+   - **DROP**（直接删除），满足任一：一次性事故经过（某次语法错误、某次 commit 失误、某次分支搞错）；session 状态汇报（「XX 未更新」「XX 待确认」「XX 与本次无关」）；项目数值/决策记录（金额、时长、尺寸等——属 anchor 的 decisions，不属 cautions）；人尽皆知的常识（缓存要刷新、warning 不影响功能）
+   - **MERGE**：与已有条目讲同一教训 → 删新留旧；新条目信息更完整时把补充信息并入旧条目的 `summary`
+   - **KEEP**：可复用的技术教训——换个项目、换个时间还会踩的坑（浏览器兼容性、CSS/Canvas/API 行为、数据丢失教训、安全问题等）
+   - 判定基准一句话：「三个月后在另一个项目遇到同类场景，这条还有用吗？」有用才留
+   - 删除/合并直接改 cautions.json，**保留原有 id 不重排**；操作完成后向用户一句话汇报（删了几条、留了几条），改动随本次 task 完成的其他修改一起提交
 
 ---
 

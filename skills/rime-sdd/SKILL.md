@@ -338,7 +338,7 @@ Task reviewer: Spec ✅. Task quality: Approved.
 [Dispatch final whole-branch review via mattpocock: review]
 Final reviewer: Standards ✅, Spec ✅ — all requirements met, ready to merge
 
-[Return to rime-flow: complete task flow — verification checklist (呈现同时落盘 spec 验证记录) → user verify → 回填验证结果 → commit range → status: done]
+[Return to rime-flow: complete task flow — 收尾提交 → verification checklist (先落盘 spec 验证记录，再呈现) → user verify → 回填验证结果 → commit gate → done + completedAt + commits 同笔写入]
 Done!
 ```
 
@@ -417,5 +417,5 @@ Done!
 - **`review`**（mattpocock）— final whole-branch review（两轴并行 sub-agent：Standards + Spec）
 
 **下游（rime-flow 接管）：**
-- 所有 task 完成后，回到 rime-flow 的「完成 task」流程（验证清单呈现同时落盘 spec 验证记录 → 用户验证 → 回填验证结果 → commit range → status: done）
+- 所有 task 完成后，回到 rime-flow 的「完成 task」流程（收尾提交 → 验证清单先落盘 spec 验证记录再呈现 → 用户验证 → 回填验证结果 → commit gate → done + completedAt + commits 同笔写入）
 - 提交使用 `/rime-git`

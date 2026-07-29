@@ -11,7 +11,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | Name | Description |
 | ---- | ----------- |
 | [rime-init](skills/rime-init/) | Project bootstrapping and legacy migration (scaffolding / toolchain setup) |
-| [rime-flow](skills/rime-flow/) | Day-to-day lifecycle management (task status transitions / phase management / subagent + model dispatch) |
+| [rime-flow](skills/rime-flow/) | Day-to-day lifecycle management (commit-gated task status flow / spec verification loop / phase management / subagent + model dispatch) |
 | [rime-sdd](skills/rime-sdd/) | Subagent orchestration for large tasks (per-task review gate + final whole-branch review) |
 | [rime-css](skills/rime-css/) | CSS architecture methodology (CUBE CSS / BEM / Tailwind) |
 | [rime-design](skills/rime-design/) | UI design quality enforcement + external design skill routing |

@@ -113,7 +113,9 @@ AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 age
 执行必须与 tasks.json 保持同步：
 - spec 定稿后将执行步骤映射到 tasks.json subtasks（新增/拆分）
 - 每完成一个 subtask 即更新其 status
-- 开始执行前确认 task status 为 `doing`，全部完成后询问用户可否标记 `done`
+- 开始执行前确认 task status 为 `doing`
+- 验证清单先写入 spec 的 `## 验证记录` 区、再向用户呈现（medium / large）
+- 标 `done` 前过 commit gate：本 task 改动全部提交且有新 commit（HEAD ≠ commitFrom，非 git 项目豁免）；`completedAt` / `commits` 与 status 同笔写入；done 后不回填，返工新建 task
 - 执行中发现 task 需要调整（复杂度变化、需要拆分）时，立刻更新 tasks.json 再继续
 
 ## Git

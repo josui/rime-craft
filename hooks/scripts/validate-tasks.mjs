@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // PostToolUse hook（matcher: Edit|Write，目标 /.rime/tasks.json）
 // 机械校验 tasks.json 是否符合 data-contract.md：字段白名单、必填与格式、
-// 状态一致性、dependsOn 引用与检环、docs[].type 枚举。
+// 状态一致性、commit gate（有 commitFrom 的 done 须有 commits 且 from ≠ to）、dependsOn 引用与检环、docs[].type 枚举。
 // 只反馈不修改文件——错误经 decision:"block" 回注给模型自纠，警告经 additionalContext 提示。
 
 import { readFileSync, appendFileSync } from "node:fs";
@@ -78,12 +78,33 @@ function validate(data) {
       }
     }
 
-    // 状态一致性（契约要求但可事后补，降级为警告）
+    // 状态一致性
     if (item.status === "doing" && !item.commitFrom) {
       warnings.push(`${label}: status=doing 但缺 commitFrom（契约要求转 doing 时写入 git rev-parse HEAD）`);
     }
-    if (item.status === "done" && !item.completedAt) {
-      warnings.push(`${label}: status=done 但缺 completedAt`);
+
+    // commit gate：completedAt / commits 与 status=done 同笔写入
+    if (item.status === "done") {
+      if (!item.completedAt) {
+        errors.push(`${label}: status=done 但缺 completedAt（须与 status 同笔写入）`);
+      }
+      if (item.commitFrom && !item.commits) {
+        errors.push(`${label}: status=done 且有 commitFrom 但缺 commits（commit gate）`);
+      }
+    } else {
+      for (const key of ["completedAt", "commits"]) {
+        if (item[key] !== undefined) {
+          errors.push(`${label}: status=${item.status} 不应有 ${key}（仅 done 时与 status 同笔写入）`);
+        }
+      }
+    }
+    if (item.commits !== undefined) {
+      const c = item.commits;
+      if (!c || typeof c !== "object" || Array.isArray(c) || typeof c.from !== "string" || typeof c.to !== "string") {
+        errors.push(`${label}: commits 应为 { "from": "...", "to": "..." }`);
+      } else if (c.from === c.to) {
+        errors.push(`${label}: commits.from === commits.to（零 commit 不得标 done）`);
+      }
     }
 
     // dependsOn 引用存在性
@@ -196,6 +217,7 @@ function emit(errors, warnings) {
   if (errors.length) {
     const reason =
       `tasks.json 违反 data-contract.md（写入已发生，请立即修正文件）：\n${lines.join("\n")}\n` +
+      `存量 done 条目按真实 git 历史补齐 commits / completedAt——属数据修复，不受 done 终态限制。\n` +
       `字段契约见 rime-craft plugin 的 skills/rime-flow/data-contract.md；拿不准先加载 rime-flow skill。`;
     process.stdout.write(JSON.stringify({ decision: "block", reason }) + "\n");
   } else {

@@ -23,7 +23,7 @@ tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
     ⚠ spec 锁设计意图；tasks.json subtasks 是自适应执行清单，发现偏离预期就直接增删
     ⚠ 执行分配（subagent + model）规则见 dispatch.md：主线程只做调度，实现工作派 subagent 并显式指定模型档位
     ⚠ 产出 spec 文件后，将路径写入 task 的 docs 字段
-    ↓ 完成后，用户确认 OK
+    ↓ 完成后，用户确认 OK 且改动已 commit（零 commit 不得标 done）
 tasks.json (status: done, completedAt: 今天)
     ↓ Phase 关闭时
 archives/tasks.P{n}.json 归档 → archive.md 叙事总结 → tasks.json 移除已归档 items
@@ -50,7 +50,7 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 - 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
 - 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。正文字体按 spec 语言指定：中文 `'Noto Sans CJK SC', system-ui`，日文 `'Noto Sans CJK JP', system-ui`，不要在前面叠拉丁 webfont（Jost 等），否则中日文粗细大小不一。
 - **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看。
-- **验证记录区**：task 完成、**向用户呈现验证清单的同时**就在 spec 末尾追加 `## 验证记录`（清单逐条落盘，待验证态 `- [ ]`），防止对话丢失后验证点找不回；用户验证反馈后回填结果（通过项打勾 + 通过日期）。spec 由此闭环——开头是设计意图与放弃的方案，结尾是「做对了」的证据。验证内容只落 spec，不写 tasks.json。
+- **验证记录区**：task 完成时**先**在 spec 末尾追加 `## 验证记录`（清单逐条落盘，待验证态 `- [ ]`），**再**向用户呈现验证清单并附 spec 路径；用户验证反馈后回填结果（通过项打勾 + 通过日期）。spec 闭环——开头是设计意图与放弃的方案，结尾是验证证据。验证内容只落 spec，不写 tasks.json。
 
 ### 实施
 
@@ -86,30 +86,24 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
 
 ### 完成 task
 
-1. 实施完成后，**生成并呈现验证清单**（让用户自己确认做对了，而非 AI 自说做完）:
-   - 基于 task 的 title + description + 本次 commit diff 即时生成；有 spec 时对照 spec 的设计意图，把验收点翻译成用户当下能跑/能点的**具体步骤**
-   - 给出**可操作**的步骤（跑哪条命令、开哪个页面点哪里、看到什么算通过），不是泛泛的「检查一下」
-   - 呈现格式:「你可以这样验证: ① …  ② …  ③ …」
-   - **有 spec（medium / large）→ 呈现的同时就写入 spec**：在 spec 末尾追加 `## 验证记录` 区，清单逐条落盘、标记为待验证（如 `- [ ]`）。对话窗口随时可能丢，验证点不能只活在对话里
-2. **用户实际验证**——等用户跑完反馈，不替用户判定通过
-3. 用户反馈结果后，**回填验证记录**:
-   - **有 spec（medium / large）** → 更新 spec `## 验证记录` 区已落盘的清单：通过项打勾 + 通过日期，未通过项记录问题与后续处理；spec 由此闭环:开头是设计意图，结尾是验证证据
-   - **无 spec（small）** → 仅对话呈现，不落盘（small 本就轻量，口头闭环即可）
-   - ⚠ 验证内容**不写入 tasks.json**——tasks.json 是状态机，验证属意图层，只活在 spec 与对话里
-4. **收集 commit range**（标记 done 之前）:
-   - 检查 task 是否有 `commitFrom`，为空则跳过
-   - 获取当前 `git rev-parse HEAD` 作为 `commitTo`
-   - 若 `commitFrom` === `commitTo`（零 commit），跳过写入
-   - 否则写入 `commits: { "from": "<commitFrom>", "to": "<HEAD>" }`
-   - 多个 task 同时 doing 时，各自范围可能重叠，属预期行为
-5. 用户确认 OK 后，将 status 更新为 `done`，写入 `completedAt`
-6. 如有 subtasks，确认全部完成
-7. **增量 cautions GC**：读取 `.rime/cautions.json`，只筛出该 task 进行期间新增的条目（`createdAt` ≥ task 进入 doing 的日期；doing 日期用 `git show -s --format=%cs <commitFrom>` 取得，无 `commitFrom` 则以 task 的 `createdAt` 近似。通常只有几条），逐条判定，**不做全量扫描**：
+1. **增量 cautions GC**：读取 `.rime/cautions.json`，筛出上一轮 GC 后新增的条目——`createdAt` ≥ active 区上一个 done task 的 `completedAt`；无则用本 task 进入 doing 的日期（`git show -s --format=%cs <commitFrom>`，无 `commitFrom` 以 task 的 `createdAt` 代替）。边界含当天，宁宽勿漏，重复审到的条目维持原判。逐条判定，**不做全量扫描**：
    - **DROP**（直接删除），满足任一：一次性事故经过（某次语法错误、某次 commit 失误、某次分支搞错）；session 状态汇报（「XX 未更新」「XX 待确认」「XX 与本次无关」）；项目数值/决策记录（金额、时长、尺寸等——属 anchor 的 decisions，不属 cautions）；人尽皆知的常识（缓存要刷新、warning 不影响功能）
    - **MERGE**：与已有条目讲同一教训 → 删新留旧；新条目信息更完整时把补充信息并入旧条目的 `summary`
    - **KEEP**：可复用的技术教训——换个项目、换个时间还会踩的坑（浏览器兼容性、CSS/Canvas/API 行为、数据丢失教训、安全问题等）
    - 判定基准一句话：「三个月后在另一个项目遇到同类场景，这条还有用吗？」有用才留
-   - 删除/合并直接改 cautions.json，**保留原有 id 不重排**；操作完成后向用户一句话汇报（删了几条、留了几条），改动随本次 task 完成的其他修改一起提交
+   - 直接修改 cautions.json，落盘即生效，**保留原有 id 不重排**；完成后向用户一句话汇报（删了几条、留了几条）
+2. 如有 subtasks，确认全部完成
+3. **收尾提交**：本 task 的全部改动提交完毕（走 `/rime-git`）；验证期间的修复照常追加提交
+4. **生成验证清单——先落盘，后呈现**：基于 task 的 title + description + `commitFrom..HEAD` 的 diff 生成**可操作**步骤（跑哪条命令、开哪个页面点哪里、看到什么算通过）；有 spec 时对照 spec 的设计意图，把验收点翻译成用户当下能跑/能点的具体步骤
+   - **有 spec（medium / large）**：先在 spec 末尾追加 `## 验证记录` 区（清单逐条落盘，待验证态 `- [ ]`），再向用户呈现，呈现时附 spec 路径。spec 未落盘不得请用户开始验证
+   - **无 spec（small）**：仅对话呈现，格式「你可以这样验证: ① …  ② …  ③ …」
+5. **用户实际验证**——等用户跑完反馈，不替用户判定通过
+6. **回填验证记录**：有 spec → 更新 `## 验证记录`：通过项打勾 + 通过日期，未通过项记录问题与后续处理；无 spec → 口头闭环。验证内容**不写入 tasks.json**
+7. **Commit gate → 标 done（一笔写入）**：
+   - **Gate**（非 git 项目豁免：`git rev-parse --git-dir` 失败 → 跳过检查直接进标 done）：本 task 的改动已全部提交（其他并行 doing task 的未提交改动不计）；`git rev-parse HEAD` ≠ `commitFrom`。任一不满足 → **不得标 done**，回第 3 步补提交。git 项目缺 `commitFrom` → 与用户确认起点 commit、补写 `commitFrom` 后再过 gate
+   - **标 done**：用户确认 OK 后，在**同一次写入**中完成 `status: done` + `completedAt` + `commits: { "from": "<commitFrom>", "to": "<HEAD>" }`（非 git 项目省略 commits）
+   - **done 为终态**：此后不再写该 task 的任何字段，例外仅两种——phase 关闭时的归档移除、validator 报错的数据修复；done 后发现问题 → 新建 task 处理，不回退状态
+   - 多个 task 并行 doing 时，各自 commit range 可能重叠，属预期行为
 
 ---
 

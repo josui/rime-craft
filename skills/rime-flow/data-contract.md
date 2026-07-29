@@ -57,7 +57,7 @@
 | dependsOn | array | | 依赖的 task ID 列表，构成 DAG，详见下方 |
 | branch | string | | doing 时用户确认后写入的关联分支名 |
 | commitFrom | string | | doing 时自动写入 HEAD hash（每次覆写），commit range 起点 |
-| commits | object | | done 时自动写入 `{ "from": "...", "to": "..." }` |
+| commits | object | | 标 done 时与 status **同笔写入** `{ "from": "...", "to": "..." }`（from ≠ to）；非 git 项目省略 |
 | docs | array | | spec/plan 等产出后写入 `[{ "type": "spec\|plan\|prototype\|reference\|blueprint", "path": "相对路径" }]` |
 
 ### 写入约束（所有写入路径必须遵守）
@@ -68,10 +68,12 @@
 - 新增 item 后 `nextId` 自增
 - `description` 若填写须**多行书写**（`\n` 分隔背景/目标/约束/验收点，见上方字段表），不得挤成一行长文本
 - item **仅允许写入本文件字段表列出的字段**；需要新字段时必须先修订本契约（连同 schemaVersion 演进评估），消费方（dashboard/hooks）以字段表为白名单
+- **commit gate**：status 改为 `done` 前必须满足——非 git 项目（`git rev-parse --git-dir` 失败）豁免；否则本 task 改动已全部提交（并行 doing task 的未提交改动不计）且 HEAD ≠ commitFrom；`completedAt`、`commits` 与 status **同笔写入**
+- **done 终态**：标 done 后不再写该 item 的任何字段，例外仅两种——phase 关闭时的归档移除、修复 validator 报错的数据修复；done 后发现问题新建 task 处理，不回退状态
 
 ### 状态机
 
-`todo → doing → done`。doing 自进入设计/grill 阶段起算；done 需用户确认。phase 关闭时该 phase 的 done items 被回收进 archives/。
+`todo → doing → done`。doing 自进入设计/grill 阶段起算；done 需用户确认且过 **commit gate**（见写入约束）。done 为终态：返工新建 task，不回退状态。phase 关闭时该 phase 的 done items 被回收进 archives/。
 
 ### dependsOn 语义
 
@@ -146,7 +148,7 @@ session 记录，每次 SessionEnd 自动生成。**gitignore，不入库**；ph
 | timestamp | string | ISO 8601 含时区 |
 | phase | string | 写入时 phase.json 的 `current` |
 | workedOn | array | 涉及的 task ID（仅 tasks.json 中已存在的） |
-| subtasksCompleted | array | 本次完成的工作。**驱动保守对账**：仅限 workedOn 中的 task，条目与 subtask title 精确相等或互为子串时，worker 自动将该 subtask 翻 done（只翻不回翻）；不匹配的条目仅作记录 |
+| subtasksCompleted | array | 本次完成的工作。**驱动保守对账**：仅限 workedOn 中 **status=doing** 的 task，条目与 subtask title 精确相等或互为子串时，worker 自动将该 subtask 翻 done（只翻不回翻）；不匹配的条目仅作记录 |
 | subtasksAdded | array | 发现的新子任务（自由描述，仅作记录） |
 | decisions | array | 关键决策 |
 | nextSteps | array | 下一步 |
@@ -172,3 +174,4 @@ phase 关闭时写入的**不可变快照**，写入后不随其他文件变更�
 - `items` 保留完整 task 对象（所有字段原样）
 - `phase` / `name` / `completedAt` 从 phase.json 取值
 - dashboard 通过 `/archives/{phaseId}` 路由按需读取
+- 归档快照不参与机械校验（validate-tasks.mjs 只覆盖 `tasks.json`）

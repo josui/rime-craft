@@ -48,6 +48,15 @@ task 执行分配（subagent + model）的唯一权威规则。rime-flow / rime-
 
 ---
 
+## 提交责任
+
+| difficulty | 提交方 |
+|------|------|
+| trivial / small / medium | implementer 不 commit；主线程审 diff 通过后统一收尾提交（`/rime-git`） |
+| large | rime-sdd 编排内 implementer 每 task 自行 commit |
+
+---
+
 ## 模型档位
 
 | 档位 | 模型 | 适用场景 |

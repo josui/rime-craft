@@ -106,7 +106,7 @@ if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'l
   if jq --argjson worked "$WORKED" --argjson completed "$COMPLETED" '
     if (.items | type) == "array" then
       .items |= map(
-        if ((.id as $id | $worked | index($id)) != null) and ((.subtasks | type) == "array") then
+        if ((.id as $id | $worked | index($id)) != null) and (.status == "doing") and ((.subtasks | type) == "array") then
           .subtasks |= map(
             if .status != "done" and (.title as $t |
               $completed | any(. as $c | ($c | length) > 0 and
@@ -117,8 +117,15 @@ if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'l
     else . end
   ' "$RIME_DIR/tasks.json" > "$TMP2" 2>/dev/null; then
     if ! cmp -s "$TMP2" "$RIME_DIR/tasks.json"; then
-      mv "$TMP2" "$RIME_DIR/tasks.json"
-      log "subtask reconcile: tasks.json updated"
+      OLD_N=$(jq '.items | length' "$RIME_DIR/tasks.json" 2>/dev/null)
+      NEW_N=$(jq '.items | length' "$TMP2" 2>/dev/null)
+      if [ -n "$OLD_N" ] && [ "$NEW_N" = "$OLD_N" ]; then
+        mv "$TMP2" "$RIME_DIR/tasks.json"
+        log "subtask reconcile: tasks.json updated"
+      else
+        rm -f "$TMP2"
+        log "subtask reconcile: item count mismatch, skipped"
+      fi
     else
       rm -f "$TMP2"
     fi

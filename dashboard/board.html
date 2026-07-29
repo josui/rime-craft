@@ -1161,7 +1161,7 @@ async function showArchive(phaseId) {
         <span class="tk-id">${t.id}</span>
         <span class="arc-title">${esc(t.title)}</span>
         ${t.branch ? `<span class="git-b branch">${t.branch}</span>` : ''}
-        ${t.commits ? `<span class="git-b commits">${t.commits.from.slice(0,7)}→${t.commits.to.slice(0,7)}</span>` : ''}
+        ${t.commits?.from && t.commits?.to ? `<span class="git-b commits">${t.commits.from.slice(0,7)}→${t.commits.to.slice(0,7)}</span>` : ''}
         ${t.completedAt ? `<span class="arc-date">${t.completedAt}</span>` : ''}
       </div>
     `).join('');
@@ -1221,7 +1221,7 @@ function renderDwContent(t) {
     ? `<div class="sec-label">Git</div>
        <div class="tk-git">
          ${t.branch ? `<span class="git-b branch">${t.branch}</span>` : ''}
-         ${t.commits ? `<span class="git-b commits">${t.commits.from.slice(0,7)} → ${t.commits.to.slice(0,7)}</span>` : ''}
+         ${t.commits?.from && t.commits?.to ? `<span class="git-b commits">${t.commits.from.slice(0,7)} → ${t.commits.to.slice(0,7)}</span>` : ''}
        </div>` : '';
 
   // Dependencies: forward dependsOn (→) + reverse blockedBy (←, live-computed).

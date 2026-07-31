@@ -166,7 +166,8 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
 
 ### docs/ 目录规则
 
-- `.rime/` 和 `docs/` 默认不入库（用户可覆盖，两者入库策略应一致）
+- `.rime/` **一律不入库**——硬要求，不由用户覆盖（入库会导致合并冲突与**切分支时状态无声漂移**，详见 [data-contract.md](data-contract.md)「存储位置与解析顺序」）
+- `docs/` 默认不入库；其策略与 `.rime/` **无关**，独立决定（`.rime/` 是可变状态，`docs/` 是文档产物）
 - 根目录放核心文档（prd, archive, techstack 等）
 - 子目录名用**复数形式**（specs, plans, researches, designs）
 - `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/specs/`**（plan 目录 `docs/plans/` 如需）

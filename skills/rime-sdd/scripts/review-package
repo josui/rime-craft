@@ -5,7 +5,9 @@
 # tasks intact.
 #
 # Usage: review-package BASE HEAD [OUTFILE]
-# Default OUTFILE: <repo-root>/.rime/sdd/$SDD_SLUG/review-<base7>..<head7>.diff
+# Default OUTFILE: <resolved .rime>/sdd/$SDD_SLUG/review-<base7>..<head7>.diff
+# (.rime location resolved by sdd-workspace — in a linked worktree this is the
+# main checkout's .rime/, not the worktree's)
 # (per rime task — export SDD_SLUG first, see sdd-workspace; named per
 # range, so a re-review after fixes gets a distinct fresh file).
 set -euo pipefail

@@ -10,11 +10,23 @@
 # Missing slug is a hard error rather than a silent fall-back to a shared
 # flat directory.
 #
-# The workspace lives in the working tree (not under .git/) because Claude Code
-# treats .git/ as a protected path and denies agent writes there — which blocks
-# an implementer subagent from writing its report file. A self-ignoring
-# .gitignore keeps the workspace out of `git status` and out of accidental
-# commits without modifying any tracked file.
+# The workspace hangs off the authoritative .rime/ directory, resolved through
+# the shared resolver in hooks/scripts/rime-utils.sh (order defined in
+# skills/rime-flow/data-contract.md). Resolving rather than using
+# `git rev-parse --show-toplevel` matters in a linked worktree: toplevel points
+# at the worktree, so artifacts would land in a *second*, empty .rime/ there —
+# and that stray directory would then be picked up by the resolver on a later
+# session, silently shadowing the real data.
+#
+# It deliberately stays in the working tree rather than under .git/. Note that
+# .git/ IS writable by agents (verified 2026-07-30 with Write and Edit under
+# permission mode acceptEdits; an earlier comment here claimed otherwise and was
+# wrong). The real reason is visibility: editors hide .git/, and these artifacts
+# — task briefs, implementer reports, review packages — are meant to be opened
+# and read by a human.
+#
+# A self-ignoring .gitignore keeps the workspace out of `git status` and out of
+# accidental commits without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so task-brief and
 # review-package cannot drift to different directories.
@@ -29,8 +41,14 @@ if [ -z "$slug" ]; then
   exit 2
 fi
 
-root=$(git rev-parse --show-toplevel)
-base="$root/.rime/sdd"
+. "$(cd "$(dirname "$0")/../../.." && pwd)/hooks/scripts/rime-utils.sh"
+
+rime_dir=$(find_rime_dirs "$PWD" | head -1 || true)
+if [ -z "$rime_dir" ]; then
+  # rime 未初始化のリポジトリ：解析後の base 直下に作る（worktree なら主検出側）
+  rime_dir="$(rime_resolve_base "$PWD")/.rime"
+fi
+base="$rime_dir/sdd"
 mkdir -p "$base/$slug"
 printf '*\n' > "$base/.gitignore"
 cd "$base/$slug" && pwd

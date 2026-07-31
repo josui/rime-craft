@@ -12,6 +12,70 @@
 | `anchors/{ts}.json` | session-end.sh（minimal）/ worker（完整） | session-start.sh（读最新一个注入上下文） |
 | `archives/tasks.P{n}.json` | rime-flow（phase 关闭时写入，此后不可变） | dashboard（`/archives/{phaseId}` 路由） |
 
+## 存储位置与解析顺序
+
+`.rime/` 位于**项目根目录**，且**一律不入库**。位置与解析规则属于契约的一部分，所有组件（hooks / dashboard / rime-sdd / AI）必须走同一顺序。
+
+### 不入库是硬要求
+
+`.rime/` 是项目全局的可变状态。一旦被 git 跟踪就会产生三个症状，其中第三个完全无声：
+
+| 症状 | 成因 |
+|------|------|
+| 合并时 `.rime/*.json` 冲突 | 状态文件没有语义上正确的冲突解法 |
+| **切分支时内容跟着变** | 在 feature 分支标 done，切回 main 又变回 doing——**无任何提示** |
+| worktree 拿到陈旧快照 | 分支切出时的旧提交版本 |
+
+因此 `.gitignore` 必须包含 `.rime/` 条目。这不是建议，也不由用户覆盖。gitignored 的文件不受 `checkout` 影响、不参与 `merge`，上表三症状随之全部消失。
+
+> `docs/` 的入库策略与 `.rime/` **无关**，各自独立决定：`.rime/` 是可变状态，`docs/`（spec / prd）是文档产物。
+
+### 解析顺序
+
+```
+1. $RIME_DIR 环境变量且为已存在目录  → 用它（显式覆盖，CI / 特殊场景）
+2. base = cwd 映射到主检出的等价路径（见下）
+3. <base>/.rime 存在                 → 用它
+4. 否则在 <base> 下向下搜索          → monorepo，maxdepth 4，
+                                        排除 node_modules / .git / dist / .worktrees / vendor
+```
+
+**cwd → 主检出等价路径映射**（步骤 2）：
+
+- 用 `git rev-parse --path-format=absolute --git-dir` 与 `--git-common-dir` 比较，两者不等即处于 **linked worktree**
+- 是 worktree → `base = dirname(git-common-dir) + (cwd 相对 worktree 根的相对路径)`
+- 否则 → `base = cwd`
+
+要点：
+
+- `--path-format=absolute` **必须加**：`--git-dir` 在仓库根返回相对路径 `.git`，不归一化则无法与 `--git-common-dir` 可靠比较（需 git ≥ 2.31）
+- `--git-common-dir` 跨所有 worktree 解析到同一绝对路径，完全不受 checkout 影响
+- **保留 cwd 的相对部分**，不可直接返回主检出根——否则破坏 monorepo：在 `<wt>/apps/foo` 工作时应解析到 `<main>/apps/foo/.rime`，而不是把所有子项目的 `.rime/` 都返回
+- 主检出场景下 `base == cwd`，行为与映射引入前**完全一致**
+- bare repo + worktree 布局下 `dirname(git-common-dir)` 只是 bare 仓库的父目录，不是主检出——须检查其下存在 `.git` 方可映射，否则回落 `cwd`
+
+### 实现归属
+
+| 实现 | 位置 | 消费者 |
+|------|------|--------|
+| shell | `hooks/scripts/rime-utils.sh` 的 `rime_resolve_base` / `find_rime_dirs` | 4 个 hook 脚本、rime-sdd 的 `sdd-workspace` |
+| JS | `dashboard/server.mjs` 的 `resolveBase` | dashboard |
+
+两份实现必须保持等价——一旦漂移，hooks 与 dashboard 会看到不同的数据。`rime_matches_changes` / `rime_label` 的路径前缀比较也必须用映射后的 `base`，用 `cwd` 会在 worktree 下永不匹配、导致 session-end 静默跳过。
+
+### 存量已入库项目的迁移
+
+位置不变，只需取消跟踪（**不需要移动任何文件**）：
+
+```bash
+git rm -r --cached .rime          # 取消跟踪，文件留在原地
+echo '.rime/' >> .gitignore       # 若尚无该条目
+```
+
+无自动迁移命令：该操作会动用户数据，边界（未提交改动、目标已存在、失败回滚）的风险不匹配省下两条命令的收益。
+
+---
+
 ## 通用格式约定
 
 - **task ID**：`#0001`，`#` + 4 位补零，全局唯一，不回收不复用，由 `nextId` 自增生成
@@ -160,7 +224,7 @@ session-start.sh 读取**最新一个** anchor 的 `timestamp` / `workedOn` / `d
 
 ## archives/tasks.P{n}.json
 
-phase 关闭时写入的**不可变快照**，写入后不随其他文件变更而更新。遵循 `.rime/` 的整体 gitignore 策略。
+phase 关闭时写入的**不可变快照**，写入后不随其他文件变更而更新。随 `.rime/` 一同不入库（见「存储位置与解析顺序」）。
 
 ```json
 {

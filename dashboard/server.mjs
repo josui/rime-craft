@@ -1,12 +1,12 @@
-// rime-dashboard v2.1.0
+// rime-dashboard v2.2.0
 // 入口：CLI 解析 / HTTP server / SSE live reload / fs.watch
 // 看板页面模板在同目录 board.html（占位符注入数据），改 UI 只动模板文件
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, watch, existsSync } from 'node:fs'
-import { join, resolve, dirname } from 'node:path'
+import { join, resolve, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
-import { exec } from 'node:child_process'
+import { exec, execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 
 const [major] = process.versions.node.split('.').map(Number)
@@ -15,13 +15,42 @@ if (major < 18) {
   process.exit(1)
 }
 
-// --rime-dir <path> で指定、なければ cwd/.rime、最後にスクリプト所在ディレクトリ
+// .rime ディレクトリ解決。解析順序の権威定義は
+// skills/rime-flow/data-contract.md「存储位置与解析顺序」。
+// hooks/scripts/rime-utils.sh の rime_resolve_base と等価に保つこと——
+// 両者がずれると hooks と dashboard が違うデータを見る。
+function gitOut(args, cwd) {
+  try {
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  } catch {
+    return ''
+  }
+}
+
+// linked worktree の cwd を main working tree の等価パスへ写す
+// <wt>/apps/foo → <main>/apps/foo。main checkout では cwd をそのまま返す
+function resolveBase(cwd) {
+  // --path-format=absolute で両者を正規化（--git-dir はリポジトリ根で
+  // 相対パス .git を返すため、正規化しないと比較できない。git ≥ 2.31）
+  const gitDir = gitOut(['rev-parse', '--path-format=absolute', '--git-dir'], cwd)
+  const gitCommon = gitOut(['rev-parse', '--path-format=absolute', '--git-common-dir'], cwd)
+  if (!gitDir || !gitCommon || gitDir === gitCommon) return cwd
+
+  const wtRoot = gitOut(['rev-parse', '--show-toplevel'], cwd)
+  const mainRoot = dirname(gitCommon)
+  // bare repo + worktree では dirname(git-common-dir) は bare の親でしかない
+  if (!wtRoot || !existsSync(join(mainRoot, '.git'))) return cwd
+
+  const rel = relative(wtRoot, cwd)
+  return rel ? join(mainRoot, rel) : mainRoot
+}
+
 const rimeDirArg = process.argv.indexOf('--rime-dir')
 const RIME_DIR = rimeDirArg !== -1 && process.argv[rimeDirArg + 1]
   ? resolve(process.argv[rimeDirArg + 1])
-  : existsSync(join(process.cwd(), '.rime'))
-    ? join(process.cwd(), '.rime')
-    : join(process.cwd(), '.rime')
+  : process.env.RIME_DIR && existsSync(process.env.RIME_DIR)
+    ? resolve(process.env.RIME_DIR)
+    : join(resolveBase(process.cwd()), '.rime')
 const ONCE = process.argv.includes('--once')
 const PROJECT_DIR = resolve(RIME_DIR, '..')
 const TEMPLATE_PATH = join(dirname(fileURLToPath(import.meta.url)), 'board.html')

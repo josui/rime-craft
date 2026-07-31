@@ -41,10 +41,12 @@ description: Use when initializing a new project or migrating an old project to 
 
 确保包含：
 - `.worktrees/`
-- `.rime/`（数据层默认不入库，用户可覆盖）
+- `.rime/`（**必须**，不由用户覆盖）
 - `docs/`（文档层默认不入库，用户可覆盖）
 
-`.rime/` 和 `docs/` 深度绑定，入库策略应保持一致。
+`.rime/` 的不入库是**硬要求**：它是项目全局的可变状态，入库会导致 `.rime/*.json` 合并冲突、worktree 拿到陈旧快照，以及**切分支时状态无声漂移**（在 feature 分支标 done，切回 main 又变回 doing）。权威说明见 rime-flow 的 [data-contract.md](../rime-flow/data-contract.md)「存储位置与解析顺序」。
+
+`docs/` 的入库策略与 `.rime/` **无关**，各自独立决定——`.rime/` 是可变状态，`docs/`（spec / prd）是文档产物。
 
 `CLAUDE.md` 跟随 `AGENTS.md` 的入库决定（同入库或同 gitignore）：若 AGENTS.md 进 `.gitignore` 而 CLAUDE.md 入库，协作者 clone 后 `@AGENTS.md` 会断链。
 
@@ -153,7 +155,7 @@ description: Use when initializing a new project or migrating an old project to 
 6. **重写 archive.md**：表格替换为阶段叙事
 7. **删除废弃文件**：`backlog.md`、`cautions.md`
 8. **创建 `.rime/` 结构**：目录 + `anchors/`
-9. **更新 .gitignore**：添加 `.rime/` 和 `docs/`（默认不入库）
+9. **更新 .gitignore**：添加 `.rime/`（必须，见 A3）和 `docs/`（默认不入库）。若旧项目已把 `.rime/` 入库，追加 `git rm -r --cached .rime` 取消跟踪（文件留在原地，无需移动）
 
 由 AI 执行，每步确认。迁移完成后确认无误再删除 `docs/.migration-backup/`。
 

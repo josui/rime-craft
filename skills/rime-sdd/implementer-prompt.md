@@ -60,6 +60,20 @@ Subagent (general-purpose):
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
 
+    ## Comments and Commit Messages
+
+    Never reference tracking artifacts that live outside the repository: task
+    IDs (#0001), caution IDs (C-001), or paths under docs/. Those are gitignored
+    by default — to anyone who clones this repo they are dead links, and commit
+    messages can't be edited after the fact.
+
+    You are a fresh subagent: you don't know what #0012 refers to either. That's
+    exactly the position every future reader is in. Write comments that stand on
+    their own — put the *reason* in the comment instead of pointing at a board.
+
+      Bad:  // see #0012
+      Good: // this endpoint returns null, not [], for an empty result set
+
     ## When You're in Over Your Head
 
     It is always OK to stop and say "this is too hard for me." Bad work is worse than

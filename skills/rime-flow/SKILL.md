@@ -168,6 +168,7 @@ spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md]
 
 - `.rime/` **一律不入库**——硬要求，不由用户覆盖（入库会导致合并冲突与**切分支时状态无声漂移**，详见 [data-contract.md](data-contract.md)「存储位置与解析顺序」）
 - `docs/` 默认不入库；其策略与 `.rime/` **无关**，独立决定（`.rime/` 是可变状态，`docs/` 是文档产物）
+- **入库文件不得引用不入库的资产**：代码注释、commit message、入库的 md 里不写 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——对 clone 者是死链。注释要自足，把「为什么」写进注释本身。派 subagent 时必须逐条传达（它不知道 `#0012` 指什么）。详见 [data-contract.md](data-contract.md)「不入库资产的引用禁令」
 - 根目录放核心文档（prd, archive, techstack 等）
 - 子目录名用**复数形式**（specs, plans, researches, designs）
 - `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/specs/`**（plan 目录 `docs/plans/` 如需）

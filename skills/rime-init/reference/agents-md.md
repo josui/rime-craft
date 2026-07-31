@@ -125,6 +125,7 @@ AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 age
 ## 约束
 
 - 不使用 EnterPlanMode（复杂任务走 grill-me → spec → rime-sdd）
+- **入库文件不得引用不入库的资产**：`.rime/` 不入库、`docs/` 默认不入库，所以代码注释、commit message、入库的 md 里不写 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——对 clone 者是查无此物的死链。注释要自足：把「为什么」直接写进去，而不是指向看板。`// 见 #0012` ✗ → `// 该接口对空数组返回 null 而非 []` ✓
 ```
 
 ### 动态内容（按检测/交互结果生成）

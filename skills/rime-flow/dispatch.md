@@ -98,7 +98,10 @@ task 执行分配（subagent + model）的唯一权威规则。rime-flow / rime-
 - 接口 / 全局约束
 - 验收标准
 - 报告格式
+- **注释禁令**（必须逐条传达，subagent 不会自己知道）：写入代码的注释里不得出现 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——这些默认不入库，对 clone 者是死链。注释要自足，把「为什么」直接写进去。权威定义见 [data-contract.md](data-contract.md)「不入库资产的引用禁令」
 
 **不让 subagent 继承主线程会话历史**——fresh subagent 只靠 prompt 里给的信息工作。
+
+上一条正因如此才关键：主线程知道 `#0012` 指什么，fresh subagent 不知道，于是照抄进注释，留下一条谁也查不到的引用。
 
 大块产物（diff、报告）走**文件路径交接**，不粘贴进对话。

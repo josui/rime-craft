@@ -4,13 +4,13 @@ set -euo pipefail
 LOG="$HOME/.rime-hook.log"
 log() { echo "[$(date +%H:%M:%S)] session-end: $*" >> "$LOG"; }
 
-# 0. 递归检测：worker 调用的 claude -p 退出时也会触发 SessionEnd hook
+# 0. Recursion guard: when the worker's claude -p invocation exits, it also triggers the SessionEnd hook
 if [ "${RIME_HOOK_WORKER:-}" = "1" ]; then exit 0; fi
 
-# 依赖预检：jq 缺失时整条管线无法工作，留痕后退出
+# Dependency precheck: without jq, the whole pipeline cannot work — log and exit
 command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
 
-# 1. 读取 stdin（必须在前台完成，stdin 只能读一次）
+# 1. Read stdin (must happen in the foreground — stdin can only be read once)
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty')
@@ -18,7 +18,7 @@ if [ -z "$CWD" ]; then log "exit: no cwd"; exit 0; fi
 if [ -z "$TRANSCRIPT" ]; then log "exit: no transcript_path"; exit 0; fi
 if [ ! -f "$TRANSCRIPT" ]; then log "exit: transcript not found: $TRANSCRIPT"; exit 0; fi
 
-# 2. 加载工具函数 + 查找 .rime 目录
+# 2. Load utility functions + find .rime directories
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/rime-utils.sh"
 
@@ -26,22 +26,22 @@ RIME_DIRS=$(find_rime_dirs "$CWD")
 if [ -z "$RIME_DIRS" ]; then log "exit: no .rime/ found under $CWD"; exit 0; fi
 log "found .rime dirs: $(echo "$RIME_DIRS" | tr '\n' ' ')"
 
-# 3. 时间戳
+# 3. Timestamps
 TIMESTAMP=$(date +%Y-%m-%dT%H-%M-%S)
 TIMESTAMP_ISO=$(date +%Y-%m-%dT%H:%M:%S%z)
 TODAY=$(date +%Y-%m-%d)
 
-# 4. 确定哪些 .rime 目录需要处理
-#    get_changed_files 在大仓库要跑 3 个 git 命令，仅在 monorepo 分支才调
+# 4. Determine which .rime directories need processing
+#    get_changed_files runs 3 git commands in a large repo — only called on the monorepo branch
 RIME_DIR_COUNT=$(echo "$RIME_DIRS" | wc -l | tr -d ' ')
 TARGET_DIRS=""
 if [ "$RIME_DIR_COUNT" -eq 1 ]; then
-  # 单目录：始终处理（向后兼容）
+  # Single directory: always process (backward compatible)
   TARGET_DIRS="$RIME_DIRS"
 else
   CHANGED_FILES=$(get_changed_files "$CWD" || echo "")
   if [ -n "$CHANGED_FILES" ]; then
-    # Monorepo + 有 git 变更：匹配变更文件到 .rime 目录
+    # Monorepo + has git changes: match changed files to .rime directories
     while IFS= read -r rd; do
       if rime_matches_changes "$rd" "$CWD" "$CHANGED_FILES"; then
         TARGET_DIRS="${TARGET_DIRS:+$TARGET_DIRS
@@ -50,7 +50,7 @@ else
     done <<< "$RIME_DIRS"
     log "matched .rime dirs by git changes: $(echo "$TARGET_DIRS" | tr '\n' ' ')"
   else
-    # Monorepo + 无 git 变更（纯讨论）：处理所有目录
+    # Monorepo + no git changes (pure discussion): process all directories
     TARGET_DIRS="$RIME_DIRS"
     log "no git changes, processing all .rime dirs"
   fi
@@ -58,8 +58,8 @@ fi
 
 if [ -z "$TARGET_DIRS" ]; then log "exit: no matching .rime dirs"; exit 0; fi
 
-# 5. 每个目标 spawn 后台 worker（transcript 过滤 / minimal 判定 / claude -p 全下放后台）
-#    前台只做 stdin 读取 + .rime 发现 + spawn，避免大 transcript 下被 hook 超时杀掉
+# 5. Spawn a background worker for each target (transcript filtering / minimal-anchor decision / claude -p — all pushed to background)
+#    The foreground only does stdin reading + .rime discovery + spawning, to avoid being killed by the hook timeout on large transcripts
 while IFS= read -r RIME_DIR; do
   [ -z "$RIME_DIR" ] && continue
   if [ ! -f "$RIME_DIR/tasks.json" ]; then

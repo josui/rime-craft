@@ -1,6 +1,6 @@
 // rime-dashboard v2.2.0
-// 入口：CLI 解析 / HTTP server / SSE live reload / fs.watch
-// 看板页面模板在同目录 board.html（占位符注入数据），改 UI 只动模板文件
+// Entry: CLI parsing / HTTP server / SSE live reload / fs.watch
+// The board page template is board.html in this directory (data injected via placeholders); UI changes touch the template only
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, watch, existsSync } from 'node:fs'
 import { join, resolve, dirname, relative } from 'node:path'
@@ -15,10 +15,10 @@ if (major < 18) {
   process.exit(1)
 }
 
-// .rime ディレクトリ解決。解析順序の権威定義は
-// skills/rime-flow/data-contract.md「存储位置与解析顺序」。
-// hooks/scripts/rime-utils.sh の rime_resolve_base と等価に保つこと——
-// 両者がずれると hooks と dashboard が違うデータを見る。
+// .rime directory resolution. The authoritative definition of the resolution
+// order is "Storage Location & Resolution Order" in skills/rime-flow/data-contract.md.
+// Keep this equivalent to rime_resolve_base in hooks/scripts/rime-utils.sh —
+// if the two drift apart, hooks and the dashboard see different data.
 function gitOut(args, cwd) {
   try {
     return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
@@ -27,18 +27,18 @@ function gitOut(args, cwd) {
   }
 }
 
-// linked worktree の cwd を main working tree の等価パスへ写す
-// <wt>/apps/foo → <main>/apps/foo。main checkout では cwd をそのまま返す
+// Map a linked worktree's cwd to its equivalent path in the main working tree:
+// <wt>/apps/foo → <main>/apps/foo. In the main checkout, return cwd as-is.
 function resolveBase(cwd) {
-  // --path-format=absolute で両者を正規化（--git-dir はリポジトリ根で
-  // 相対パス .git を返すため、正規化しないと比較できない。git ≥ 2.31）
+  // Normalize both with --path-format=absolute (--git-dir returns the relative
+  // path .git at the repo root, so they can't be compared unnormalized. git ≥ 2.31)
   const gitDir = gitOut(['rev-parse', '--path-format=absolute', '--git-dir'], cwd)
   const gitCommon = gitOut(['rev-parse', '--path-format=absolute', '--git-common-dir'], cwd)
   if (!gitDir || !gitCommon || gitDir === gitCommon) return cwd
 
   const wtRoot = gitOut(['rev-parse', '--show-toplevel'], cwd)
   const mainRoot = dirname(gitCommon)
-  // bare repo + worktree では dirname(git-common-dir) は bare の親でしかない
+  // With a bare repo + worktree, dirname(git-common-dir) is merely the bare repo's parent
   if (!wtRoot || !existsSync(join(mainRoot, '.git'))) return cwd
 
   const rel = relative(wtRoot, cwd)
@@ -132,7 +132,7 @@ const server = createServer((req, res) => {
   if (req.url.startsWith('/file/')) {
     const relPath = decodeURIComponent(req.url.slice(6))
     const filePath = join(PROJECT_DIR, relPath)
-    // 安全检查：不允许路径遍历到项目目录之外
+    // Security check: no path traversal outside the project directory
     if (!filePath.startsWith(PROJECT_DIR)) {
       res.writeHead(403)
       res.end('Forbidden')

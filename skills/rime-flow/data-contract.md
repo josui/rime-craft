@@ -1,117 +1,117 @@
-# .rime/ 数据契约（权威定义）
+# .rime/ Data Contract (Authoritative)
 
-`.rime/` 数据层的唯一权威 schema。所有消费者（rime-flow / rime-init / rime-backlog / hooks / dashboard）以本文件为准；其他文档只保留指针和最小摘要，不得整段复述 schema。
+The single authoritative schema for the `.rime/` data layer. All consumers (rime-flow / rime-init / rime-backlog / hooks / dashboard) treat this file as the source of truth; other docs keep only a pointer and a minimal summary, never a full restatement of the schema.
 
-## 总览：文件与读写归属
+## Overview: Files and Read/Write Ownership
 
-| 文件 | 写入方 | 读取方 |
+| File | Written by | Read by |
 |------|--------|--------|
-| `tasks.json` | `/rime-backlog`（别名 `/rime-task`，新增 item）、rime-flow / AI（状态流转、归档清理） | hooks（session-end 传给 worker）、dashboard、rime-flow |
-| `phase.json` | rime-init（创建）、rime-flow（phase 关闭 / 新 phase） | hooks（session-start/end 读 current）、dashboard、`/rime-backlog`（取 current） |
-| `cautions.json` | SessionEnd worker（自动追加）、手动 | rime-flow（开始 task 时匹配注入）、dashboard |
-| `anchors/{ts}.json` | session-end.sh（minimal）/ worker（完整） | session-start.sh（读最新一个注入上下文） |
-| `archives/tasks.P{n}.json` | rime-flow（phase 关闭时写入，此后不可变） | dashboard（`/archives/{phaseId}` 路由） |
+| `tasks.json` | `/rime-backlog` (alias `/rime-task`, new items), rime-flow / AI (state transitions, archive cleanup) | hooks (session-end hands off to the worker), dashboard, rime-flow |
+| `phase.json` | rime-init (creation), rime-flow (phase closing / new phase) | hooks (session-start/end read `current`), dashboard, `/rime-backlog` (reads `current`) |
+| `cautions.json` | SessionEnd worker (auto-appended), manual | rime-flow (matched and injected when starting a task), dashboard |
+| `anchors/{ts}.json` | session-end.sh (minimal) / worker (full) | session-start.sh (reads the latest one and injects it into context) |
+| `archives/tasks.P{n}.json` | rime-flow (written at phase closing, immutable afterward) | dashboard (`/archives/{phaseId}` route) |
 
-## 存储位置与解析顺序
+## Storage Location & Resolution Order
 
-`.rime/` 位于**项目根目录**，且**一律不入库**。位置与解析规则属于契约的一部分，所有组件（hooks / dashboard / rime-sdd / AI）必须走同一顺序。
+`.rime/` lives at the **project root** and is **never tracked in git**. The location and resolution rules are part of the contract — every component (hooks / dashboard / rime-sdd / AI) must follow the same order.
 
-### 不入库是硬要求
+### Being Untracked Is a Hard Requirement
 
-`.rime/` 是项目全局的可变状态。一旦被 git 跟踪就会产生三个症状，其中第三个完全无声：
+`.rime/` is project-wide mutable state. Once it's tracked by git, three symptoms appear — the third one completely silent:
 
-| 症状 | 成因 |
+| Symptom | Cause |
 |------|------|
-| 合并时 `.rime/*.json` 冲突 | 状态文件没有语义上正确的冲突解法 |
-| **切分支时内容跟着变** | 在 feature 分支标 done，切回 main 又变回 doing——**无任何提示** |
-| worktree 拿到陈旧快照 | 分支切出时的旧提交版本 |
+| `.rime/*.json` conflicts on merge | State files have no semantically correct conflict resolution |
+| **Content flips when switching branches** | Marked done on a feature branch, switches back to doing when you check out main — **with no warning at all** |
+| Worktrees get a stale snapshot | The old committed version at branch checkout |
 
-因此 `.gitignore` 必须包含 `.rime/` 条目。这不是建议，也不由用户覆盖。gitignored 的文件不受 `checkout` 影响、不参与 `merge`，上表三症状随之全部消失。
+Therefore `.gitignore` must contain a `.rime/` entry. This is not a suggestion, and it is not overridable by the user. Gitignored files aren't affected by `checkout` and don't participate in `merge` — all three symptoms above disappear as a result.
 
-> `docs/` 的入库策略与 `.rime/` **无关**，各自独立决定：`.rime/` 是可变状态，`docs/`（spec / prd）是文档产物。
+> The tracking policy for `docs/` is **independent** of `.rime/` — each is decided separately: `.rime/` is mutable state, `docs/` (spec / prd) is documentation output.
 
-### 解析顺序
+### Resolution Order
 
 ```
-1. $RIME_DIR 环境变量且为已存在目录  → 用它（显式覆盖，CI / 特殊场景）
-2. base = cwd 映射到主检出的等价路径（见下）
-3. <base>/.rime 存在                 → 用它
-4. 否则在 <base> 下向下搜索          → monorepo，maxdepth 4，
-                                        排除 node_modules / .git / dist / .worktrees / vendor
+1. $RIME_DIR env var, if set and it's an existing directory → use it (explicit override, for CI / special cases)
+2. base = cwd mapped to the equivalent path in the main checkout (see below)
+3. <base>/.rime exists                 → use it
+4. Otherwise, search downward under <base>  → monorepo, maxdepth 4,
+                                        excluding node_modules / .git / dist / .worktrees / vendor
 ```
 
-**cwd → 主检出等价路径映射**（步骤 2）：
+**cwd → main-checkout equivalent-path mapping** (step 2):
 
-- 用 `git rev-parse --path-format=absolute --git-dir` 与 `--git-common-dir` 比较，两者不等即处于 **linked worktree**
-- 是 worktree → `base = dirname(git-common-dir) + (cwd 相对 worktree 根的相对路径)`
-- 否则 → `base = cwd`
+- Compare `git rev-parse --path-format=absolute --git-dir` with `--git-common-dir` — if they differ, you're in a **linked worktree**
+- If it's a worktree → `base = dirname(git-common-dir) + (cwd's path relative to the worktree root)`
+- Otherwise → `base = cwd`
 
-要点：
+Key points:
 
-- `--path-format=absolute` **必须加**：`--git-dir` 在仓库根返回相对路径 `.git`，不归一化则无法与 `--git-common-dir` 可靠比较（需 git ≥ 2.31）
-- `--git-common-dir` 跨所有 worktree 解析到同一绝对路径，完全不受 checkout 影响
-- **保留 cwd 的相对部分**，不可直接返回主检出根——否则破坏 monorepo：在 `<wt>/apps/foo` 工作时应解析到 `<main>/apps/foo/.rime`，而不是把所有子项目的 `.rime/` 都返回
-- 主检出场景下 `base == cwd`，行为与映射引入前**完全一致**
-- bare repo + worktree 布局下 `dirname(git-common-dir)` 只是 bare 仓库的父目录，不是主检出——须检查其下存在 `.git` 方可映射，否则回落 `cwd`
+- `--path-format=absolute` **must be included**: at the repo root, `--git-dir` returns the relative path `.git`; without normalizing it, it can't be reliably compared with `--git-common-dir` (requires git ≥ 2.31)
+- `--git-common-dir` resolves to the same absolute path across all worktrees, entirely unaffected by checkout
+- **Preserve cwd's relative portion** — never return the main checkout root directly, or it breaks monorepos: working in `<wt>/apps/foo` should resolve to `<main>/apps/foo/.rime`, not return the same `.rime/` for every sub-project
+- In the main-checkout case, `base == cwd`, and behavior is **exactly the same** as before this mapping was introduced
+- In a bare-repo + worktree layout, `dirname(git-common-dir)` is just the bare repo's parent directory, not the main checkout — you must check that a `.git` exists under it before mapping, otherwise fall back to `cwd`
 
-### 实现归属
+### Implementation Ownership
 
-| 实现 | 位置 | 消费者 |
+| Implementation | Location | Consumers |
 |------|------|--------|
-| shell | `hooks/scripts/rime-utils.sh` 的 `rime_resolve_base` / `find_rime_dirs` | 4 个 hook 脚本、rime-sdd 的 `sdd-workspace` |
-| JS | `dashboard/server.mjs` 的 `resolveBase` | dashboard |
+| shell | `rime_resolve_base` / `find_rime_dirs` in `hooks/scripts/rime-utils.sh` | the 4 hook scripts, rime-sdd's `sdd-workspace` |
+| JS | `resolveBase` in `dashboard/server.mjs` | dashboard |
 
-两份实现必须保持等价——一旦漂移，hooks 与 dashboard 会看到不同的数据。`rime_matches_changes` / `rime_label` 的路径前缀比较也必须用映射后的 `base`，用 `cwd` 会在 worktree 下永不匹配、导致 session-end 静默跳过。
+The two implementations must stay equivalent — the moment they drift, hooks and dashboard see different data. `rime_matches_changes` / `rime_label`'s path-prefix comparison must also use the mapped `base`; using `cwd` would never match under a worktree, causing session-end to skip silently.
 
-### 存量已入库项目的迁移
+### Migrating an Already-Tracked Project
 
-位置不变，只需取消跟踪（**不需要移动任何文件**）：
+The location stays the same — only untracking is needed (**no files need to be moved**):
 
 ```bash
-git rm -r --cached .rime          # 取消跟踪，文件留在原地
-echo '.rime/' >> .gitignore       # 若尚无该条目
+git rm -r --cached .rime          # untrack, files stay in place
+echo '.rime/' >> .gitignore       # if the entry isn't already there
 ```
 
-无自动迁移命令：该操作会动用户数据，边界（未提交改动、目标已存在、失败回滚）的风险不匹配省下两条命令的收益。
+There is no automated migration command: this operation touches user data, and the edge-case risk (uncommitted changes, target already existing, rollback on failure) isn't worth the two commands it would save.
 
-### 不入库资产的引用禁令
+### Ban on Referencing Untracked Assets
 
-`.rime/` 一律不入库、`docs/` 默认不入库，因此**入库的文件不得引用不入库的资产**——对 clone 仓库的人（以及换台机器的自己）这些全是查无此物的悬空引用。
+`.rime/` is never tracked, and `docs/` is untracked by default, so **tracked files must not reference untracked assets** — to anyone who clones the repo (including yourself on a different machine), these are all dangling references that resolve to nothing.
 
-禁止在**代码注释、commit message、以及任何入库的 md**（README / AGENTS.md / skill 文档）中出现：
+The following must not appear in **code comments, commit messages, or any tracked markdown** (README / AGENTS.md / skill docs):
 
-| 被引用物 | 约束 |
+| Referenced thing | Constraint |
 |---|---|
-| task ID（`#0001`）、caution ID（`C-001`） | **无条件禁止**——`.rime/` 硬性不入库 |
-| `docs/` 下的文档路径（`docs/prd.md`、`docs/specs/*.md`） | **条件性禁止**——`docs/` 未入库时禁止（默认如此）；项目若已将 `docs/` 入库则允许 |
+| task ID (`#0001`), caution ID (`C-001`) | **Unconditionally forbidden** — `.rime/` is hard-never-tracked |
+| Document paths under `docs/` (`docs/prd.md`, `docs/specs/*.md`) | **Conditionally forbidden** — forbidden while `docs/` is untracked (the default); allowed if the project has tracked `docs/` |
 
-**改为**：把「为什么」直接写进注释本身。注释要能独立成立，不依赖外部看板。
+**Instead**: write the "why" directly into the comment itself. A comment should stand on its own, without depending on an external board.
 
-| ✗ 悬空引用 | ✓ 自足注释 |
+| ✗ Dangling reference | ✓ Self-contained comment |
 |---|---|
-| `// 见 #0005` | `// worktree 下 toplevel 指向 worktree，需映射回主检出` |
-| `// 参考 C-003 的教训` | `// --git-dir 在仓库根返回相对路径，必须 --path-format=absolute` |
-| `// 详见 docs/specs/xxx.md` | 摘出关键约束写进注释；长背景留在 spec，注释不引它 |
+| `// see #0005` | `// under a worktree, toplevel points at the worktree; must be mapped back to the main checkout` |
+| `// see the lesson from C-003` | `// --git-dir returns a relative path at the repo root; --path-format=absolute is required` |
+| `// see docs/specs/xxx.md for details` | Extract the key constraint into the comment; leave the long background in the spec — don't reference it from the comment |
 
-**不受此限**：`.rime/` 内部文件之间、`docs/` 内部文档之间的互相引用（同属不入库集合，一起分发或一起不分发）。spec 里写 `#0005` 完全正常。
+**Not subject to this restriction**: cross-references between files within `.rime/`, or between documents within `docs/` (they belong to the same untracked set — they distribute together or not at all). Writing `#0005` inside a spec is perfectly fine.
 
 ---
 
-## 通用格式约定
+## General Format Conventions
 
-- **task ID**：`#0001`，`#` + 4 位补零，全局唯一，不回收不复用，由 `nextId` 自增生成
-- **caution ID**：`C-001`，连字符 + 3 位补零，由 worker 扫描现有最大值自增
-- **phase ID**：`P0`, `P1`, ...
-- **日期**：`YYYY-MM-DD`；**anchor 时间戳字段**：ISO 8601 含时区（`2026-06-10T09:53:23+0900`）
-- **schemaVersion**：tasks.json 当前为 `2`，phase.json 为 `1`，anchor 为 `1`。**例外：cautions.json 是裸数组、无 schemaVersion**——根类型改为对象会破坏已部署的 hooks（jq 数组追加）与 dashboard，等真正 breaking 变更时再连同迁移一起做
+- **task ID**: `#0001`, `#` + 4-digit zero-padding, globally unique, never recycled or reused, generated by incrementing `nextId`
+- **caution ID**: `C-001`, hyphen + 3-digit zero-padding, incremented by the worker scanning the current maximum value
+- **phase ID**: `P0`, `P1`, ...
+- **date**: `YYYY-MM-DD`; **anchor timestamp field**: ISO 8601 with timezone (`2026-06-10T09:53:23+0900`)
+- **schemaVersion**: currently `2` for tasks.json, `1` for phase.json, `1` for anchor. **Exception: cautions.json is a bare array with no schemaVersion** — changing the root type to an object would break deployed hooks (jq array append) and the dashboard; that migration is deferred until a genuinely breaking change happens alongside it
 
 ---
 
 ## tasks.json
 
-任务状态的 source of truth。
+Source of truth for task state.
 
-### 根结构
+### Root Structure
 
 ```json
 {
@@ -122,50 +122,50 @@ echo '.rime/' >> .gitignore       # 若尚无该条目
 }
 ```
 
-`segments` 可选，按 module 分配编号区间：`{ "infra": "0001-0099", "feature-a": "0100-0199" }`。
+`segments` is optional; it assigns ID ranges by module: `{ "infra": "0001-0099", "feature-a": "0100-0199" }`.
 
-### Item 字段
+### Item Fields
 
-| 字段 | 类型 | 必须 | 说明 |
+| Field | Type | Required | Description |
 |------|------|------|------|
-| id | string | ✓ | `#0001` 格式 |
-| module | string | | 功能模块（对应 segments 的 key） |
-| title | string | ✓ | 功能标题（大颗粒，人定义） |
-| description | string | | 详细说明；**多行书写**——背景/目标/约束/验收点分行或分段（`\n` 分隔），不要挤成一行长文本，便于人类扫读与 dashboard 渲染 |
+| id | string | ✓ | `#0001` format |
+| module | string | | Feature module (corresponds to a `segments` key) |
+| title | string | ✓ | Feature title (coarse-grained, human-defined) |
+| description | string | | Detailed description; **write it multi-line** — background/goals/constraints/acceptance points split into lines or paragraphs (`\n`-separated); don't cram it into one long line — this helps human skimming and dashboard rendering |
 | status | enum | ✓ | `todo` / `doing` / `done` |
-| phase | string | ✓ | 所属阶段，从 phase.json `current` 获取 |
+| phase | string | ✓ | The phase it belongs to, taken from phase.json's `current` |
 | priority | enum | ✓ | `high` / `medium` / `low` |
-| difficulty | enum | | `small`(🟢 半小时内) / `medium`(🟡 半天) / `large`(🔴 1天+) |
+| difficulty | enum | | `small`(🟢 within half an hour) / `medium`(🟡 half a day) / `large`(🔴 1+ day) |
 | createdAt | string | ✓ | `YYYY-MM-DD` |
-| completedAt | string | | 仅 done 时填写 |
-| subtasks | array | | 自适应执行清单 `[{title, status}]` |
-| dependsOn | array | | 依赖的 task ID 列表，构成 DAG，详见下方 |
-| branch | string | | doing 时用户确认后写入的关联分支名 |
-| commitFrom | string | | doing 时自动写入 HEAD hash（每次覆写），commit range 起点 |
-| commits | object | | 标 done 时与 status **同笔写入** `{ "from": "...", "to": "..." }`（from ≠ to）；非 git 项目省略 |
-| docs | array | | spec/plan 等产出后写入 `[{ "type": "spec\|plan\|prototype\|reference\|blueprint", "path": "相对路径" }]` |
+| completedAt | string | | Filled in only when done |
+| subtasks | array | | Adaptive execution checklist `[{title, status}]` |
+| dependsOn | array | | List of dependency task IDs, forms a DAG, see below for details |
+| branch | string | | The associated branch name, written after the user confirms while doing |
+| commitFrom | string | | Automatically written with the HEAD hash while doing (overwritten every time), the start of the commit range |
+| commits | object | | Written **in the same write** as status when marked done: `{ "from": "...", "to": "..." }` (from ≠ to); omitted for non-git projects |
+| docs | array | | Written after producing a spec/plan/etc.: `[{ "type": "spec\|plan\|prototype\|reference\|blueprint", "path": "relative path" }]` |
 
-### 写入约束（所有写入路径必须遵守）
+### Write Constraints (all write paths must comply)
 
-- 必填字段（id / title / status / priority / createdAt / phase）缺失或格式错误时**中止写入并报错**
-- `dependsOn` 写入前必须做 **DFS 检环**（含自依赖）：构成环则拒绝写入，`dependsOn` 图恒为 DAG
-- `dependsOn` 为空时**省略该 key**，不写 `"dependsOn": []`
-- 新增 item 后 `nextId` 自增
-- `description` 若填写须**多行书写**（`\n` 分隔背景/目标/约束/验收点，见上方字段表），不得挤成一行长文本
-- item **仅允许写入本文件字段表列出的字段**；需要新字段时必须先修订本契约（连同 schemaVersion 演进评估），消费方（dashboard/hooks）以字段表为白名单
-- **commit gate**：status 改为 `done` 前必须满足——非 git 项目（`git rev-parse --git-dir` 失败）豁免；否则本 task 改动已全部提交（并行 doing task 的未提交改动不计）且 HEAD ≠ commitFrom；`completedAt`、`commits` 与 status **同笔写入**
-- **done 终态**：标 done 后不再写该 item 的任何字段，例外仅两种——phase 关闭时的归档移除、修复 validator 报错的数据修复；done 后发现问题新建 task 处理，不回退状态
+- If required fields (id / title / status / priority / createdAt / phase) are missing or malformed, **abort the write and report an error**
+- `dependsOn` must undergo a **DFS cycle check** before being written (including self-dependency): a cycle rejects the write — the `dependsOn` graph is always a DAG
+- When `dependsOn` is empty, **omit the key** — don't write `"dependsOn": []`
+- `nextId` increments after a new item is added
+- If `description` is filled in, it must be **written multi-line** (`\n`-separated background/goals/constraints/acceptance points, see the field table above); it may not be crammed into one long line
+- An item **may only have fields listed in this file's field table written to it**; a new field requires revising this contract first (along with a schemaVersion evolution assessment) — consumers (dashboard/hooks) treat the field table as a whitelist
+- **Commit gate**: must be satisfied before status changes to `done` — exempt for non-git projects (`git rev-parse --git-dir` fails); otherwise, all of this task's changes are committed (uncommitted changes from parallel doing tasks don't count) and HEAD ≠ commitFrom; `completedAt` and `commits` are written **in the same write** as status
+- **done is a terminal state**: no field of this item is written again after being marked done, with exactly two exceptions — archival removal on phase closing, and data fixes for validator errors; if a problem is found after done, create a new task to handle it, never roll back the status
 
-### 状态机
+### State Machine
 
-`todo → doing → done`。doing 自进入设计/grill 阶段起算；done 需用户确认且过 **commit gate**（见写入约束）。done 为终态：返工新建 task，不回退状态。phase 关闭时该 phase 的 done items 被回收进 archives/。
+`todo → doing → done`. doing is counted from entering the design/grill phase; done requires user confirmation and passing the **commit gate** (see Write Constraints). done is a terminal state: rework creates a new task, never rolls back the status. When a phase closes, that phase's done items are reclaimed into archives/.
 
-### dependsOn 语义
+### dependsOn Semantics
 
-- **单向**声明前置依赖，不反向回写；反向 `blockedBy` 由 dashboard 实时计算
-- 被依赖 task 的 status 为 `done` 即视为依赖满足
-- 开始 task 时依赖未满足只做**软警告**，不阻止流转
-- phase 归档时自动移除指向已归档 ID 的引用（active 区不留悬空引用）
+- Declares prerequisite dependencies **one-way**, never written back in reverse; the reverse `blockedBy` is computed live by the dashboard
+- A dependency is considered satisfied once the depended-on task's status is `done`
+- When starting a task, an unsatisfied dependency triggers only a **soft warning**, and doesn't block the transition
+- References pointing to archived IDs are automatically removed on phase archiving (the active set keeps no dangling references)
 
 ---
 
@@ -181,82 +181,82 @@ echo '.rime/' >> .gitignore       # 若尚无该条目
 }
 ```
 
-| 字段 | 类型 | 必须 | 说明 |
+| Field | Type | Required | Description |
 |------|------|------|------|
-| current | string | ✓ | 当前活跃 phase 的 id |
+| current | string | ✓ | ID of the currently active phase |
 | phases[].id | string | ✓ | `P0`, `P1`, ... |
-| phases[].name | string | ✓ | 阶段名 |
+| phases[].name | string | ✓ | Phase name |
 | phases[].status | enum | ✓ | `active` / `done` |
 | phases[].startedAt | string | ✓ | `YYYY-MM-DD` |
-| phases[].completedAt | string | | phase 关闭时写入，对象原地更新（不替换、不删除） |
+| phases[].completedAt | string | | Written at phase closing, the object is updated in place (not replaced, not deleted) |
 
 ---
 
 ## cautions.json
 
-裸数组，append-only，不设 status 字段。由 SessionEnd worker 自动提取或手动追加。
+A bare array, append-only, with no status field. Automatically extracted by the SessionEnd worker, or appended manually.
 
 ```json
 []
 ```
 
-| 字段 | 类型 | 必须 | 说明 |
+| Field | Type | Required | Description |
 |------|------|------|------|
-| id | string | ✓ | `C-001` 格式 |
-| title | string | ✓ | 简短标题 |
-| summary | string | | 详细描述 |
-| tags | array | | 分类标签，**参与匹配注入**（见下） |
-| reference | string | | commit hash / 文件路径 / 链接 |
+| id | string | ✓ | `C-001` format |
+| title | string | ✓ | Short title |
+| summary | string | | Detailed description |
+| tags | array | | Classification tags, **participate in match-injection** (see below) |
+| reference | string | | commit hash / file path / link |
 | createdAt | string | ✓ | `YYYY-MM-DD` |
-| source | string | | `session-{TIMESTAMP}`，worker 自动填 |
+| source | string | | `session-{TIMESTAMP}`, auto-filled by the worker |
 
-### 匹配注入规则
+### Match-Injection Rules
 
-rime-flow 开始 task 时：以 task 的 `title` + `description` 关键词，对 caution 的 `tags` + `title` 做 **substring 匹配**（CJK 文本直接子串包含检查）。匹配到的 cautions 注入对话上下文，无匹配则跳过。
+When rime-flow starts a task: keywords from the task's `title` + `description` are matched against a caution's `tags` + `title` via **substring matching** (for CJK text, a plain substring-containment check). Matched cautions are injected into the conversation context; if there's no match, skip.
 
-### 收录标准
+### Inclusion Criteria
 
-只收录**可能再发生**的教训和约束（平台隐性限制、架构决策副作用、反复出现的模式错误）；不收录已修复的一次性 bug、一次性迁移问题、文档已覆盖的内容。不再相关的条目定期直接删除；此外每次 task 完成时由 rime-flow 做**增量 GC**——只审查该 task 进行期间新增的条目，按 DROP / MERGE / KEEP 判定（流程见 SKILL.md「完成 task」），删除/合并保留原有 id 不重排。
+Only include lessons and constraints that **could recur** (implicit platform limitations, side effects of architectural decisions, recurring pattern mistakes); don't include one-off bugs already fixed, one-off migration issues, or content already covered by documentation. Entries that are no longer relevant are deleted outright on a regular basis; in addition, on every task completion rime-flow performs an **incremental GC** — reviewing only entries added while that task was in progress, judged as DROP / MERGE / KEEP (see "Completing a task" in SKILL.md for the process); deletions/merges keep the existing ids without renumbering.
 
 ---
 
 ## anchors/{TIMESTAMP}.json
 
-session 记录，每次 SessionEnd 自动生成。**gitignore，不入库**；phase 关闭时清理，全局只保留最近 10 个。
+Session records, auto-generated on every SessionEnd. **Gitignored, never tracked**; cleaned up on phase closing, keeping only the most recent 10 globally.
 
-- **文件名**：`YYYY-MM-DDTHH-MM-SS.json`（本地时间，连字符分隔）
-- **写入方**：对话过短时由 session-end.sh 同步写 minimal anchor（各数组为空）；正常情况由后台 worker 调用 `claude -p` 生成完整内容
+- **Filename**: `YYYY-MM-DDTHH-MM-SS.json` (local time, hyphen-separated)
+- **Written by**: when the conversation is too short, session-end.sh synchronously writes a minimal anchor (all arrays empty); normally, a background worker calls `claude -p` to generate the full content
 
-| 字段 | 类型 | 说明 |
+| Field | Type | Description |
 |------|------|------|
 | schemaVersion | number | `1` |
-| timestamp | string | ISO 8601 含时区 |
-| phase | string | 写入时 phase.json 的 `current` |
-| workedOn | array | 涉及的 task ID（仅 tasks.json 中已存在的） |
-| subtasksCompleted | array | 本次完成的工作。**驱动保守对账**：仅限 workedOn 中 **status=doing** 的 task，条目与 subtask title 精确相等或互为子串时，worker 自动将该 subtask 翻 done（只翻不回翻）；不匹配的条目仅作记录 |
-| subtasksAdded | array | 发现的新子任务（自由描述，仅作记录） |
-| decisions | array | 关键决策 |
-| nextSteps | array | 下一步 |
-| cautions | array | 提取的踩坑 `[{title, summary?, tags?}]`——追加进 cautions.json 时由 worker 补 id / createdAt / source |
+| timestamp | string | ISO 8601 with timezone |
+| phase | string | phase.json's `current` at write time |
+| workedOn | array | Task IDs involved (only ones that already exist in tasks.json) |
+| subtasksCompleted | array | Work completed this session. **Drives conservative reconciliation**: limited to tasks in workedOn with **status=doing**; when an entry exactly equals or is a mutual substring of a subtask title, the worker automatically flips that subtask to done (one-directional, never flips back); non-matching entries are recorded only |
+| subtasksAdded | array | New subtasks discovered (free-form description, recorded only) |
+| decisions | array | Key decisions |
+| nextSteps | array | Next steps |
+| cautions | array | Extracted pitfalls `[{title, summary?, tags?}]` — the worker fills in id / createdAt / source when appending to cautions.json |
 
-session-start.sh 读取**最新一个** anchor 的 `timestamp` / `workedOn` / `decisions` / `nextSteps` 注入新 session 上下文。
+session-start.sh reads the **most recent** anchor's `timestamp` / `workedOn` / `decisions` / `nextSteps` and injects them into the new session's context.
 
 ---
 
 ## archives/tasks.P{n}.json
 
-phase 关闭时写入的**不可变快照**，写入后不随其他文件变更而更新。随 `.rime/` 一同不入库（见「存储位置与解析顺序」）。
+An **immutable snapshot** written at phase closing; it does not update afterward when other files change. Untracked along with the rest of `.rime/` (see "Storage Location & Resolution Order").
 
 ```json
 {
   "phase": "P2",
-  "name": "品质改善",
+  "name": "Quality Improvements",
   "completedAt": "2026-03-20",
   "items": [...]
 }
 ```
 
-- `items` 保留完整 task 对象（所有字段原样）
-- `phase` / `name` / `completedAt` 从 phase.json 取值
-- dashboard 通过 `/archives/{phaseId}` 路由按需读取
-- 归档快照不参与机械校验（validate-tasks.mjs 只覆盖 `tasks.json`）
+- `items` preserves full task objects (all fields as-is)
+- `phase` / `name` / `completedAt` are taken from phase.json
+- The dashboard reads it on demand via the `/archives/{phaseId}` route
+- Archive snapshots are not covered by mechanical validation (validate-tasks.mjs only covers `tasks.json`)

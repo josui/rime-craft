@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spec — {功能名}</title>
+    <title>Spec — {Feature Name}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -32,9 +32,10 @@
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
       body {
-        /* 正文字体按 spec 语言指定，禁止混排拉丁 webfont（会导致中日文粗细大小不一）：
-           中文 → 'Noto Sans CJK SC'（配 lang="zh-CN"）
-           日文 → 'Noto Sans CJK JP'（配 lang="ja"） */
+        /* Body font is set per the spec's language; never mix in a Latin webfont
+           (causes inconsistent weight/size between CJK and Latin text):
+           Chinese → 'Noto Sans CJK SC' (pair with lang="zh-CN")
+           Japanese → 'Noto Sans CJK JP' (pair with lang="ja") */
         font-family: 'Noto Sans CJK SC', system-ui, sans-serif;
         background: var(--bg);
         color: var(--ink);
@@ -77,7 +78,7 @@
       ul, ol { padding-left: 22px; } li { margin-bottom: 6px; }
       strong { font-weight: 700; color: var(--ink); }
 
-      /* ===== Note（无 border-left） ===== */
+      /* ===== Note (no border-left) ===== */
       .r-note { background: var(--muted-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; font-size: 15px; color: var(--ink-2); margin: 16px 0; line-height: 1.65; }
       .r-note__lede { color: var(--ink); font-weight: 700; }
 
@@ -102,13 +103,13 @@
       .r-view__label { font-size: 12.5px; font-weight: 700; color: var(--ink-4); letter-spacing: 0.08em; text-transform: uppercase; }
       .r-view__name { font-size: 20px; font-weight: 700; margin: 4px 0 6px; line-height: 1.3; }
       .r-view__sub { font-size: 14.5px; color: var(--ink-3); margin-bottom: 10px; }
-      /* 占位手机框：可整段替换为 <iframe class="r-phone" src="mock.html"> */
+      /* Placeholder phone frame: can be replaced wholesale with <iframe class="r-phone" src="mock.html"> */
       .r-phone { display: flex; align-items: center; justify-content: center; width: 375px; height: 720px; border: 1px solid var(--line); border-radius: 18px; background: var(--muted); color: var(--ink-4); font-size: 13px; font-family: 'JetBrains Mono', monospace; text-align: center; padding: 16px; }
       .r-view__notes { font-size: 15px; color: var(--ink-2); padding-top: 4px; }
       .r-view__notes ul { margin: 0; padding-left: 20px; } .r-view__notes li { margin-bottom: 8px; }
       @media (max-width: 760px) { .r-view { grid-template-columns: 1fr; } .r-phone { width: 100%; max-width: 375px; } }
 
-      /* ===== Desktop/wide mock（桌面端用：浏览器窗口框，notes 放下方） ===== */
+      /* ===== Desktop/wide mock (for desktop: browser-window frame, notes placed below) ===== */
       .r-view--wide { display: block; }
       .r-view--wide .r-view__notes { padding-top: 16px; max-width: 64ch; }
       .r-screen { width: 100%; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--paper); margin-top: 4px; }
@@ -116,19 +117,19 @@
       .r-screen__dot { width: 11px; height: 11px; border-radius: 50%; background: var(--muted-2); }
       .r-screen__url { margin-left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-4); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 3px 12px; flex: 1; max-width: 340px; }
       .r-screen__body { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; color: var(--ink-4); font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center; background: var(--muted); }
-      /* 真 mock：把 .r-screen__body 整段换成 <iframe style="display:block;width:100%;aspect-ratio:16/10;border:0"> */
+      /* Real mock: replace .r-screen__body wholesale with <iframe style="display:block;width:100%;aspect-ratio:16/10;border:0"> */
 
       /* ===== Code ===== */
       pre.r-code { background: oklch(24% 0.006 325deg); color: oklch(92% 0.008 85deg); border-radius: 10px; padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; margin: 10px 0 20px; }
       code.r-inline { background: oklch(24% 0.006 325deg); color: oklch(92% 0.008 85deg); padding: 2px 7px; border-radius: 4px; font-size: 13.5px; }
 
-      /* ===== 不做的事 ===== */
+      /* ===== Out of scope ===== */
       .r-skip { list-style: none; padding-left: 0; }
       .r-skip li { margin-bottom: 8px; color: var(--ink-3); padding-left: 22px; position: relative; }
       .r-skip li::before { content: '✕'; position: absolute; left: 0; color: var(--rose); font-weight: 700; }
       .r-skip li strong { color: var(--ink-2); }
 
-      /* ===== 小屏 fallback ===== */
+      /* ===== Small-screen fallback ===== */
       @media (max-width: 880px) {
         .r-nav { position: static; width: auto; border-right: none; border-bottom: 1px solid var(--line); padding: 28px 24px; }
         .r-nav__list { flex-flow: row wrap; }
@@ -138,153 +139,153 @@
   </head>
   <body>
     <aside class="r-nav">
-      <div class="r-nav__brand">{模块} · Spec</div>
-      <!-- 日期独立放 title 上方：meta 行只留编号 + status，status 换成 confirmed 等长词也不折行 -->
+      <div class="r-nav__brand">{Module} · Spec</div>
+      <!-- Date sits alone above the title: the meta line keeps only the ID + status, so status stays on one line even when swapped for a longer word like confirmed -->
       <div class="r-nav__date">2026-05-31</div>
-      <div class="r-nav__title">{功能名}</div>
+      <div class="r-nav__title">{Feature Name}</div>
       <div class="r-nav__meta">#0000 · draft</div>
       <ul class="r-nav__list">
-        <li><a href="#overview">1. 概览</a></li>
-        <li><a href="#decisions">2. 决策记录</a></li>
-        <li><a href="#ui">3. 界面</a></li>
-        <li><a href="#flow">4. 交互 / 状态</a></li>
-        <li><a href="#schema">5. 数据结构</a></li>
-        <li><a href="#scope">6. 边界 · 不做</a></li>
+        <li><a href="#overview">1. Overview</a></li>
+        <li><a href="#decisions">2. Decisions</a></li>
+        <li><a href="#ui">3. UI</a></li>
+        <li><a href="#flow">4. Interaction / State</a></li>
+        <li><a href="#schema">5. Schema</a></li>
+        <li><a href="#scope">6. Scope · Out of Scope</a></li>
       </ul>
     </aside>
 
     <main class="r-main">
       <div class="r-content">
-        <!-- 1. 概览 -->
+        <!-- 1. Overview -->
         <section class="r-section" id="overview">
           <div class="r-section__num">01 · Overview</div>
-          <h2 class="r-section__title">概览</h2>
+          <h2 class="r-section__title">Overview</h2>
           <p class="r-section__lede">
-            一两句说清这个功能解决什么问题、为谁解决、做完长什么样。背景 / 动机写这里，不写实现细节。
+            One or two sentences on what problem this feature solves, for whom, and what it looks like when done. Background / motivation goes here, not implementation details.
           </p>
 
-          <h3 class="r-h3">用户故事</h3>
+          <h3 class="r-h3">User Stories</h3>
           <div class="r-stories">
             <div class="r-story">
-              <div class="r-story__role">作为「想……的」用户</div>
-              <div class="r-story__text">我希望<strong>做某操作</strong>，就能<strong>得到某结果</strong>，不需要……</div>
+              <div class="r-story__role">As a user who wants "..."</div>
+              <div class="r-story__text">I want to <strong>do some action</strong>, so I can <strong>get some result</strong>, without needing to...</div>
             </div>
             <div class="r-story">
-              <div class="r-story__role">作为「想……的」用户</div>
-              <div class="r-story__text">我希望……</div>
+              <div class="r-story__role">As a user who wants "..."</div>
+              <div class="r-story__text">I want...</div>
             </div>
           </div>
         </section>
 
-        <!-- 2. 决策记录 -->
+        <!-- 2. Decisions -->
         <section class="r-section" id="decisions">
           <div class="r-section__num">02 · Decisions</div>
-          <h2 class="r-section__title">决策记录</h2>
+          <h2 class="r-section__title">Decisions</h2>
           <p class="r-section__lede">
-            grill 逼问后钉死的关键取舍，连同<strong>理由</strong>与放弃的方案 —— 半年后回看仍知道当初为什么这么定。
+            The key trade-offs locked down after grill interrogation, along with the <strong>rationale</strong> and the options rejected — so six months later you still know why it was decided this way.
           </p>
           <table class="r-table">
-            <thead><tr><th class="col-k">决策点</th><th class="col-v">结论</th><th>理由 / 放弃的方案</th></tr></thead>
+            <thead><tr><th class="col-k">Decision Point</th><th class="col-v">Conclusion</th><th>Rationale / Rejected Options</th></tr></thead>
             <tbody>
-              <tr><td>数据来源</td><td>方案 A</td><td>B 需额外依赖；A 复用现有 store</td></tr>
-              <tr><td>……</td><td>……</td><td>……</td></tr>
+              <tr><td>Data source</td><td>Option A</td><td>B needs an extra dependency; A reuses the existing store</td></tr>
+              <tr><td>...</td><td>...</td><td>...</td></tr>
             </tbody>
           </table>
         </section>
 
-        <!-- 3. 界面 -->
+        <!-- 3. UI -->
         <section class="r-section" id="ui">
           <div class="r-section__num">03 · UI</div>
-          <h2 class="r-section__title">界面</h2>
+          <h2 class="r-section__title">UI</h2>
           <p class="r-section__lede">
-            按主流程逐屏展示。下面两种框<strong>按目标设备二选一</strong>，删掉用不到的那种：
-            手机端用 <code class="r-inline">.r-view</code>（phone-frame，左屏右 notes）；
-            桌面端用 <code class="r-inline">.r-view--wide</code>（浏览器窗口框，notes 在下方）。
-            需要精度时把占位框换成 <code class="r-inline">&lt;iframe src="mock.html"&gt;</code>。
+            Walk through the main flow screen by screen. The two frame styles below are <strong>an either/or choice based on the target device</strong> — delete whichever you don't use:
+            mobile uses <code class="r-inline">.r-view</code> (phone-frame, screen on the left, notes on the right);
+            desktop uses <code class="r-inline">.r-view--wide</code> (browser-window frame, notes below).
+            When you need precision, replace the placeholder frame with an <code class="r-inline">&lt;iframe src="mock.html"&gt;</code>.
           </p>
 
-          <h3 class="r-h3">手机端 — phone-frame</h3>
+          <h3 class="r-h3">Mobile — phone-frame</h3>
           <div class="r-views">
             <div class="r-view">
-              <div class="r-phone">375 × 720<br />手机线框占位<br />（换成 iframe mock）</div>
+              <div class="r-phone">375 × 720<br />Mobile wireframe placeholder<br />(replace with an iframe mock)</div>
               <div>
-                <div class="r-view__label">View 1 · 主流程</div>
-                <div class="r-view__name">屏幕名</div>
-                <div class="r-view__sub">一句话说明这屏是什么</div>
+                <div class="r-view__label">View 1 · Main Flow</div>
+                <div class="r-view__name">Screen Name</div>
+                <div class="r-view__sub">One sentence on what this screen is</div>
                 <div class="r-view__notes">
                   <ul>
-                    <li><strong>区块 A</strong> — 作用 / 数据来源 / 交互</li>
-                    <li><strong>区块 B</strong> — ……</li>
+                    <li><strong>Block A</strong> — purpose / data source / interaction</li>
+                    <li><strong>Block B</strong> — ...</li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
 
-          <h3 class="r-h3">桌面端 — screen-frame</h3>
+          <h3 class="r-h3">Desktop — screen-frame</h3>
           <div class="r-views">
             <div class="r-view r-view--wide">
-              <div class="r-view__label">View 1 · 主界面</div>
-              <div class="r-view__name">页面名</div>
-              <div class="r-view__sub">一句话说明这个宽屏页面是什么</div>
+              <div class="r-view__label">View 1 · Main Screen</div>
+              <div class="r-view__name">Page Name</div>
+              <div class="r-view__sub">One sentence on what this wide-screen page is</div>
               <div class="r-screen">
                 <div class="r-screen__bar">
                   <span class="r-screen__dot"></span><span class="r-screen__dot"></span><span class="r-screen__dot"></span>
                   <span class="r-screen__url">app.example.com/page</span>
                 </div>
-                <div class="r-screen__body">1280 × 800 宽屏线框占位<br />（换成 iframe mock）</div>
+                <div class="r-screen__body">1280 × 800 wide-screen wireframe placeholder<br />(replace with an iframe mock)</div>
               </div>
               <div class="r-view__notes">
                 <ul>
-                  <li><strong>侧栏 / 顶栏 / 主区</strong> — 桌面布局的区块划分与作用</li>
-                  <li><strong>响应式断点</strong> — 宽屏 → 窄屏如何降级</li>
+                  <li><strong>Sidebar / header / main area</strong> — how the desktop layout is divided into blocks and their roles</li>
+                  <li><strong>Responsive breakpoint</strong> — how wide screen degrades to narrow screen</li>
                 </ul>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 4. 交互 / 状态 -->
+        <!-- 4. Interaction / State -->
         <section class="r-section" id="flow">
           <div class="r-section__num">04 · Flow</div>
-          <h2 class="r-section__title">交互 / 状态</h2>
+          <h2 class="r-section__title">Interaction / State</h2>
           <ul>
-            <li><strong>默认态</strong>：……</li>
-            <li><strong>加载 / 空 / 错误态</strong>：……</li>
-            <li><strong>关键操作</strong>：点击 X → 发生 Y</li>
+            <li><strong>Default state</strong>: ...</li>
+            <li><strong>Loading / empty / error states</strong>: ...</li>
+            <li><strong>Key action</strong>: click X → Y happens</li>
           </ul>
           <div class="r-note">
-            <span class="r-note__lede">状态机：</span>用 r-note 记录"常驻视图 + 弹层"这类结构约束，或边界条件。
+            <span class="r-note__lede">State machine:</span> use r-note to record structural constraints like "persistent view + overlay", or edge conditions.
           </div>
         </section>
 
-        <!-- 5. 数据结构（可选） -->
+        <!-- 5. Schema (optional) -->
         <section class="r-section" id="schema">
           <div class="r-section__num">05 · Schema</div>
-          <h2 class="r-section__title">数据结构</h2>
-          <p class="r-section__lede">涉及数据的功能才写。TS 类型 / 接口形状，前后端对齐用。</p>
+          <h2 class="r-section__title">Schema</h2>
+          <p class="r-section__lede">Write this only for features that involve data. TS types / interface shapes, for frontend-backend alignment.</p>
           <pre class="r-code">interface Example {
   id: string
-  name: string        // UI 直接显示
-  status: 'a' | 'b'   // 驱动渲染分支
+  name: string        // displayed directly in the UI
+  status: 'a' | 'b'   // drives the render branch
 }</pre>
         </section>
 
-        <!-- 6. 边界 -->
+        <!-- 6. Scope -->
         <section class="r-section" id="scope">
           <div class="r-section__num">06 · Scope</div>
-          <h2 class="r-section__title">边界 · 不做的事</h2>
+          <h2 class="r-section__title">Scope · Out of Scope</h2>
           <ul class="r-skip">
-            <li><strong>本期不做 1</strong> —— 砍掉的理由</li>
-            <li><strong>本期不做 2</strong></li>
+            <li><strong>Not doing 1 this cycle</strong> — reason it was cut</li>
+            <li><strong>Not doing 2 this cycle</strong></li>
           </ul>
 
-          <h3 class="r-h3">开放问题</h3>
-          <ol><li>还没拍板、需后续确认的点……</li></ol>
+          <h3 class="r-h3">Open Questions</h3>
+          <ol><li>Points not yet decided, needing follow-up confirmation...</li></ol>
         </section>
 
         <div style="margin-top: 96px; padding-top: 28px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-4);">
-          关联资料：<a href="#">mock.html</a> · 任务 #0000
+          Related: <a href="#">mock.html</a> · Task #0000
         </div>
       </div>
     </main>

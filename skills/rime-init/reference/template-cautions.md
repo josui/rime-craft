@@ -1,29 +1,29 @@
-# Cautions 模板
+# Cautions Template
 
-踩过的坑和关键约束，避免重复犯错。
+Pitfalls hit and key constraints, to avoid repeating mistakes.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} — 注意事项
+# {Project Name} — Cautions
 
-> 踩过的坑和关键约束，避免重复犯错。
+> Pitfalls hit and key constraints, to avoid repeating mistakes.
 
-## 1. 标题
+## 1. Title
 
-**问题：** 描述遇到了什么
+**Problem:** describe what was encountered
 
-**解决方案：** 怎么解决的
+**Solution:** how it was resolved
 
-**参考：** `path/to/file` 或相关链接
+**Reference:** `path/to/file` or a related link
 
-## 2. 标题
+## 2. Title
 
 ...
 ```
 
-## 写法要点
+## Writing Notes
 
-- 每个坑独立编号，只追加不重排
-- 三段式：问题 → 方案 → 参考
-- 活文档，踩坑时立即记录，不要攒着
+- Each pitfall gets its own number; only append, never reorder
+- Three-part structure: problem → solution → reference
+- A living document — record a pitfall the moment it's hit, don't let them pile up

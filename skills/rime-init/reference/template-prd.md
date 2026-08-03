@@ -1,82 +1,82 @@
-# PRD 模板
+# PRD Template
 
-PRD 是项目的产品定位和规格描述。**先写 PRD 再动手。**
+The PRD is the project's product positioning and spec description. **Write the PRD before starting work.**
 
-任务状态由 `.rime/tasks.json` 管理，PRD 只负责叙事。
+Task status is managed by `.rime/tasks.json`; the PRD is narrative-only.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} — Product Requirements Document
+# {Project Name} — Product Requirements Document
 
-## 概述
+## Overview
 
-一句话说清这是什么、解决什么问题。
-明确定位：个人工具 / 开源项目 / 商业产品。
+One sentence stating what this is and what problem it solves.
+State the positioning clearly: personal tool / open-source project / commercial product.
 
-## 核心理念
+## Core Philosophy
 
-- **关键词** — 一句话解释
-- 3-5 条，确立设计哲学
+- **Keyword** — one-sentence explanation
+- 3-5 items establishing the design philosophy
 
-## 用户画像
+## User Persona
 
-一段话描述：目标用户身份、工作习惯、核心痛点。
+A paragraph describing: target user identity, work habits, core pain points.
 
-## 核心流程
+## Core Flow
 
-<!-- 用实际的示例展示主场景 -->
-<!-- UI 截图 / CLI 输出 / 使用流程 / 目录结构 等 -->
+<!-- Show the main scenario with a real example -->
+<!-- UI screenshots / CLI output / usage flow / directory structure, etc. -->
 
-## 功能规划
+## Feature Plan
 
-> 任务状态由 `.rime/tasks.json` 管理。
-> 已完成阶段归档至 [archive.md](archive.md)。
+> Task status is managed by `.rime/tasks.json`.
+> Completed phases are archived to [archive.md](archive.md).
 
 ### P0 — MVP
 
-本阶段目标：一句话描述。
+This phase's goal: one-sentence description.
 
-- #001 功能标题 — 简要描述
-- #002 功能标题 — 简要描述
+- #001 Feature title — brief description
+- #002 Feature title — brief description
 
-<!-- 初期可在 PRD 中写 P0~P2 所有阶段的规划 -->
-<!-- 阶段完成后：PRD 只留当前和未来阶段 -->
+<!-- Early on, the PRD may list the plan for all phases P0-P2 -->
+<!-- After a phase completes: the PRD keeps only the current and future phases -->
 
-### 后续方向
+### Future Directions
 
-（大颗粒想法，不分配编号，评估后通过 /rime-backlog 纳入 tasks.json）
+(Large-grained ideas, not assigned an ID; after evaluation, bring into tasks.json via /rime-backlog)
 
-## 非功能需求（按需）
+## Non-Functional Requirements (as needed)
 
-| 需求 | 说明 |
+| Requirement | Description |
 |------|------|
-<!-- 用具体数字：启动 < 200ms、支撑 10K 条等 -->
+<!-- Use concrete numbers: startup < 200ms, supports 10K records, etc. -->
 
-## 不做的事
+## Out of Scope
 
-- 明确列出不做的功能
-- 划清边界，防止 scope creep
+- Explicitly list features that won't be built
+- Draw the boundary to prevent scope creep
 
-## 技术选型（开发项目）
+## Tech Stack (dev projects)
 
-| 用途 | 选型 | 说明 |
+| Purpose | Choice | Notes |
 |------|------|------|
 
-## 相关文档
+## Related Documents
 
-| 文档 | 内容 |
+| Document | Content |
 |------|------|
-| .rime/tasks.json | 任务状态（source of truth） |
-| archive.md | 已完成阶段归档 |
-| product/ | 详细仕様書 |
+| .rime/tasks.json | Task status (source of truth) |
+| archive.md | Archive of completed phases |
+| product/ | Detailed specifications |
 ```
 
-## 写法要点
+## Writing Notes
 
-- **PRD 是叙事文档**，描述产品定位、目标、功能规格
-- **任务状态不在 PRD 中管理**，由 `.rime/tasks.json` 负责
-- **功能规划用引用列表**（`- #001 标题 — 描述`），不用状态表格
-- **核心流程用真实示例**，不写抽象描述
-- **"不做的事"必须有**，最容易忽略也最有价值
-- 阶段完成后移入 archive.md，PRD 只保留当前和未来阶段
+- **The PRD is a narrative document**, describing product positioning, goals, and feature specs
+- **Task status is not managed in the PRD** — that's `.rime/tasks.json`'s job
+- **Use a reference list for the feature plan** (`- #001 Title — description`), not a status table
+- **Use real examples for the core flow**, not abstract descriptions
+- **"Out of Scope" is mandatory** — the easiest to skip and the most valuable
+- After a phase completes, move it into archive.md; the PRD keeps only the current and future phases

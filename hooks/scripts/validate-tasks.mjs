@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// PostToolUse hook（matcher: Edit|Write，目标 /.rime/tasks.json）
-// 机械校验 tasks.json 是否符合 data-contract.md：字段白名单、必填与格式、
-// 状态一致性、commit gate（有 commitFrom 的 done 须有 commits 且 from ≠ to）、dependsOn 引用与检环、docs[].type 枚举。
-// 只反馈不修改文件——错误经 decision:"block" 回注给模型自纠，警告经 additionalContext 提示。
+// PostToolUse hook (matcher: Edit|Write, targeting /.rime/tasks.json)
+// Mechanically validates that tasks.json conforms to data-contract.md: field whitelist, required fields and formats,
+// status consistency, commit gate (a done item with commitFrom must have commits and from ≠ to), dependsOn reference and cycle checking, docs[].type enum.
+// Feedback only, does not modify the file — errors are fed back to the model via decision:"block" for self-correction; warnings are surfaced via additionalContext.
 
 import { readFileSync, appendFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -15,7 +15,7 @@ const log = (msg) => {
   } catch {}
 };
 
-// ---- data-contract.md 的机械投影 ----
+// ---- Mechanical projection of data-contract.md ----
 
 const ITEM_FIELDS = new Set([
   "id", "module", "title", "description", "status", "phase", "priority",
@@ -30,7 +30,7 @@ const DOC_TYPE_ENUM = new Set(["spec", "plan", "prototype", "reference", "bluepr
 const ID_RE = /^#\d{4}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-// ---- 校验 ----
+// ---- Validation ----
 
 function validate(data) {
   const errors = [];
@@ -40,113 +40,113 @@ function validate(data) {
 
   for (const item of items) {
     if (item === null || typeof item !== "object" || Array.isArray(item)) {
-      errors.push(`items 中存在非对象元素: ${JSON.stringify(item)}`);
+      errors.push(`items contains a non-object element: ${JSON.stringify(item)}`);
       continue;
     }
-    const label = typeof item.id === "string" ? item.id : "(缺 id 的 item)";
+    const label = typeof item.id === "string" ? item.id : "(item missing id)";
 
-    // 字段白名单——直接拦 startedAt 这类发明字段
+    // Field whitelist — directly blocks invented fields like startedAt
     for (const key of Object.keys(item)) {
       if (!ITEM_FIELDS.has(key)) {
-        errors.push(`${label}: 未知字段 "${key}"（契约外字段禁止写入；如确需新字段，先修订 data-contract.md）`);
+        errors.push(`${label}: unknown field "${key}" (fields outside the contract may not be written; if a new field is genuinely needed, amend data-contract.md first)`);
       }
     }
 
-    // 必填字段
+    // Required fields
     for (const key of REQUIRED_FIELDS) {
       if (item[key] === undefined || item[key] === null || item[key] === "") {
-        errors.push(`${label}: 缺少必填字段 "${key}"`);
+        errors.push(`${label}: missing required field "${key}"`);
       }
     }
 
-    // 格式与枚举
+    // Format and enums
     if (item.id !== undefined && !ID_RE.test(String(item.id))) {
-      errors.push(`${label}: id 格式错误（应为 # + 4 位补零，如 #0001）`);
+      errors.push(`${label}: invalid id format (should be # + 4 zero-padded digits, e.g. #0001)`);
     }
     if (item.status !== undefined && !STATUS_ENUM.has(item.status)) {
-      errors.push(`${label}: status "${item.status}" 不在枚举 todo/doing/done 内`);
+      errors.push(`${label}: status "${item.status}" is not in the enum todo/doing/done`);
     }
     if (item.priority !== undefined && !PRIORITY_ENUM.has(item.priority)) {
-      errors.push(`${label}: priority "${item.priority}" 不在枚举 high/medium/low 内`);
+      errors.push(`${label}: priority "${item.priority}" is not in the enum high/medium/low`);
     }
     if (item.difficulty !== undefined && !DIFFICULTY_ENUM.has(item.difficulty)) {
-      errors.push(`${label}: difficulty "${item.difficulty}" 不在枚举 small/medium/large 内`);
+      errors.push(`${label}: difficulty "${item.difficulty}" is not in the enum small/medium/large`);
     }
     for (const key of ["createdAt", "completedAt"]) {
       if (item[key] !== undefined && !DATE_RE.test(String(item[key]))) {
-        errors.push(`${label}: ${key} 格式错误（应为 YYYY-MM-DD）`);
+        errors.push(`${label}: ${key} has an invalid format (should be YYYY-MM-DD)`);
       }
     }
 
-    // 状态一致性
+    // Status consistency
     if (item.status === "doing" && !item.commitFrom) {
-      warnings.push(`${label}: status=doing 但缺 commitFrom（契约要求转 doing 时写入 git rev-parse HEAD）`);
+      warnings.push(`${label}: status=doing but missing commitFrom (the contract requires writing git rev-parse HEAD when transitioning to doing)`);
     }
 
-    // commit gate：completedAt / commits 与 status=done 同笔写入
+    // commit gate: completedAt / commits must be written in the same commit as status=done
     if (item.status === "done") {
       if (!item.completedAt) {
-        errors.push(`${label}: status=done 但缺 completedAt（须与 status 同笔写入）`);
+        errors.push(`${label}: status=done but missing completedAt (must be written in the same write as status)`);
       }
       if (item.commitFrom && !item.commits) {
-        errors.push(`${label}: status=done 且有 commitFrom 但缺 commits（commit gate）`);
+        errors.push(`${label}: status=done and has commitFrom but is missing commits (commit gate)`);
       }
     } else {
       for (const key of ["completedAt", "commits"]) {
         if (item[key] !== undefined) {
-          errors.push(`${label}: status=${item.status} 不应有 ${key}（仅 done 时与 status 同笔写入）`);
+          errors.push(`${label}: status=${item.status} should not have ${key} (only written together with status when done)`);
         }
       }
     }
     if (item.commits !== undefined) {
       const c = item.commits;
       if (!c || typeof c !== "object" || Array.isArray(c) || typeof c.from !== "string" || typeof c.to !== "string") {
-        errors.push(`${label}: commits 应为 { "from": "...", "to": "..." }`);
+        errors.push(`${label}: commits should be { "from": "...", "to": "..." }`);
       } else if (c.from === c.to) {
-        errors.push(`${label}: commits.from === commits.to（零 commit 不得标 done）`);
+        errors.push(`${label}: commits.from === commits.to (zero commits may not be marked done)`);
       }
     }
 
-    // dependsOn 引用存在性
+    // dependsOn reference existence
     if (item.dependsOn !== undefined) {
       if (!Array.isArray(item.dependsOn)) {
-        errors.push(`${label}: dependsOn 应为数组`);
+        errors.push(`${label}: dependsOn should be an array`);
       } else if (item.dependsOn.length === 0) {
-        errors.push(`${label}: dependsOn 为空时应省略该 key，不写 []`);
+        errors.push(`${label}: when dependsOn is empty, the key should be omitted, not written as []`);
       } else {
         for (const dep of item.dependsOn) {
           if (dep === item.id) {
-            errors.push(`${label}: dependsOn 自依赖`);
+            errors.push(`${label}: dependsOn self-reference`);
           } else if (!ids.has(dep)) {
-            errors.push(`${label}: dependsOn 引用不存在的 task "${dep}"`);
+            errors.push(`${label}: dependsOn references a nonexistent task "${dep}"`);
           }
         }
       }
     }
 
-    // docs[].type 枚举
+    // docs[].type enum
     if (item.docs !== undefined) {
       if (!Array.isArray(item.docs)) {
-        errors.push(`${label}: docs 应为数组`);
+        errors.push(`${label}: docs should be an array`);
       } else {
         for (const doc of item.docs) {
           if (!doc || typeof doc !== "object" || !doc.type || !doc.path) {
-            errors.push(`${label}: docs 条目应为 {type, path}`);
+            errors.push(`${label}: docs entries should be {type, path}`);
           } else if (!DOC_TYPE_ENUM.has(doc.type)) {
-            errors.push(`${label}: docs[].type "${doc.type}" 不在枚举 spec/plan/prototype/reference/blueprint 内`);
+            errors.push(`${label}: docs[].type "${doc.type}" is not in the enum spec/plan/prototype/reference/blueprint`);
           }
         }
       }
     }
   }
 
-  // dependsOn DFS 检环（图恒为 DAG）
+  // dependsOn DFS cycle detection (the graph must always be a DAG)
   const graph = new Map(
     items
       .filter((it) => it && typeof it === "object" && typeof it.id === "string")
       .map((it) => [it.id, Array.isArray(it.dependsOn) ? it.dependsOn.filter((d) => ids.has(d)) : []]),
   );
-  const state = new Map(); // 0=未访问 1=在栈 2=已完成
+  const state = new Map(); // 0=unvisited 1=on stack 2=done
   const stack = [];
   const dfs = (node) => {
     state.set(node, 1);
@@ -155,7 +155,7 @@ function validate(data) {
       const s = state.get(dep) ?? 0;
       if (s === 1) {
         const cycle = [...stack.slice(stack.indexOf(dep)), dep].join(" → ");
-        errors.push(`dependsOn 存在环: ${cycle}`);
+        errors.push(`dependsOn has a cycle: ${cycle}`);
       } else if (s === 0) {
         dfs(dep);
       }
@@ -170,7 +170,7 @@ function validate(data) {
   return { errors, warnings };
 }
 
-// ---- hook 入口 ----
+// ---- Hook entry point ----
 
 function readStdin() {
   try {
@@ -185,18 +185,18 @@ function main() {
   try {
     input = JSON.parse(readStdin());
   } catch {
-    return; // 非 JSON 输入，静默放行
+    return; // non-JSON input, silently allow
   }
 
   const filePath = input?.tool_input?.file_path ?? "";
-  if (!/(^|\/)\.rime\/tasks\.json$/.test(filePath)) return; // matcher 只滤 tool name，路径在此二次过滤
+  if (!/(^|\/)\.rime\/tasks\.json$/.test(filePath)) return; // the matcher only filters on tool name; the path is filtered again here
 
   let data;
   try {
     data = JSON.parse(readFileSync(filePath, "utf8"));
   } catch (e) {
-    // 写入后的文件读不了/不是合法 JSON，本身就是必须回注的错误
-    emit([`tasks.json 不是合法 JSON 或无法读取: ${e.message}`], []);
+    // If the file can't be read after being written, or isn't valid JSON, that itself is an error that must be fed back
+    emit([`tasks.json is not valid JSON or could not be read: ${e.message}`], []);
     return;
   }
 
@@ -205,10 +205,10 @@ function main() {
   if (errors.length || warnings.length) emit(errors, warnings);
 }
 
-// 输出协议（Claude Code PostToolUse）：
-// - errors → JSON {decision:"block", reason} 输出到 stdout，reason 自动回注给模型自纠
-//   （PostToolUse 时写入已发生，block 不撤销写入，只把违规信息喂回去）
-// - 仅 warnings → hookSpecificOutput.additionalContext，作为上下文提示不打断
+// Output protocol (Claude Code PostToolUse):
+// - errors → JSON {decision:"block", reason} written to stdout; reason is fed back to the model automatically for self-correction
+//   (by PostToolUse time the write has already happened; block does not undo the write, it only feeds back the violation info)
+// - warnings only → hookSpecificOutput.additionalContext, surfaced as a non-blocking context hint
 function emit(errors, warnings) {
   const lines = [
     ...errors.map((e) => `❌ ${e}`),
@@ -216,16 +216,16 @@ function emit(errors, warnings) {
   ];
   if (errors.length) {
     const reason =
-      `tasks.json 违反 data-contract.md（写入已发生，请立即修正文件）：\n${lines.join("\n")}\n` +
-      `存量 done 条目按真实 git 历史补齐 commits / completedAt——属数据修复，不受 done 终态限制。\n` +
-      `字段契约见 rime-craft plugin 的 skills/rime-flow/data-contract.md；拿不准先加载 rime-flow skill。`;
+      `tasks.json violates data-contract.md (the write has already happened — fix the file immediately):\n${lines.join("\n")}\n` +
+      `For pre-existing done entries, backfill commits / completedAt according to real git history — this is a data repair, not subject to the done terminal-state restriction.\n` +
+      `Field contract: see skills/rime-flow/data-contract.md in the rime-craft plugin; when unsure, load the rime-flow skill first.`;
     process.stdout.write(JSON.stringify({ decision: "block", reason }) + "\n");
   } else {
     process.stdout.write(
       JSON.stringify({
         hookSpecificOutput: {
           hookEventName: "PostToolUse",
-          additionalContext: `tasks.json 契约警告：\n${lines.join("\n")}`,
+          additionalContext: `tasks.json contract warnings:\n${lines.join("\n")}`,
         },
       }) + "\n",
     );

@@ -5,7 +5,7 @@ description: Use when executing a spec with independent `## Task N` sections via
 
 # Subagent-Driven Development
 
-> 本 skill 原文取自 [obra/superpowers](https://github.com/obra/superpowers) 的 `subagent-driven-development`（MIT License），移植时替换了全部 superpowers 依赖为 rime-flow + mattpocock skills（`tdd` / `review`），工作目录从 `.superpowers/sdd/` 改为 `.rime/sdd/<task-id>/`（按 rime task 编号分目录，多次 large 任务互不覆盖）。
+> This skill originates from `subagent-driven-development` in [obra/superpowers](https://github.com/obra/superpowers) (MIT License). The port replaces all superpowers dependencies with rime-flow + mattpocock skills (`tdd` / `review`), and moves the working directory from `.superpowers/sdd/` to `.rime/sdd/<task-id>/` (one directory per rime task ID, so successive large tasks never overwrite each other).
 
 Execute a spec by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
@@ -227,7 +227,7 @@ final whole-branch review. When you fill a reviewer template:
 ## Review Loop Cost Rules
 
 The review loop is the largest fixed cost of this skill. The authoritative
-cost model lives in rime-flow's `dispatch.md`（「review 成本模型」）; these
+cost model lives in rime-flow's `dispatch.md` ("Review Cost Model"); these
 are its operational rules here:
 
 - **Persistent reviewer per task.** Fresh-per-task exists to prevent
@@ -376,7 +376,7 @@ Task reviewer: Spec ✅. Task quality: Approved.
 [Dispatch final whole-branch review via mattpocock: review]
 Final reviewer: Standards ✅, Spec ✅ — all requirements met, ready to merge
 
-[Return to rime-flow: complete task flow — 收尾提交 → verification checklist (先落盘 spec 验证记录，再呈现) → user verify → 回填验证结果 → commit gate → done + completedAt + commits 同笔写入]
+[Return to rime-flow: complete task flow — wrap-up commit → verification checklist (persist to the spec's Verification section first, then present) → user verify → backfill verification results → commit gate → done + completedAt + commits in the same write]
 Done!
 ```
 
@@ -452,13 +452,13 @@ Done!
 
 ## Integration
 
-**上游（rime-flow 提供）：**
-- **rime-flow spec + subtasks** — spec 定稿后，执行步骤写成 `## Task N` 段落，作为本 skill 的执行输入；subtasks 在 tasks.json 做状态追踪
+**Upstream (provided by rime-flow):**
+- **rime-flow spec + subtasks** — once the spec is finalized, the execution steps are written as `## Task N` sections and become this skill's input; subtasks are tracked in tasks.json
 
-**本 skill 调用：**
-- **`tdd`**（mattpocock）— implementer subagent 遵循 TDD
-- **`review`**（mattpocock）— final whole-branch review（两轴并行 sub-agent：Standards + Spec）
+**Skills this skill calls:**
+- **`tdd`** (mattpocock) — implementer subagents follow TDD
+- **`review`** (mattpocock) — final whole-branch review (two-axis parallel sub-agents: Standards + Spec)
 
-**下游（rime-flow 接管）：**
-- 所有 task 完成后，回到 rime-flow 的「完成 task」流程（收尾提交 → 验证清单先落盘 spec 验证记录再呈现 → 用户验证 → 回填验证结果 → commit gate → done + completedAt + commits 同笔写入）
-- 提交使用 `/rime-git`
+**Downstream (rime-flow takes over):**
+- After all tasks complete, return to rime-flow's "Completing a task" flow (wrap-up commit → persist the verification checklist to the spec's Verification section first, then present → user verifies → backfill verification results → commit gate → done + completedAt + commits in the same write)
+- Commits go through `/rime-git`

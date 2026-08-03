@@ -2,29 +2,29 @@
 description: Open the current project's .rime/ kanban dashboard — tasks, phases, and cautions. Project task tracking, NOT AI usage/spend/billing.
 ---
 
-在浏览器中打开当前项目的 `.rime/` dashboard。
+Open the current project's `.rime/` dashboard in the browser.
 
-## 前提条件
+## Prerequisites
 
 - Node.js 18+
-- 当前项目已有 `.rime/` 目录（含 tasks.json）
+- The current project already has a `.rime/` directory (with tasks.json)
 
-如果 `.rime/` 不存在，server 会打印它解析到的路径并提示先用 `/rime-init` 初始化项目。
+If `.rime/` does not exist, the server prints the path it resolved and suggests initializing the project with `/rime-init` first.
 
-## 执行
+## Execution
 
-Dashboard server 脚本位于 plugin 内部，无需复制到项目中。脚本路径用 `${CLAUDE_PLUGIN_ROOT}` 解析——Claude Code 会在本命令进入上下文前就地展开为绝对路径，无需推算或查找。
+The dashboard server script lives inside the plugin — no need to copy it into the project. The script path resolves via `${CLAUDE_PLUGIN_ROOT}` — Claude Code expands it to an absolute path in place before this command enters context; no guessing or searching needed.
 
-**直接启动，不要询问用户。** 在项目目录下使用后台运行（`run_in_background`）启动 live reload 模式：
+**Start it directly, do not ask the user.** From the project directory, launch live-reload mode in the background (`run_in_background`):
 
 ```
 node ${CLAUDE_PLUGIN_ROOT}/dashboard/server.mjs
 ```
 
-**不要自己拼 `--rime-dir`。** server 内置解析器，解析顺序与 hooks 完全一致（权威定义见 rime-flow 的 data-contract.md「存储位置与解析顺序」），并且会正确处理 linked worktree——从 worktree 启动时自动解析到主检出侧的权威数据。手工拼路径会绕过这层，在 worktree 下拿到错的或不存在的目录。
+**Do not assemble `--rime-dir` yourself.** The server has a built-in resolver whose resolution order is identical to the hooks' (authoritative definition: "Storage Location & Resolution Order" in rime-flow's data-contract.md), and it handles linked worktrees correctly — when started from a worktree it automatically resolves to the authoritative data on the main checkout side. Assembling the path by hand bypasses that layer and gets a wrong or nonexistent directory under a worktree.
 
-仅在需要指向另一个项目的 `.rime/` 时才追加 `--rime-dir <path>`。
+Append `--rime-dir <path>` only when pointing at another project's `.rime/`.
 
-Node 启动后会自动在浏览器中打开页面，不需要额外执行 `open` 命令。
+Node opens the page in the browser automatically after starting; no extra `open` command is needed.
 
-告知用户 dashboard 已启动，live reload 模式运行中。
+Tell the user (in their conversation language) that the dashboard is up and running in live-reload mode.

@@ -2,69 +2,69 @@
 description: Quickly add a backlog entry
 ---
 
-向当前项目的 `.rime/tasks.json` 添加一条新任务（status: todo）。
+Add a new task (status: todo) to the current project's `.rime/tasks.json`.
 
-> 字段、枚举与写入约束的权威定义在 rime-flow skill 的 `data-contract.md`；本命令内嵌的校验步骤与之保持一致，冲突时以契约为准。
+> The authoritative definitions of fields, enums, and Write Constraints live in the rime-flow skill's `data-contract.md`; the validation steps embedded in this command are kept consistent with it — when they conflict, the contract wins.
 
-## 定位 tasks.json
+## Locate tasks.json
 
-按以下顺序查找，使用第一个找到的：
-1. `**/.rime/tasks.json`（Glob 搜索当前项目）
-2. 找不到则提示用户：需要先用 `/rime-init` 初始化项目
+Search in the following order and use the first one found:
+1. `**/.rime/tasks.json` (Glob search of the current project)
+2. If not found, tell the user, in the user's conversation language, that the project needs to be initialized first with `/rime-init`
 
-## 输入
+## Input
 
-`$ARGUMENTS` 格式：`[内容]` 或 `[Phase]: [内容]`，内容中可附带依赖声明。
+`$ARGUMENTS` format: `[content]` or `[Phase]: [content]`; the content may carry a dependency declaration.
 
-示例：
-- `Service Page 支持拖拽排序`
-- `P2: Asset 批量删除功能`
+Examples:
+- `Service Page supports drag-and-drop reordering`
+- `P2: Asset bulk-delete feature`
 
-**依赖解析**：识别内容中的「依赖 #0017」「依赖 #0017 #0018」这类表达，提取其中的 task ID（`#` + 4 位数字）为 `dependsOn` ID 列表。无显式依赖则不写该字段（不写 `"dependsOn": []`）。
+**Dependency parsing**: recognize expressions such as "depends on #0017" or "depends on #0017 #0018" in the content, and extract the task IDs they contain (`#` + 4 digits) into the `dependsOn` ID list. If there is no explicit dependency, do not write this field (do not write `"dependsOn": []`).
 
-示例：
-- `Dashboard 交互化 依赖 #0017` → `dependsOn: ["#0017"]`
-- `P2: 拓扑排序渲染 依赖 #0017 #0018` → `dependsOn: ["#0017", "#0018"]`
+Examples:
+- `Dashboard interactivity depends on #0017` → `dependsOn: ["#0017"]`
+- `P2: Topological-sort rendering depends on #0017 #0018` → `dependsOn: ["#0017", "#0018"]`
 
-如果 `$ARGUMENTS` 为空，询问用户要添加什么。
+If `$ARGUMENTS` is empty, ask the user what to add, in the user's conversation language.
 
-## 执行步骤
+## Execution Steps
 
-1. 定位并读取 `.rime/tasks.json`
-2. 从 `$ARGUMENTS` 解析内容（如有 Phase 前缀则提取，否则用 `phase.json` 的 current）
-3. 根据内容判断 difficulty（`small` / `medium` / `large`），告知用户
-4. 根据内容判断 priority（`high` / `medium` / `low`），不确定时询问用户
-5. 从 tasks.json 读取 `nextId`，生成新 id（补零 4 位）
-6. 如有 `segments`，根据 module 分配对应区间编号
-7. **依赖存在性校验**（仅当解析出 `dependsOn`）：每个被依赖 ID 必须在当前 `tasks.json` 中存在。若有不存在的 ID，列出并提示用户，要求确认（保留）或移除后再继续；未澄清前不写入。
-8. **依赖检环（DFS）**（仅当解析出 `dependsOn`）：将新 task 的 `dependsOn` 纳入由现有 task 的 `dependsOn` 构成的依赖图，从新 task 出发做 DFS。若构成环（含 `dependsOn` 指向自身的自依赖），**拒绝写入**并提示环路径（如 `#0033 → #0017 → #0033`）。tasks.json 须恒为 DAG。
-9. **写入前校验**：确保以下必填字段全部存在且格式正确，缺失则中止并报错：
-   - `id`: `#0001` 格式（4 位补零）
-   - `title`: 非空字符串
-   - `status`: 必须为 `todo`
-   - `priority`: `high` / `medium` / `low` 之一
-   - `createdAt`: `YYYY-MM-DD` 格式
-   - `phase`: 非空字符串
-   - `dependsOn`（可选）：若存在，须为 task ID 数组，且已通过第 7、8 步的存在性 + 无环校验；为空时不写该 key
-   - `description`（可选）：若填写，须**多行书写**——背景/目标/约束/验收点用 `\n` 分行或分段，**不得挤成一行长文本**
-10. 追加 item（`dependsOn` 仅当非空时加入，无依赖则省略该 key）：
+1. Locate and read `.rime/tasks.json`
+2. Parse the content from `$ARGUMENTS` (extract the Phase prefix if present, otherwise use `phase.json`'s current)
+3. Judge difficulty from the content (`small` / `medium` / `large`) and tell the user, in the user's conversation language
+4. Judge priority from the content (`high` / `medium` / `low`); if uncertain, ask the user, in the user's conversation language
+5. Read `nextId` from tasks.json and generate the new id (zero-padded to 4 digits)
+6. If `segments` exist, assign the corresponding range number based on module
+7. **Dependency existence check** (only when `dependsOn` was parsed out): every referenced ID must exist in the current `tasks.json`. If any ID does not exist, list them and prompt the user, in the user's conversation language, requiring confirmation (keep) or removal before proceeding; do not write until this is resolved.
+8. **Dependency cycle check (DFS)** (only when `dependsOn` was parsed out): fold the new task's `dependsOn` into the dependency graph formed by existing tasks' `dependsOn`, and run a DFS starting from the new task. If it forms a cycle (including a self-dependency where `dependsOn` points at itself), **refuse to write** and report the cycle path to the user, in the user's conversation language (e.g. `#0033 → #0017 → #0033`). `tasks.json` must always remain a DAG.
+9. **Pre-write validation**: make sure all of the following required fields are present and correctly formatted; if any are missing, abort and report the error to the user, in the user's conversation language:
+   - `id`: `#0001` format (4-digit zero-padded)
+   - `title`: non-empty string
+   - `status`: must be `todo`
+   - `priority`: one of `high` / `medium` / `low`
+   - `createdAt`: `YYYY-MM-DD` format
+   - `phase`: non-empty string
+   - `dependsOn` (optional): if present, must be an array of task IDs that has already passed the existence and acyclicity checks from steps 7 and 8; omit this key when empty
+   - `description` (optional): if filled in, must be **written as multiple lines** — break the background/goal/constraints/acceptance points into lines or paragraphs with `\n`; **must not be crammed into one long line of text**
+10. Append the item (`dependsOn` included only when non-empty; omit this key when there is no dependency):
     ```json
     {
       "id": "#0001",
-      "module": "模块名（有 segments 时推断，否则可选）",
-      "title": "用户提供的内容",
-      "description": "背景：为什么要做\n目标：做成什么样\n验收：怎么算完成",
+      "module": "module name (inferred when segments exist, otherwise optional)",
+      "title": "content provided by the user",
+      "description": "Background: why to do this\nGoal: what it should look like when done\nAcceptance: how to tell it's complete",
       "status": "todo",
-      "phase": "从解析或 phase.json 获取",
-      "priority": "判断结果",
-      "difficulty": "判断结果",
-      "createdAt": "今天日期",
+      "phase": "obtained from parsing or from phase.json",
+      "priority": "the judged result",
+      "difficulty": "the judged result",
+      "createdAt": "today's date",
       "dependsOn": ["#0017"],
       "subtasks": []
     }
     ```
 
-    ⚠ `description` 有内容时必须如上例**多行书写**（`\n` 分隔），一行长文本难以扫读、dashboard 渲染也差。
+    ⚠ When `description` has content, it must be **written as multiple lines** as in the example above (`\n`-separated) — a single long line of text is hard to scan and also renders poorly in the dashboard.
 
-11. `nextId` 自增
-12. 显示添加结果：编号、标题、module、difficulty（🟢/🟡/🔴）、phase
+11. Increment `nextId`
+12. Show the result of the addition, in the user's conversation language: id, title, module, difficulty (🟢/🟡/🔴), phase

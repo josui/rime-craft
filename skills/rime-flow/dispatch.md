@@ -1,119 +1,119 @@
-# Task 执行分配（dispatch）契约（权威定义）
+# Task Dispatch Contract (Authoritative)
 
-task 执行分配（subagent + model）的唯一权威规则。rime-flow / rime-sdd 涉及「派谁做、用什么模型」时均以本文件为准，其他文档只留指针，不整段复述。
+The single authoritative rule set for task dispatch (subagent + model). Whenever rime-flow / rime-sdd needs to decide "who does it, with which model," this file is the source of truth — other docs keep only a pointer, never a full restatement.
 
-动机一句话：把 fable / opus 配额留给调度与设计，实现工作下沉到便宜模型。
-
----
-
-## 主线程 = 调度者
-
-主线程（fable）的职责限定为：
-
-- grill / spec 设计
-- 上下文策展（为 subagent 准备自包含的派发材料）
-- 派发 subagent
-- 审 diff、验收
-- tasks.json 状态流转
-
-除以下两种情况外，主线程不直接实现：
-
-1. **trivial 例外**（判据见下）
-2. **升级链顶端回落**：opus 都搞不定，问题回主线程亲自处理
+One-sentence motivation: keep fable / opus quota for dispatching and design, and push implementation work down to cheaper models.
 
 ---
 
-## trivial 判据
+## Main Thread = Dispatcher
 
-⚠ trivial 不是 tasks.json 的 difficulty 枚举值（枚举仍是 small / medium / large，见 data-contract.md），它是 small 任务在**执行期**的降级判定，tasks.json 里照记 small。
+The main thread's (fable's) responsibilities are limited to:
 
-三条**同时满足**才算 trivial：
+- grill / spec design
+- Context curation (preparing self-contained dispatch material for subagents)
+- Dispatching subagents
+- Reviewing diffs, accepting work
+- tasks.json state transitions
 
-- 单文件
-- 约 10 行以内
-- 无设计判断成分
+Outside the following two cases, the main thread never implements directly:
 
-三条同时满足 → 主线程直接做。派发的上下文重建开销超过收益，派反而更慢更贵。
+1. **The trivial exception** (test below)
+2. **Fallback at the top of the escalation chain**: when even opus can't solve it, the problem falls back to the main thread to handle personally
 
 ---
 
-## 按 difficulty 的派发形态
+## The trivial Test
 
-| difficulty | 派发形态 |
+⚠ trivial is not a difficulty enum value in tasks.json (the enum remains small / medium / large — see data-contract.md); it's a downgrade judgment made **at execution time** for a small task. tasks.json still records it as small.
+
+All three conditions must hold **simultaneously** to count as trivial:
+
+- Single file
+- Roughly 10 lines or fewer
+- No design-judgment component
+
+When all three hold → the main thread does it directly. The context-rebuilding overhead of dispatching would exceed the benefit — dispatching would end up slower and more expensive.
+
+---
+
+## Dispatch Shape by difficulty
+
+| difficulty | Dispatch shape |
 |------|------|
-| trivial（small 的执行期判定） | 主线程直接做（不派发） |
-| small | 派 1 个 implementer subagent 一次完成，主线程验收 diff |
-| medium | 主线程 grill → spec 后，按 subtasks 逐段**串行**派发 implementer（不并行，避免冲突），主线程逐段审 diff，**不派 reviewer subagent** |
-| large | rime-sdd 编排（per-task implementer + reviewer + final review），模型档位遵循本文件 |
+| trivial (an execution-time judgment on small) | Main thread does it directly (no dispatch) |
+| small | Dispatch 1 implementer subagent to finish in one pass; main thread accepts the diff |
+| medium | After the main thread grills → spec, dispatch implementers **serially**, segment by segment, by subtasks (not in parallel, to avoid conflicts); main thread reviews the diff after each segment; **no reviewer subagent is dispatched** |
+| large | Orchestrated by rime-sdd (per-task implementer + reviewer + final review); model tiers follow this file |
 
 ---
 
-## 提交责任
+## Commit Responsibility
 
-| difficulty | 提交方 |
+| difficulty | Who commits |
 |------|------|
-| trivial / small / medium | implementer 不 commit；主线程审 diff 通过后统一收尾提交（`/rime-git`） |
-| large | rime-sdd 编排内 implementer 每 task 自行 commit |
+| trivial / small / medium | The implementer does not commit; after the main thread's diff review passes, it makes one consolidated wrap-up commit (`/rime-git`) |
+| large | Within rime-sdd orchestration, the implementer commits per task on its own |
 
 ---
 
-## 模型档位
+## Model Tiers
 
-| 档位 | 模型 | 适用场景 |
+| Tier | Model | Applicable scenarios |
 |------|------|------|
-| 低档 | haiku | spec 里含完整代码的转写、单文件机械小修、重命名/格式化 |
-| 中档 | sonnet | prose spec 的常规实现、多文件集成、一般 review、只读调查（Explore） |
-| 顶档 | opus | 架构判断、复杂 debug、并发/安全敏感改动、final whole-branch review |
+| Low | haiku | Transcribing a spec that already contains complete code, mechanical single-file tweaks, renaming/formatting |
+| Mid | sonnet | Routine implementation from a prose spec, multi-file integration, general review, read-only investigation (Explore) |
+| Top | opus | Architectural judgment, complex debugging, concurrency/security-sensitive changes, final whole-branch review |
 
-⚠ **fable / session 继承**：不给 subagent，只留主线程。**派发时必须显式指定 model**——省略 model 即继承 session 模型（最贵），静默击穿本契约。
+⚠ **fable / session inheritance**: never given to a subagent, reserved for the main thread only. **A model must be explicitly specified when dispatching** — omitting it means inheriting the session model (the most expensive), which silently breaks this contract.
 
-> 档位是抽象，模型别名（haiku/sonnet/opus）随代际演进由 Claude Code 解析到当代模型。
+> Tiers are an abstraction; the model aliases (haiku/sonnet/opus) are resolved by Claude Code to the current generation's models as they evolve.
 
 ---
 
-## agent type 映射
+## Agent Type Mapping
 
-| 工作类型 | agent type |
+| Type of work | agent type |
 |------|------|
-| 只读调查 / 代码探索 | `Explore`（prompt 中明确要求用 Read/Grep/Glob 工具读文件搜代码，禁止用 bash 的 cat/grep 拼管道） |
-| 实现 / 修 bug | `general-purpose` |
-| review（large 流程内） | rime-sdd 的 reviewer 模板 |
-| 实现前的方案草案（如需） | `Plan` |
+| Read-only investigation / code exploration | `Explore` (the prompt must explicitly require using Read/Grep/Glob tools to read files and search code; piping bash's cat/grep is forbidden) |
+| Implementation / bug fixing | `general-purpose` |
+| Review (within the large flow) | rime-sdd's reviewer template |
+| Draft plan before implementation (if needed) | `Plan` |
 
 ---
 
-## 升降级规则
+## Escalation Rules
 
-- subagent 报 **BLOCKED** 或**同一段返工 2 次** → 升一档重派（haiku→sonnet→opus），**禁止同模型原样重试**
-- 顶档到 opus 为止；**opus 仍不行 → 回主线程亲自处理**（升级链顶端回落）
-
----
-
-## review 成本模型
-
-review 是 SDD 流程最大的固定开销。三条原则（编排机制见 rime-sdd 的 Review Loop Cost Rules，此处不复述）：
-
-- **复核分级**：fix 后的复核深度按**本轮修复的最高严重度**降档——含 Critical / Important 修复 → 派 reviewer subagent 复核；仅 Minor / 注释 / test-only 修复 → 主线程读 fix diff 代行。**降档只降通道不降标准**，且只作用于复核轮，首轮 review 永远全量 gate。
-- **reviewer 常驻复用**：per-task fresh 防的是实现上下文污染，只约束 implementer；reviewer 相反——一个 task 内从首轮跟到复核收尾（热上下文省掉每轮重读 brief / diff 的固定成本），task 结束即弃，**跨 task 不复用**。
-- **辅助 review 攒批**：语言 / 文档类辅助 review（文案审查、jp-review 等）不随 commit、不随 review 轮，**攒到 task 收尾一次扫**全量改动。
-
-配套纪律：reviewer 每轮必须在 **final message 交完整 verdict 报告**——idle / 只发确认不算复核完成，主线程重催；仍无报告则视同 agent 失效，换新 reviewer 重派。
+- If a subagent reports **BLOCKED** or **the same segment is reworked twice** → escalate one tier and re-dispatch (haiku→sonnet→opus); **retrying with the same model as-is is forbidden**
+- The top tier stops at opus; **if opus still can't do it → fall back to the main thread to handle personally** (fallback at the top of the escalation chain)
 
 ---
 
-## 派发 prompt 契约
+## Review Cost Model
 
-派发给 subagent 的 prompt 必须自包含：
+Review is the largest fixed cost in the SDD flow. Three principles (the orchestration mechanics live in rime-sdd's Review Loop Cost Rules, not restated here):
 
-- 任务描述
-- 涉及文件路径
-- 接口 / 全局约束
-- 验收标准
-- 报告格式
-- **注释禁令**（必须逐条传达，subagent 不会自己知道）：写入代码的注释里不得出现 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——这些默认不入库，对 clone 者是死链。注释要自足，把「为什么」直接写进去。权威定义见 [data-contract.md](data-contract.md)「不入库资产的引用禁令」
+- **Tiered re-review**: the depth of the post-fix re-review is downgraded based on **the highest severity fixed in this round** — a round containing a Critical / Important fix → dispatch a reviewer subagent for re-review; a round with only Minor / comment / test-only fixes → the main thread reads the fix diff and stands in. **Downgrading lowers the channel, not the bar**, and it applies only to re-review rounds — the first review round is always a full gate.
+- **Reviewer stays resident and is reused**: per-task freshness guards against implementation-context contamination, and applies only to the implementer; the reviewer is the opposite — it stays with a task from the first round through to the final re-review (a warm context saves the fixed cost of re-reading the brief/diff every round), then is discarded when the task ends — **never reused across tasks**.
+- **Auxiliary review batches up**: language / documentation auxiliary reviews (copy review, jp-review, etc.) don't run per commit or per review round — they're **batched to a single sweep at task wrap-up** over the full set of changes.
 
-**不让 subagent 继承主线程会话历史**——fresh subagent 只靠 prompt 里给的信息工作。
+Accompanying discipline: each round, the reviewer must deliver a **complete verdict report in its final message** — going idle or sending only an acknowledgment does not count as completing re-review; the main thread re-prompts it. If it still delivers no report, treat the agent as dead and dispatch a fresh reviewer.
 
-上一条正因如此才关键：主线程知道 `#0012` 指什么，fresh subagent 不知道，于是照抄进注释，留下一条谁也查不到的引用。
+---
 
-大块产物（diff、报告）走**文件路径交接**，不粘贴进对话。
+## Dispatch Prompt Contract
+
+A prompt dispatched to a subagent must be self-contained:
+
+- Task description
+- Files involved (paths)
+- Interface / global constraints
+- Acceptance criteria
+- Report format
+- **Comment ban** (must be communicated explicitly every time — a subagent has no way to know this on its own): comments written into code must not contain task IDs (`#0001`), caution IDs (`C-001`), or `docs/` paths — these are untracked by default and are dead links to anyone who clones the repo. Comments should be self-contained: write the "why" directly into them. See "Ban on Referencing Untracked Assets" in [data-contract.md](data-contract.md) for the authoritative definition.
+
+**A subagent never inherits the main thread's conversation history** — a fresh subagent works only from the information given in its prompt.
+
+This is exactly why the previous point matters: the main thread knows what `#0012` refers to, a fresh subagent does not — so it copies it verbatim into a comment, leaving behind a reference no one can ever trace.
+
+Large artifacts (diffs, reports) are handed off **via file path**, not pasted into the conversation.

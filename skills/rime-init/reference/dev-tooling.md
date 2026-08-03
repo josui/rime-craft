@@ -1,70 +1,70 @@
-# 开发工具链配置
+# Dev Toolchain Setup
 
-前端 / Node.js 项目的开发工具初始化流程。Go、Swift 等非 JS/TS 项目不适用。
-
----
-
-## 前提
-
-版本原则见 AGENTS.md。安装前先查最新文档确认兼容性。
+Dev tool initialization flow for frontend / Node.js projects. Not applicable to non-JS/TS projects like Go or Swift.
 
 ---
 
-## 执行步骤
+## Prerequisites
 
-### 1. 确认项目信息
+Versioning principles are in AGENTS.md. Before installing, check the latest docs to confirm compatibility.
 
-询问用户：
+---
 
-1. **包管理器**：pnpm / npm / yarn / bun
-2. **框架类型**：React / Vue / Next.js / Node.js / 纯 TypeScript / 其他
-3. **样式方案**：Tailwind / CSS / SCSS / CSS-in-JS
-4. **可选工具**：commitlint、EditorConfig
+## Execution Steps
 
-### 2. 安装依赖
+### 1. Confirm Project Info
+
+Ask the user:
+
+1. **Package manager**: pnpm / npm / yarn / bun
+2. **Framework type**: React / Vue / Next.js / Node.js / plain TypeScript / other
+3. **Styling approach**: Tailwind / CSS / SCSS / CSS-in-JS
+4. **Optional tools**: commitlint, EditorConfig
+
+### 2. Install Dependencies
 
 ```bash
-# 基础（必选）
+# Base (required)
 pnpm add -D prettier eslint husky lint-staged
 
-# TypeScript ESLint（TypeScript 项目必选）
+# TypeScript ESLint (required for TypeScript projects)
 pnpm add -D typescript-eslint
 
-# 可选
+# Optional
 pnpm add -D @commitlint/cli @commitlint/config-conventional
 ```
 
-框架特定依赖见下方"框架特定配置"。
+Framework-specific dependencies are in "Framework-Specific Configuration" below.
 
-### 3. 复制配置文件
+### 3. Copy Config Files
 
-从 `assets/` 目录复制模板到项目根目录：
+Copy templates from the `assets/` directory to the project root:
 
-| 文件 | 用途 | 优先级 |
+| File | Purpose | Priority |
 |------|------|--------|
-| [.prettierrc](../assets/.prettierrc) | Prettier 配置 | 必选 |
-| [.prettierignore](../assets/.prettierignore) | Prettier 忽略 | 必选 |
-| [eslint.config.js](../assets/eslint.config.js) | ESLint Flat Config | 必选 |
-| [.lintstagedrc.json](../assets/.lintstagedrc.json) | lint-staged 配置 | 必选 |
-| [.editorconfig](../assets/.editorconfig) | 编辑器配置 | 推荐 |
-| [commitlint.config.js](../assets/commitlint.config.js) | commitlint 配置 | 可选 |
+| [.prettierrc](../assets/.prettierrc) | Prettier config | Required |
+| [.prettierignore](../assets/.prettierignore) | Prettier ignore | Required |
+| [eslint.config.js](../assets/eslint.config.js) | ESLint flat config | Required |
+| [.lintstagedrc.json](../assets/.lintstagedrc.json) | lint-staged config | Required |
+| [.editorconfig](../assets/.editorconfig) | Editor config | Recommended |
+| [commitlint.config.js](../assets/commitlint.config.js) | commitlint config | Optional |
 
-根据框架类型调整 ESLint 配置。
+Adjust the ESLint config based on the framework type.
 
-### 4. 初始化 Husky
+### 4. Initialize Husky
 
 ```bash
 npx husky init
 echo "npx lint-staged" > .husky/pre-commit
 ```
 
-commitlint 启用时追加：
+When commitlint is enabled, also add:
 
 ```bash
 echo 'npx --no -- commitlint --edit "$1"' > .husky/commit-msg
 ```
 
-### 5. 添加 package.json scripts
+### 5. Add package.json Scripts
 
 ```json
 {
@@ -77,7 +77,7 @@ echo 'npx --no -- commitlint --edit "$1"' > .husky/commit-msg
 }
 ```
 
-### 6. 验证
+### 6. Verify
 
 ```bash
 pnpm lint
@@ -86,7 +86,7 @@ pnpm format:check
 
 ---
 
-## 框架特定配置
+## Framework-Specific Configuration
 
 ### React + Vite
 
@@ -94,11 +94,11 @@ pnpm format:check
 pnpm add -D eslint-plugin-react-hooks eslint-plugin-react-refresh
 ```
 
-### React + WXT（Chrome 扩展）
+### React + WXT (Chrome Extension)
 
-WXT 项目自带 TypeScript 配置。ESLint 配置同 React，额外注意：
-- WXT 自动生成的文件（`.wxt/`、`.output/`）加入 `.prettierignore` 和 ESLint ignore
-- Content Script 的 Shadow DOM 内样式不走 Stylelint
+WXT projects ship with their own TypeScript config. ESLint config is the same as React, with extra notes:
+- Add WXT's auto-generated files (`.wxt/`, `.output/`) to `.prettierignore` and the ESLint ignore list
+- Styles inside a Content Script's Shadow DOM don't go through Stylelint
 
 ### Vue 3
 
@@ -165,18 +165,18 @@ export default tseslint.config(
 )
 ```
 
-### 纯 TypeScript
+### Plain TypeScript
 
-无需额外插件，直接使用 `assets/eslint.config.js` 基础配置。
-
----
+No extra plugins needed — use the base `assets/eslint.config.js` config directly.
 
 ---
 
-## 常见问题
+---
 
-| 问题 | 解决方案 |
+## Common Issues
+
+| Issue | Solution |
 |------|----------|
-| ESLint 与 Prettier 冲突 | 安装 `eslint-config-prettier` 放在配置最后 |
-| Husky hooks 不执行 | 确认 `.husky/` 目录存在且有执行权限 |
-| TypeScript 路径别名报错 | ESLint 配置中添加 `settings: { 'import/resolver': { typescript: {} } }` |
+| ESLint conflicts with Prettier | Install `eslint-config-prettier` and put it last in the config |
+| Husky hooks don't run | Confirm the `.husky/` directory exists and has execute permission |
+| TypeScript path alias errors | Add `settings: { 'import/resolver': { typescript: {} } }` to the ESLint config |

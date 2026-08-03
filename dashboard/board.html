@@ -894,7 +894,7 @@
     </div>
   </section>
   <div class="archive-view" id="archive-view" style="display:none">
-    <div class="archive-empty" id="archive-empty" style="display:none">该阶段无结构化归档数据</div>
+    <div class="archive-empty" id="archive-empty" style="display:none">No structured archive data for this phase</div>
     <div class="archive-list" id="archive-list"></div>
   </div>
 </div>
@@ -910,7 +910,7 @@ const CAUTIONS = __CAUTIONS_DATA__;
 
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// 描述按行分段；连续的 "- " 列表行并为一段，让段间距只落在段落之间
+// Split the description into blocks by line; consecutive "- " list lines merge into one block, so spacing lands between paragraphs only
 const descHtml = s => {
   const blocks = [];
   for (const line of String(s == null ? '' : s).split('\n')) {
@@ -1093,7 +1093,7 @@ function renderTasks() {
   const g = { todo: [], doing: [], done: [] };
   f.forEach(t => { const s = t.status || 'todo'; if (g[s]) g[s].push(t); });
   g.todo = sortTodo(g.todo);
-  // doing: 新任务在上。契约无 startedAt（白名单明确拦截），用 createdAt 倒序近似，同日期按 id 倒序
+  // doing: newest on top. The contract has no startedAt (explicitly blocked by the whitelist), so approximate with createdAt descending, then id descending within the same date
   g.doing.sort((a, b) =>
     (b.createdAt || '').localeCompare(a.createdAt || '') ||
     (b.id || '').localeCompare(a.id || ''));
@@ -1121,7 +1121,7 @@ function renderTasks() {
           ).join('')}</div>` : '';
 
       const deps = (t.dependsOn && t.dependsOn.length)
-        ? `<div class="tk-deps"><span class="dep-lb">依赖</span>${t.dependsOn.map(id =>
+        ? `<div class="tk-deps"><span class="dep-lb">deps</span>${t.dependsOn.map(id =>
             `<span class="dep-id">${esc(id)}</span>`).join('')}</div>` : '';
 
       const blocked = status === 'todo' && !depsSatisfied(t);
@@ -1195,7 +1195,7 @@ async function showArchive(phaseId) {
     });
   } catch {
     archiveEmpty.style.display = '';
-    archiveEmpty.textContent = '该阶段无结构化归档数据';
+    archiveEmpty.textContent = 'No structured archive data for this phase';
     archiveListEl.innerHTML = '';
   }
 }
@@ -1251,10 +1251,10 @@ function renderDwContent(t) {
   const blockedBy = items.filter(x => (x.dependsOn || []).includes(t.id)).map(x => x.id);
   const depFwd = dependsOn.map(id => {
     const s = statusById.has(id) ? statusById.get(id) : 'todo';
-    return `<div class="dep-row"><span class="dep-dir">依赖于 →</span><span class="dep-id">${esc(id)}</span><span class="dep-st ${s}">${stLabel(s)}</span></div>`;
+    return `<div class="dep-row"><span class="dep-dir">depends on →</span><span class="dep-id">${esc(id)}</span><span class="dep-st ${s}">${stLabel(s)}</span></div>`;
   }).join('');
   const depRev = blockedBy.map(id =>
-    `<div class="dep-row"><span class="dep-dir">被依赖 ←</span><span class="dep-id">${esc(id)}</span></div>`
+    `<div class="dep-row"><span class="dep-dir">depended on by ←</span><span class="dep-id">${esc(id)}</span></div>`
   ).join('');
   const deps = (dependsOn.length || blockedBy.length)
     ? `<div class="sec-label">Dependencies</div><div class="dw-deps">${depFwd}${depRev}</div>`

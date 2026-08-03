@@ -1,179 +1,179 @@
-# AGENTS.md 生成指南与模板
+# AGENTS.md Generation Guide & Template
 
-本文件分为两部分：**生成指南**（指导 rime-init A2 步骤如何生成 AGENTS.md）和**模板正文**（生成产物的内容）。
+This file has two parts: the **generation guide** (instructs rime-init step A2 on how to generate AGENTS.md) and the **template body** (the content of the generated artifact).
 
 ---
 
-## 生成指南
+## Generation Guide
 
-### 前置检测
+### Pre-check
 
-rime 工作流依赖以下外部 skill（mattpocock/skills，MIT License），未安装则对应能力受限：
+The rime workflow depends on the following external skills (mattpocock/skills, MIT License); if not installed, the corresponding capability is degraded:
 
-| 外部 skill | 用途 | 缺失影响 |
+| External skill | Purpose | Impact if missing |
 |------------|------|----------|
-| `grill-me` / `grill-with-docs` | medium / large 任务设计收敛 | 退化为纯对话式设计，无结构化逼问 |
-| `tdd` | rime-sdd implementer 遵循 TDD | rime-sdd 的 subagent 无 TDD 约束 |
-| `review` | rime-sdd final whole-branch review（Standards + Spec 两轴） | large 任务缺最终质量闸门 |
+| `grill-me` / `grill-with-docs` | Converging medium / large task design | Degrades to plain conversational design, no structured interrogation |
+| `tdd` | rime-sdd implementer follows TDD | rime-sdd's subagent has no TDD constraint |
+| `review` | rime-sdd final whole-branch review (Standards + Spec axes) | large tasks lack a final quality gate |
 
-- 检测方式：按 skill 安装位置（`~/.agents/skills/`、项目 `.agents/skills/` 或对应工具的 skill 目录）检查是否存在同名 skill
-- 未安装时提醒用户：上述能力将受限，可从 [mattpocock/skills](https://github.com/mattpocock/skills) 安装
-- 提醒后继续生成完整模板（外部 skill 可随时安装，不影响模板内容）
+- Detection method: check whether a skill of the same name exists in the skill install locations (`~/.agents/skills/`, the project's `.agents/skills/`, or the relevant tool's skill directory)
+- If not installed, remind the user: the capabilities above will be degraded, and can be installed from [mattpocock/skills](https://github.com/mattpocock/skills)
+- After the reminder, continue generating the full template (external skills can be installed anytime — it doesn't affect the template content)
 
-### 入库选择
+### Tracked-in-git Decision
 
-询问用户 AGENTS.md 是否入库：
-- 入库：团队共享 AI 协作规范
-- 加入 `.gitignore`：不想干扰协作者，或开源项目不想公开
+Ask the user whether AGENTS.md should be tracked in git:
+- Tracked: shares the AI collaboration conventions with the team
+- Gitignored: don't want to disturb collaborators, or an open-source project that doesn't want this public
 
-### 可选交互
+### Optional Interaction
 
-一次展示以下选项，用户逐一回答或跳过。
+Present the following options all at once; the user answers each one or skips.
 
-**语言设置**（三个独立选项，不选则不写入）
+**Language settings** (three independent options; unselected ones aren't written)
 
-- AI 沟通语言
-- 代码注释语言
-- UI 文案默认语言
+- AI communication language
+- Code comment language
+- Default UI copy language
 
-**验证方式**（不选则不写入）
+**Verification method** (unselected → not written)
 
-- a) 用户手动管理 dev server，AI 不启动也不验证
-- b) AI 可以启动 dev server 自行验证
-- c) 使用 agent-browser 做浏览器验证
+- a) The user manages the dev server manually; the AI neither starts it nor verifies
+- b) The AI may start the dev server and verify on its own
+- c) Use agent-browser for browser-based verification
 
-### 技术栈 Skill 自动映射
+### Automatic Tech-Stack Skill Mapping
 
-init 时根据项目技术栈自动检测并写入对应 skill 规则。
-检测方式：扫描 package.json 依赖 + 项目配置文件（如 tailwind.config.*、tsconfig.json 等）。内容项目（无 package.json）跳过此步骤。
+During init, automatically detect the project's tech stack and write in the matching skill rules.
+Detection method: scan package.json dependencies + project config files (e.g. tailwind.config.*, tsconfig.json). Content projects (no package.json) skip this step.
 
-| 检测条件 | 写入内容 |
+| Detection condition | Content written |
 |----------|----------|
-| TypeScript / JavaScript | `JS/TS 开发参照 rime-js skill` |
-| CSS / Tailwind | `CSS 架构参照 rime-css skill` |
-| React | `React 组件开发参照 rime-react skill` |
-| 有 UI（HTML/CSS/JSX/TSX） | `UI 设计品质参照 rime-design skill` |
+| TypeScript / JavaScript | `JS/TS development follows the rime-js skill` |
+| CSS / Tailwind | `CSS architecture follows the rime-css skill` |
+| React | `React component development follows the rime-react skill` |
+| Has a UI (HTML/CSS/JSX/TSX) | `UI design quality follows the rime-design skill` |
 
-> 新增 rime skill 时须同步更新此映射表。
+> When adding a new rime skill, update this mapping table accordingly.
 
-### CLAUDE.md 桥接
+### CLAUDE.md Bridge
 
-Claude Code 只原生读取 `CLAUDE.md`，**不读 `AGENTS.md`**。生成 AGENTS.md 后必须建桥，否则规则不会被加载：
+Claude Code natively reads only `CLAUDE.md` — **it never reads `AGENTS.md`**. After generating AGENTS.md, a bridge is mandatory, otherwise the rules never get loaded:
 
-- 项目**无** `CLAUDE.md` → 新建 `CLAUDE.md`，内容仅一行 `@AGENTS.md`（import 语法，session 启动时就地展开加载 AGENTS.md）
-- 项目**已有** `CLAUDE.md` → 检查是否已含 `@AGENTS.md`，没有则在文件**顶部追加**该行，绝不改动用户原有内容
-- **不用软链**（`ln -s`）：`@import` 跨平台一致（Windows 软链需管理员/开发者模式），且对协作者透明
-- `CLAUDE.md` 的入库策略**跟随 AGENTS.md**（同入库或同 gitignore），避免「桥在、被链文件不在」的断链
+- Project has **no** `CLAUDE.md` → create `CLAUDE.md` containing only the single line `@AGENTS.md` (import syntax; expanded in place to load AGENTS.md at session start)
+- Project **already has** `CLAUDE.md` → check whether it already contains `@AGENTS.md`; if not, **append that line at the top** of the file — never touch the user's existing content
+- **Don't use symlinks** (`ln -s`): `@import` is cross-platform consistent (Windows symlinks need admin/developer mode) and transparent to collaborators
+- `CLAUDE.md`'s tracked-in-git policy **follows AGENTS.md**'s (both tracked, or both gitignored), avoiding a dead link where "the bridge exists but the linked file doesn't"
 
-### 文档地图
+### Document Map
 
-AGENTS.md 底部生成「文档地图」区块，指向 `docs/` 文档，给 agent 一个统一入口：
+Generate a "Document Map" section at the bottom of AGENTS.md pointing to the `docs/` documents, giving the agent a single entry point:
 
-- **仅列实际创建的文档**（A5 创建了哪些就列哪些，跳过的不写）
-- 扁平列表，每个文档一行：`- [类型](相对路径) — 一句话用途`
-- 在 **A5 创建 docs/ 文档之后**写入（A2 生成 AGENTS.md 时 docs 尚未存在）
+- **List only the documents actually created** (whatever A5 created, list those; skip the rest)
+- A flat list, one line per document: `- [type](relative path) — one-sentence purpose`
+- Write this in **after A5 creates the docs/ documents** (docs don't exist yet when A2 generates AGENTS.md)
 
 ---
 
-## 模板正文
+## Template Body
 
-### 固定内容（所有 rime 项目）
+### Fixed Content (All rime Projects)
 
 ```markdown
 # AGENTS.md
 
-## 任务执行模式
+## Task Execution Mode
 
-所有任务通过 rime-flow 管理生命周期。使用 `/rime-dashboard` 查看进度。
-根据复杂度分层执行：
+All tasks are managed through the rime-flow lifecycle. Use `/rime-dashboard` to check progress.
+Execute by complexity tier:
 
-| 层级 | 场景 | 做法 |
+| Tier | Scenario | Approach |
 |------|------|------|
-| small | 单文件改动、小 bug | 直接动手，不讨论 |
-| medium | 目标明确但路径需确认 | grill-me 收敛设计 → spec → subtasks 边做边改 |
-| large | 多文件变更、新功能、架构调整、技术选型 | grill-me 收敛设计 → spec（含 ## Task N 段落）→ rime-sdd 编排执行 |
+| small | Single-file changes, small bugs | Just do it, no discussion |
+| medium | Clear goal but path needs confirming | grill-me converges the design → spec → subtasks, iterate while implementing |
+| large | Multi-file changes, new features, architecture changes, tech selection | grill-me converges the design → spec (with `## Task N` sections) → rime-sdd orchestrates execution |
 
 ### Evidence First
 
-不凭推理猜，先拿到事实再行动。
+Don't guess by reasoning — get the facts before acting.
 
-| 场景 | 反模式 | 正确行为 |
+| Scenario | Anti-pattern | Correct behavior |
 |------|--------|---------|
-| 不确定 API / 库的用法 | 在 context 里试参数组合 | 查本地文档 → curl 拉取实际响应 → context7 / web search |
-| 遇到 bug / 异常行为 | 只看局部代码打补丁 | 先梳理整体流程，加 console.log 定位，拿到实际值再修复 |
-| 连续两次尝试失败 | 继续换参数重试 | 停下来搜索 error message 或成熟方案 |
-| 要实现常见模式 | 从零手写 | 先查是否有成熟库 / pattern |
+| Unsure how an API / library works | Try parameter combinations in context | Check local docs → curl the actual response → context7 / web search |
+| Hit a bug / unexpected behavior | Patch based on local code alone | Trace the overall flow first, add console.log to localize it, get the actual value before fixing |
+| Two attempts in a row have failed | Keep retrying with different parameters | Stop and search the error message or a proven approach |
+| Need to implement a common pattern | Write it from scratch | Check first whether a proven library / pattern exists |
 
-不适用：纯业务逻辑、项目特有的领域知识（搜不到外部资料的场景）。
+Not applicable to: pure business logic, project-specific domain knowledge (scenarios with no external reference to search for).
 
-改动完成后 review 变更范围，清理残留的调试代码和无用逻辑。
+After a change is complete, review the changed scope and clean up leftover debug code and dead logic.
 
-### Rime 对齐规则
+### Rime Alignment Rules
 
-执行必须与 tasks.json 保持同步：
-- spec 定稿后将执行步骤映射到 tasks.json subtasks（新增/拆分）
-- 每完成一个 subtask 即更新其 status
-- 开始执行前确认 task status 为 `doing`
-- 验证清单先写入 spec 的 `## 验证记录` 区、再向用户呈现（medium / large）
-- 标 `done` 前过 commit gate：本 task 改动全部提交且有新 commit（HEAD ≠ commitFrom，非 git 项目豁免）；`completedAt` / `commits` 与 status 同笔写入；done 后不回填，返工新建 task
-- 执行中发现 task 需要调整（复杂度变化、需要拆分）时，立刻更新 tasks.json 再继续
+Execution must stay in sync with tasks.json:
+- Once a spec is finalized, map its execution steps onto tasks.json subtasks (add/split)
+- Update a subtask's status as soon as it's completed
+- Confirm the task status is `doing` before starting execution
+- Write the verification checklist into the spec's `## Verification` section first, then present it to the user (medium / large)
+- Before marking `done`, pass the commit gate: every change for this task is committed and there's a new commit (HEAD ≠ commitFrom; exempt for non-git projects); `completedAt` / `commits` are written in the same write as status; no backfilling after done — rework opens a new task
+- If a task is found to need adjustment during execution (complexity change, needs splitting), update tasks.json immediately before continuing
 
 ## Git
 
-提交统一使用 `/rime-git`。
+Commit uniformly via `/rime-git`.
 
-## 约束
+## Constraints
 
-- 不使用 EnterPlanMode（复杂任务走 grill-me → spec → rime-sdd）
-- **入库文件不得引用不入库的资产**：`.rime/` 不入库、`docs/` 默认不入库，所以代码注释、commit message、入库的 md 里不写 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——对 clone 者是查无此物的死链。注释要自足：把「为什么」直接写进去，而不是指向看板。`// 见 #0012` ✗ → `// 该接口对空数组返回 null 而非 []` ✓
+- Don't use EnterPlanMode (complex tasks go through grill-me → spec → rime-sdd)
+- **Ban on Referencing Untracked Assets**: `.rime/` is untracked and `docs/` is untracked by default, so code comments, commit messages, and tracked markdown must not contain task IDs (`#0001`), caution IDs (`C-001`), or paths under `docs/` — to someone who clones the repo, these are dead links to nothing. Comments must be self-contained: write the "why" directly into the comment instead of pointing at the board. `// see #0012` ✗ → `// this endpoint returns null instead of [] for an empty array` ✓
 ```
 
-### 动态内容（按检测/交互结果生成）
+### Dynamic Content (Generated from Detection/Interaction Results)
 
-**语言设置**（用户选择后生成，不选不写）：
+**Language settings** (generated after the user chooses; not written if skipped):
 
 ```markdown
-## 语言
+## Language
 
-- AI 沟通：中文
-- 代码注释：日本語
-- UI 文案：日本語、技术术语保留英文
+- AI communication: Chinese
+- Code comments: Japanese
+- UI copy: Japanese, with technical terms kept in English
 ```
 
-**验证方式**（用户显式选择后生成，不选不写）：
+**Verification method** (generated after the user explicitly chooses; not written if skipped):
 
 ```markdown
-## 验证
+## Verification
 
-- 用户手动管理 dev server，AI 不启动/不验证
+- The user manages the dev server manually; the AI neither starts it nor verifies
 ```
 
-**Skill 使用**（自动检测后生成，无匹配不写）：
+**Skill usage** (generated after auto-detection; not written if there's no match):
 
 ```markdown
-## Skill 使用
+## Skill Usage
 
 ### CSS
-- CSS 架构参照 `rime-css` skill
+- CSS architecture follows the `rime-css` skill
 
 ### React
-- 完成功能、修 bug、review 时运行 `react-doctor`
-- 写/重构组件时参照 `rime-react` skill
+- Run `react-doctor` when finishing a feature, fixing a bug, or reviewing
+- Follow the `rime-react` skill when writing/refactoring components
 ```
 
-**文档地图**（A5 创建文档后生成，按实际产出列出，未创建的不写）：
+**Document map** (generated after A5 creates the documents, listing actual output; not written for anything not created):
 
 ```markdown
-## 文档
+## Documents
 
-- [prd](docs/myapp-prd.md) — 产品定位与功能规划
-- [techstack](docs/myapp-techstack.md) — 技术选型与项目结构
-- [DESIGN.md](docs/DESIGN.md) — 设计系统（token + rationale，google-labs DESIGN.md 格式）
+- [prd](docs/myapp-prd.md) — Product positioning and feature plan
+- [techstack](docs/myapp-techstack.md) — Tech stack choices and project structure
+- [DESIGN.md](docs/DESIGN.md) — Design system (tokens + rationale, google-labs DESIGN.md format)
 ```
 
-### CLAUDE.md（桥接文件，与 AGENTS.md 同目录）
+### CLAUDE.md (Bridge File, Same Directory as AGENTS.md)
 
-无 CLAUDE.md 时新建，内容仅一行；已有则在顶部追加这一行：
+Create it if there's no CLAUDE.md, with just this one line; if it already exists, append this line at the top:
 
 ```markdown
 @AGENTS.md

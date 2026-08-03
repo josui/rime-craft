@@ -1,18 +1,18 @@
-# Schema 模板 `[开发]`
+# Schema Template `[Dev]`
 
-数据结构定义。
+Data structure definitions.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} — 数据结构
+# {Project Name} — Data Structures
 
-<!-- DB schema / TypeScript 类型 / Storage 格式 -->
-<!-- 用代码块写完整定义 -->
+<!-- DB schema / TypeScript types / storage format -->
+<!-- Write the full definition in a code block -->
 
-## 设计备注
+## Design Notes
 
-| 决策 | 说明 |
+| Decision | Notes |
 |------|------|
-<!-- 解释每个设计选择的理由 -->
+<!-- Explain the rationale for each design choice -->
 ```

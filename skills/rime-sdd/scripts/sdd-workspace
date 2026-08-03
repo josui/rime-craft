@@ -45,7 +45,7 @@ fi
 
 rime_dir=$(find_rime_dirs "$PWD" | head -1 || true)
 if [ -z "$rime_dir" ]; then
-  # rime 未初始化のリポジトリ：解析後の base 直下に作る（worktree なら主検出側）
+  # Repo without rime initialized: create under the resolved base (main checkout side if in a worktree)
   rime_dir="$(rime_resolve_base "$PWD")/.rime"
 fi
 base="$rime_dir/sdd"

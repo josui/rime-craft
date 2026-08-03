@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 后台 worker：接收前台脚本准备好的数据，执行 claude -p 并写入 anchor
-# 由 session-end.sh 通过 nohup 启动，不受 hook 超时限制
+# Background worker: receives data prepared by the foreground script, runs claude -p, and writes the anchor
+# Started by session-end.sh via nohup, not subject to the hook timeout
 
 RIME_DIR="$1"
 TIMESTAMP="$2"
@@ -27,7 +27,7 @@ write_minimal_anchor() {
   }' > "$RIME_DIR/anchors/$TIMESTAMP.json"
 }
 
-# transcript 过滤（重活下放后台，避免前台被 hook 超时杀）
+# Transcript filtering (heavy lifting pushed to background, to avoid the foreground being killed by the hook timeout)
 FILTERED=$(jq -r '
   if .type == "user" then
     (.message.content // "" | if type == "array" then map(select(.type == "text") | .text) | join("\n") else . end) as $t |
@@ -42,7 +42,7 @@ FILTERED=$(jq -r '
 
 FILTERED_LINES=$(echo "$FILTERED" | grep -c '.' 2>/dev/null || echo "0")
 
-# 空对话 → minimal anchor，无需调 claude -p
+# Empty conversation → minimal anchor, no need to call claude -p
 if [ -z "$FILTERED" ] || [ "$FILTERED_LINES" -lt 2 ]; then
   log "minimal anchor: $RIME_DIR (filtered_lines=$FILTERED_LINES)"
   write_minimal_anchor
@@ -51,42 +51,43 @@ fi
 
 TASKS=$(cat "$RIME_DIR/tasks.json")
 
-# 调用 claude -p
-PROMPT="你是一个 session 总结助手。分析以下对话内容，结合当前任务列表，提取关键信息。
+# Call claude -p
+PROMPT="You are a session-summarization assistant. Analyze the following conversation, cross-reference it with the current task list, and extract the key information.
 
-当前任务列表:
+Current task list:
 $TASKS
 
-对话内容:
+Conversation:
 $FILTERED
 
-输出严格 JSON 格式（无 markdown 包裹、无注释、无多余文字）:
+Output strict JSON (no markdown wrapping, no comments, no extra text):
 {
   \"workedOn\": [\"#xxx\"],
-  \"subtasksCompleted\": [\"本次完成的工作内容（自由描述）\"],
-  \"subtasksAdded\": [\"发现的新子任务（自由描述）\"],
-  \"decisions\": [\"关键决策\"],
-  \"nextSteps\": [\"下一步\"],
-  \"cautions\": [{\"title\": \"踩坑标题\", \"summary\": \"详细描述（可选）\", \"tags\": [\"tag1\"]}]
+  \"subtasksCompleted\": [\"work completed in this session (free-form description)\"],
+  \"subtasksAdded\": [\"newly discovered subtasks (free-form description)\"],
+  \"decisions\": [\"key decisions\"],
+  \"nextSteps\": [\"next steps\"],
+  \"cautions\": [{\"title\": \"pitfall title\", \"summary\": \"detailed description (optional)\", \"tags\": [\"tag1\"]}]
 }
 
-规则:
-- workedOn 只填 tasks.json 中已存在的 task ID
-- subtasksCompleted: 本次完成的工作。若对应某个 doing task 的 subtask，**原样复述该 subtask 的 title**（系统会据此自动对账翻 done）；其余自由描述
-- subtasksAdded: 自由描述发现的新子任务（作为 session 记录，不用于自动状态变更）
-- 没有的字段填空数组，不要编造
-- 只输出 JSON，不要任何其他文字"
+Rules:
+- workedOn: only fill in task IDs that already exist in tasks.json
+- subtasksCompleted: work completed in this session. If it corresponds to a subtask of a doing task, **repeat that subtask's title verbatim** (the system uses this to automatically reconcile it to done); otherwise, describe freely
+- subtasksAdded: freely describe newly discovered subtasks (recorded for the session log only, not used for automatic status changes)
+- Leave fields with nothing to report as empty arrays — do not invent content
+- cautions: write the title and summary in English regardless of the conversation's language
+- Output only the JSON, with no other text"
 
-# perl alarm 做超时（macOS 无 GNU timeout）：超时收到 SIGALRM 退出，降级走 minimal anchor
+# perl alarm for timeout (macOS has no GNU timeout): on timeout, receives SIGALRM and exits, falling back to a minimal anchor
 CLAUDE_TIMEOUT="${RIME_CLAUDE_TIMEOUT:-120}"
 RAW=$(RIME_HOOK_WORKER=1 perl -e 'alarm shift @ARGV; exec @ARGV' "$CLAUDE_TIMEOUT" \
   claude -p --model haiku <<< "$PROMPT" 2>/dev/null || echo "")
 
-# 从模型输出中提取 JSON（可能被 markdown 代码块包裹）
+# Extract JSON from the model output (may be wrapped in a markdown code block)
 RESULT=$(echo "$RAW" | sed -n '/^```/,/^```/{ /^```/d; p; }' 2>/dev/null)
 [ -z "$RESULT" ] && RESULT="$RAW"
 
-# 无效 JSON → 降级为 minimal anchor
+# Invalid JSON → fall back to minimal anchor
 if [ -z "$RESULT" ] || ! echo "$RESULT" | jq . >/dev/null 2>&1; then
   log "fallback: invalid JSON: $(echo "$RAW" | head -1)"
   write_minimal_anchor
@@ -94,11 +95,11 @@ if [ -z "$RESULT" ] || ! echo "$RESULT" | jq . >/dev/null 2>&1; then
 fi
 log "claude-p success"
 
-# 写 anchor
+# Write anchor
 echo "$RESULT" | jq --arg ts "$TIMESTAMP_ISO" --arg ph "$PHASE" '{schemaVersion: 1} + . + {timestamp: $ts, phase: $ph}' > "$RIME_DIR/anchors/$TIMESTAMP.json"
 
-# subtask 保守对账：仅限 workedOn 的 task，subtasksCompleted 与 subtask title
-# 精确相等或互为子串时翻 done（只翻不回翻）。语义见 rime-flow/data-contract.md
+# Conservative subtask reconciliation: limited to tasks in workedOn; when subtasksCompleted and the subtask title
+# are exactly equal or mutual substrings, flip to done (only forward, never reverts). Semantics documented in rime-flow/data-contract.md
 WORKED=$(echo "$RESULT" | jq -c '.workedOn // []' 2>/dev/null || echo "[]")
 COMPLETED=$(echo "$RESULT" | jq -c '.subtasksCompleted // []' 2>/dev/null || echo "[]")
 if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'length')" -gt 0 ]; then
@@ -135,7 +136,7 @@ if [ "$(echo "$WORKED" | jq 'length')" -gt 0 ] && [ "$(echo "$COMPLETED" | jq 'l
   fi
 fi
 
-# 追加 cautions
+# Append cautions
 CAUTION_COUNT=$(echo "$RESULT" | jq '.cautions | length' 2>/dev/null || echo "0")
 if [ "$CAUTION_COUNT" -gt 0 ] 2>/dev/null; then
   MAX_NUM=$(jq -r '.[].id // "C-000"' "$RIME_DIR/cautions.json" 2>/dev/null | sed 's/C[-]*0*//' | sort -n | tail -1 || echo "0")

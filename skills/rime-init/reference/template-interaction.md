@@ -1,27 +1,27 @@
-# Interaction 模板 `[开发]`
+# Interaction Template `[Dev]`
 
-交互设计、页面状态、操作流程。
+Interaction design, page states, operation flows.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} — 交互设计
+# {Project Name} — Interaction Design
 
-## 页面/视图
+## Pages/Views
 
-<!-- 每个页面/视图一个章节 -->
-<!-- 用 ASCII 或截图展示 UI 状态 -->
+<!-- One section per page/view -->
+<!-- Show UI states with ASCII or screenshots -->
 
-## 操作
+## Operations
 
-<!-- 所有用户操作的完整列表 -->
-<!-- 快捷键 / 手势 / 按钮 的汇总表 -->
+<!-- Full list of all user operations -->
+<!-- A summary table of shortcuts / gestures / buttons -->
 
-## 状态流转
+## State Transitions
 
-<!-- 页面间的导航关系、状态变化 -->
+<!-- Navigation relationships between pages, state changes -->
 
-## 设计备注
+## Design Notes
 
-<!-- 记录决策理由：为什么这样设计，不只是设计了什么 -->
+<!-- Record the rationale behind decisions: why it's designed this way, not just what was designed -->
 ```

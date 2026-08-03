@@ -1,29 +1,29 @@
-# 文档模板
+# Documentation Templates
 
-每种文档的模板和写法要点。按需查阅对应文件。
+Templates and writing notes for each document type. Consult the relevant file as needed.
 
-## 通用文档
+## Common Documents
 
-| 模板 | 说明 |
+| Template | Description |
 |------|------|
-| [template-prd.md](template-prd.md) | PRD — 当前阶段需求、编号追踪 |
-| [template-archive.md](template-archive.md) | Archive — 已完成功能归档 |
-| [template-cautions.md](template-cautions.md) | 踩坑记录、关键约束 |
+| [template-prd.md](template-prd.md) | PRD — current-phase requirements, ID tracking |
+| [template-archive.md](template-archive.md) | Archive — archive of completed features |
+| [template-cautions.md](template-cautions.md) | Pitfall log, key constraints |
 
-## 开发项目追加
+## Additional for Dev Projects
 
-| 模板 | 说明 |
+| Template | Description |
 |------|------|
-| [template-techstack.md](template-techstack.md) | 技术选型、项目结构、阶段计划 |
-| [template-interaction.md](template-interaction.md) | 交互设计、页面状态、操作流程 |
-| [template-schema.md](template-schema.md) | 数据结构定义 |
-| [DESIGN.md（rime-design skill）](../../rime-design/design-template.md) | 设计系统 token + rationale（google-labs/design.md 格式）。模板与生成流程在 rime-design skill，不在本目录 |
+| [template-techstack.md](template-techstack.md) | Tech stack choices, project structure, phase plan |
+| [template-interaction.md](template-interaction.md) | Interaction design, page states, operation flows |
+| [template-schema.md](template-schema.md) | Data structure definitions |
+| [DESIGN.md (rime-design skill)](../../rime-design/design-template.md) | Design system tokens + rationale (google-labs/design.md format). Template and generation flow live in the rime-design skill, not in this directory |
 
-## 设计阶段（spec）
+## Design Phase (spec)
 
-medium / large 任务 grill 收敛后产出 spec，固化决策 + 理由 + 边界：
+Medium / large tasks produce a spec after grill convergence, locking down decisions + rationale + boundaries:
 
-| 格式 | 说明 |
+| Format | Description |
 |------|------|
-| Markdown（自由格式） | 非 UI spec —— 决策记录 + 交互 + 边界，放与 Claude Code `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`） |
-| [template-spec.html](template-spec.html) | UI spec —— sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框，dashboard `/file` 原生渲染 |
+| Markdown (free-form) | Non-UI spec — decision log + interaction + boundaries, placed in `specs/` alongside Claude Code's `plansDirectory` (default `docs/specs/*.md`) |
+| [template-spec.html](template-spec.html) | UI spec — sidebar numbered navigation + decision table + phone/desktop dual mock frames, natively rendered by dashboard `/file` |

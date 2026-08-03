@@ -3,164 +3,164 @@ name: rime-init
 description: Use when initializing a new project or migrating an old project to the rime workflow. New-project scaffolding + legacy migration — create the .rime/ data layer, docs/ skeleton, and AGENTS.md, and configure the dev toolchain. Triggers: initializing a new project, migrating a legacy-format project.
 ---
 
-# 项目初创与迁移
+# Project Initialization & Migration
 
-新项目初始化或旧项目迁移到 rime 工作流。日常管理请使用 `rime-flow`。
+Initialize a new project or migrate a legacy project onto the rime workflow. For day-to-day management, use `rime-flow`.
 
 ---
 
-## 场景 A：初创项目
+## Scenario A: New Project
 
-项目刚建立，需要搭建文档骨架和 AI 协作规则。
+The project has just been created and needs a documentation skeleton and AI collaboration rules.
 
-### A1. 判断项目类型
+### A1. Determine Project Type
 
-| 类型 | 特征 | 示例 |
+| Type | Characteristics | Examples |
 |------|------|------|
-| 开发项目 | 有代码构建、依赖管理、技术栈 | Web app、CLI 工具、库 |
-| 内容项目 | 以文本/配置为主，无构建流程 | 工具集、文档站、prompt 仓库 |
+| Development project | Has a code build, dependency management, a tech stack | Web app, CLI tool, library |
+| Content project | Mostly text/config, no build pipeline | Toolsets, doc sites, prompt repos |
 
-后续步骤根据类型有所不同，标注 `[开发]` 的步骤内容项目跳过。
+The following steps differ by type; content projects skip steps marked `[Dev]`.
 
-### A2. 创建 AGENTS.md + CLAUDE.md
+### A2. Create AGENTS.md + CLAUDE.md
 
-项目根目录，定义 AI 协作规则。完整生成指南和模板 → [reference/agents-md.md](reference/agents-md.md)
+At the project root, define the AI collaboration rules. Full generation guide and template → [reference/agents-md.md](reference/agents-md.md)
 
-流程：
+Flow:
 
-1. **前置检测**：检测 rime 工作流依赖的外部 skill 是否安装，未安装则提醒（不阻断，详见 [reference/agents-md.md](reference/agents-md.md) 的前置检测）
-2. **入库选择**：询问用户（入库 = 团队共享；加入 `.gitignore` = 不公开）
-3. **可选交互**：一次展示语言设置（AI 沟通 / 代码注释 / UI 文案）+ 验证方式，用户逐一回答或跳过
-4. **技术栈 Skill 自动映射** `[开发]`：扫描 package.json + 配置文件，自动写入对应 skill 规则
-5. **生成 AGENTS.md**：固定内容 + 用户选择/检测结果的动态内容
-6. **CLAUDE.md 桥接**：Claude Code 只读 `CLAUDE.md` 不读 `AGENTS.md`，必须建桥。无 `CLAUDE.md` → 新建含一行 `@AGENTS.md`；已有 → 顶部去重追加（不动原内容）。详见 [reference/agents-md.md](reference/agents-md.md)
+1. **Pre-check**: check whether the external skills the rime workflow depends on are installed; if not, warn the user (non-blocking — see the pre-check section in [reference/agents-md.md](reference/agents-md.md))
+2. **Tracked-in-git decision**: ask the user (tracked in git = shared with the team; added to `.gitignore` = not made public)
+3. **Optional interaction**: present language settings (AI communication / code comments / UI copy) + verification method all at once; the user answers each one or skips
+4. **Automatic tech-stack skill mapping** `[Dev]`: scan package.json + config files and auto-write the matching skill rules
+5. **Generate AGENTS.md**: fixed content + dynamic content from the user's choices/detection results
+6. **CLAUDE.md bridge**: Claude Code only reads `CLAUDE.md`, never `AGENTS.md` — a bridge is mandatory. No `CLAUDE.md` → create one containing just the line `@AGENTS.md`; already exists → append that line at the top after dedup (leave the original content untouched). Details in [reference/agents-md.md](reference/agents-md.md)
 
-创建后不在日常中修改，除非协作规则本身需要调整
+Once created, it isn't modified day-to-day unless the collaboration rules themselves need to change.
 
-### A3. 配置 .gitignore
+### A3. Configure .gitignore
 
-确保包含：
+Make sure it includes:
 - `.worktrees/`
-- `.rime/`（**必须**，不由用户覆盖）
-- `docs/`（文档层默认不入库，用户可覆盖）
+- `.rime/` (**mandatory** — not overridable by the user)
+- `docs/` (the doc layer is untracked by default; the user can override this)
 
-`.rime/` 的不入库是**硬要求**：它是项目全局的可变状态，入库会导致 `.rime/*.json` 合并冲突、worktree 拿到陈旧快照，以及**切分支时状态无声漂移**（在 feature 分支标 done，切回 main 又变回 doing）。权威说明见 rime-flow 的 [data-contract.md](../rime-flow/data-contract.md)「存储位置与解析顺序」。
+Keeping `.rime/` untracked is a **hard requirement**: it holds project-global mutable state, and tracking it causes `.rime/*.json` merge conflicts, worktrees picking up stale snapshots, and **silent state drift across branch switches** (marked `done` on a feature branch, then back to `doing` after switching back to main). Authoritative explanation in rime-flow's [data-contract.md](../rime-flow/data-contract.md), "Storage Location & Resolution Order."
 
-`docs/` 的入库策略与 `.rime/` **无关**，各自独立决定——`.rime/` 是可变状态，`docs/`（spec / prd）是文档产物。
+The tracked-in-git policy for `docs/` is **independent** of `.rime/` — each is decided on its own: `.rime/` is mutable state, `docs/` (spec / PRD) is documentation output.
 
-`CLAUDE.md` 跟随 `AGENTS.md` 的入库决定（同入库或同 gitignore）：若 AGENTS.md 进 `.gitignore` 而 CLAUDE.md 入库，协作者 clone 后 `@AGENTS.md` 会断链。
+`CLAUDE.md` follows `AGENTS.md`'s tracked-in-git decision (both tracked, or both gitignored): if AGENTS.md is gitignored while CLAUDE.md is tracked, `@AGENTS.md` becomes a dead link for collaborators after cloning.
 
-### A4. 创建 .rime/ 数据层
+### A4. Create the .rime/ Data Layer
 
-项目根目录创建结构化数据目录：
+Create the structured data directory at the project root:
 
 ```
 .rime/
-├── tasks.json      ← 任务状态 source of truth
-├── phase.json      ← 当前阶段信息
-├── cautions.json   ← 踩坑记录（append-only）
-└── anchors/        ← session 记录（自动生成，gitignore）
+├── tasks.json      ← task status source of truth
+├── phase.json      ← current phase info
+├── cautions.json   ← pitfall log (append-only)
+└── anchors/        ← session records (auto-generated, gitignored)
 ```
 
-初始文件模板 → [reference/template-tasks-json.md](reference/template-tasks-json.md)
+Initial file templates → [reference/template-tasks-json.md](reference/template-tasks-json.md)
 
-### A5. 创建 docs/ 文档骨架
+### A5. Create the docs/ Documentation Skeleton
 
-根据项目规模和类型选择需要的文档。
+Choose the needed documents based on project size and type.
 
-**通用文档：**
+**Common documents:**
 
-| 文档 | 内容 | 适用 |
+| Document | Content | Applies to |
 |------|------|------|
-| prd | 产品定位、目标、功能规划（叙事） | 所有项目 |
-| archive | 已完成阶段的叙事归档 | 所有项目 |
+| prd | Product positioning, goals, feature plan (narrative) | All projects |
+| archive | Narrative archive of completed phases | All projects |
 
-**开发项目追加：**
+**Additional for dev projects:**
 
-| 文档 | 内容 | 优先级 |
+| Document | Content | Priority |
 |------|------|--------|
-| techstack | 技术选型、项目结构、阶段计划 | 推荐 |
-| interaction | 交互设计、页面状态、操作流程 | 中型以上 |
-| schema | 数据结构定义 | 中型以上 |
-| DESIGN.md | 设计系统（token + rationale，[google-labs/design.md](https://github.com/google-labs-code/design.md) 格式） | 有 UI 的项目 |
+| techstack | Tech stack choices, project structure, phase plan | Recommended |
+| interaction | Interaction design, page states, operation flows | Medium size and up |
+| schema | Data structure definitions | Medium size and up |
+| DESIGN.md | Design system (tokens + rationale, [google-labs/design.md](https://github.com/google-labs-code/design.md) format) | Projects with a UI |
 
-文件命名 `{project}-{type}.md`。例外：`DESIGN.md` 采用 [google-labs/design.md](https://github.com/google-labs-code/design.md) 标准格式名，不加 project prefix。模板 → [reference/doc-templates.md](reference/doc-templates.md)（DESIGN.md 的模板与生成流程在 `rime-design` skill）
+File naming: `{project}-{type}.md`. Exception: `DESIGN.md` uses the standard [google-labs/design.md](https://github.com/google-labs-code/design.md) filename, with no project prefix. Templates → [reference/doc-templates.md](reference/doc-templates.md) (DESIGN.md's template and generation flow live in the `rime-design` skill)
 
-> DESIGN.md 是团队共享的设计契约。若 `docs/` 默认进 `.gitignore`（见 A3），有团队协作时建议单独 `git add -f docs/DESIGN.md` 或将其移出忽略范围，否则协作者 clone 后拿不到设计系统。
+> DESIGN.md is a design contract shared by the team. If `docs/` is gitignored by default (see A3), when collaborating with a team it's recommended to `git add -f docs/DESIGN.md` separately or move it out of the ignore scope — otherwise collaborators won't get the design system after cloning.
 
-**PRD 优先**：先写 PRD 再动手。
+**PRD first**: write the PRD before starting work.
 
-创建文档后，将「文档地图」写入 AGENTS.md 底部（仅列实际创建的文档）。详见 [reference/agents-md.md](reference/agents-md.md)
+After creating the documents, write a "Document Map" into the bottom of AGENTS.md (list only the documents actually created). Details in [reference/agents-md.md](reference/agents-md.md)
 
-### A6. 配置开发工具链 `[开发]`
+### A6. Configure the Dev Toolchain `[Dev]`
 
-前端 / Node.js 项目适用。Go、Swift 等非 JS/TS 项目跳过。
+Applies to frontend / Node.js projects. Skip for non-JS/TS projects like Go or Swift.
 
-详细配置流程 → [reference/dev-tooling.md](reference/dev-tooling.md)
+Detailed setup flow → [reference/dev-tooling.md](reference/dev-tooling.md)
 
-**代码质量工具：**
+**Code quality tools:**
 
-| 工具 | 用途 | 优先级 |
+| Tool | Purpose | Priority |
 |------|------|--------|
-| Prettier | 代码格式化 | 必选 |
-| ESLint | 代码质量检查 | 必选 |
-| Husky | Git hooks 管理 | 必选 |
-| lint-staged | 暂存文件检查 | 必选 |
-| EditorConfig | 编辑器配置统一 | 推荐 |
-| commitlint | 提交信息规范 | 可选 |
+| Prettier | Code formatting | Required |
+| ESLint | Code quality checks | Required |
+| Husky | Git hooks management | Required |
+| lint-staged | Staged-file checks | Required |
+| EditorConfig | Unified editor config | Recommended |
+| commitlint | Commit message conventions | Optional |
 
-配置文件模板在 `assets/` 目录。
+Config file templates live in the `assets/` directory.
 
-**组件库选型（有 UI 需求时）：**
+**Component library selection (when there's a UI need):**
 
-询问用户是否需要组件库，常见选项：
+Ask the user whether a component library is needed; common options:
 
-| 库 | 特点 | 适用场景 |
+| Library | Characteristics | Best fit |
 |------|------|----------|
-| shadcn/ui | 复制源码、可完全自定义、Tailwind | 需要高度定制的项目 |
-| Radix UI | 无样式 primitives、Accessibility 优先 | 自己写样式、重视 a11y |
-| Base UI | MUI 团队出品、无样式、hooks 驱动 | 需要底层控制 |
-| coss ui | 复制源码、Tailwind、轻量 | shadcn 替代方案 |
+| shadcn/ui | Copy-the-source, fully customizable, Tailwind | Projects needing heavy customization |
+| Radix UI | Unstyled primitives, accessibility-first | Writing your own styles, prioritizing a11y |
+| Base UI | From the MUI team, unstyled, hooks-driven | Needing low-level control |
+| coss ui | Copy-the-source, Tailwind, lightweight | shadcn alternative |
 
-不需要组件库时跳过。选定后记录到 `techstack.md`。
+Skip if no component library is needed. Once chosen, record it in `techstack.md`.
 
-### A7. 创建 README.md
+### A7. Create README.md
 
-面向用户，入库。
-
----
-
-## 场景 C：迁移旧项目
-
-对已在使用旧版 rime-flow（markdown 表格管理状态）的项目执行一次性迁移。
-
-### 判断是否需要迁移
-
-检查是否存在以下旧格式：
-- `backlog.md` 含状态表格（`❌` / `✅`）
-- `prd.md` 含功能需求状态表格
-- 无 `.rime/` 目录
-
-### 迁移流程
-
-1. **备份**：将 `prd.md`、`backlog.md`、`archive.md`、`cautions.md` 复制到 `docs/.migration-backup/`
-2. **提取 items**：扫描所有文档中的 `#xxx` 条目 → 生成 `tasks.json`
-   - archive 里的 → `status: done`
-   - prd 里 ✅ 的 → `status: done`
-   - prd 里 ❌ 的 → `status: doing`
-   - backlog 里的 → `status: todo`
-3. **创建 phase.json**：从 prd 的 P0/P1 标题推断阶段信息
-4. **转换 cautions**：如有 cautions.md → 转换为 `cautions.json`
-5. **重写 prd.md**：保留叙事部分，表格替换为引用列表
-6. **重写 archive.md**：表格替换为阶段叙事
-7. **删除废弃文件**：`backlog.md`、`cautions.md`
-8. **创建 `.rime/` 结构**：目录 + `anchors/`
-9. **更新 .gitignore**：添加 `.rime/`（必须，见 A3）和 `docs/`（默认不入库）。若旧项目已把 `.rime/` 入库，追加 `git rm -r --cached .rime` 取消跟踪（文件留在原地，无需移动）
-
-由 AI 执行，每步确认。迁移完成后确认无误再删除 `docs/.migration-backup/`。
+User-facing, tracked in git.
 
 ---
 
-## 初创完成后
+## Scenario C: Migrating a Legacy Project
 
-项目初创完成后，日常管理（任务状态更新、阶段归档、文档维护）由 `rime-flow` skill 自动接管。
+A one-time migration for projects already using the old rime-flow (markdown-table-based status management).
+
+### Determine Whether Migration Is Needed
+
+Check for the following legacy signs:
+- `backlog.md` contains a status table (`❌` / `✅`)
+- `prd.md` contains a feature-requirement status table
+- No `.rime/` directory
+
+### Migration Flow
+
+1. **Backup**: copy `prd.md`, `backlog.md`, `archive.md`, `cautions.md` to `docs/.migration-backup/`
+2. **Extract items**: scan every document for `#xxx` entries → generate `tasks.json`
+   - In archive → `status: done`
+   - ✅ in prd → `status: done`
+   - ❌ in prd → `status: doing`
+   - In backlog → `status: todo`
+3. **Create phase.json**: infer phase info from the P0/P1 headings in the prd
+4. **Convert cautions**: if cautions.md exists → convert it to `cautions.json`
+5. **Rewrite prd.md**: keep the narrative sections, replace tables with a reference list
+6. **Rewrite archive.md**: replace tables with phase narratives
+7. **Delete obsolete files**: `backlog.md`, `cautions.md`
+8. **Create the `.rime/` structure**: the directory + `anchors/`
+9. **Update .gitignore**: add `.rime/` (mandatory, see A3) and `docs/` (untracked by default). If the legacy project already tracks `.rime/` in git, run `git rm -r --cached .rime` to untrack it (the files stay in place, no need to move them)
+
+Executed by the AI, confirming at each step. After migration is complete, confirm everything is correct before deleting `docs/.migration-backup/`.
+
+---
+
+## After Initialization
+
+Once project initialization is complete, day-to-day management (task status updates, phase archiving, doc maintenance) is automatically taken over by the `rime-flow` skill.

@@ -3,35 +3,35 @@ name: rime-flow
 description: Use when starting or executing a task from tasks.json, updating task status, closing a phase, or maintaining project docs. Daily lifecycle management — tasks.json status flow (todo → doing → done), phase lifecycle, and doc-update rules. Triggers: executing or starting a tasks.json task, updating task status, archiving a phase, maintaining docs.
 ---
 
-# 日常生命周期管理
+# Daily Lifecycle Management
 
-管理 .rime/ 数据层的日常状态流转。初创项目请使用 `/rime-init`。
+Manages day-to-day state transitions in the `.rime/` data layer. For new projects, use `/rime-init`.
 
 ---
 
-## 任务生命周期
+## Task Lifecycle
 
 ```
-用户定义功能 → /rime-backlog（别名 /rime-task）→ tasks.json (status: todo)
-    ↓ 用户说「做 #xxx」「执行 #xxx」「grill #xxx」等（没有对应 task 则先建 task，见下方步骤 0）
-tasks.json (status: doing)  ← 进入设计/grill 阶段即算开始
-    ↓ 根据 difficulty 决定执行方式
-    ├─ trivial → 主线程直接实现（唯一例外，判据见 dispatch.md）
-    ├─ small  → 派 1 个 implementer subagent 一次完成（模型按 dispatch.md）
-    ├─ medium → grill-me 收敛设计 → spec → 按 subtasks 派发 implementer 实施（subtasks 当活计划，边做边改）
-    └─ large  → grill-me → spec（含 ## Task N 段落）→ rime-sdd 编排执行（subagent per task + per-task review）
-    ⚠ spec 锁设计意图；tasks.json subtasks 是自适应执行清单，发现偏离预期就直接增删
-    ⚠ 执行分配（subagent + model）规则见 dispatch.md：主线程只做调度，实现工作派 subagent 并显式指定模型档位
-    ⚠ 产出 spec 文件后，将路径写入 task 的 docs 字段
-    ↓ 完成后，用户确认 OK 且改动已 commit（零 commit 不得标 done）
-tasks.json (status: done, completedAt: 今天)
-    ↓ Phase 关闭时
-archives/tasks.P{n}.json 归档 → archive.md 叙事总结 → tasks.json 移除已归档 items
+User defines a feature → /rime-backlog (alias /rime-task) → tasks.json (status: todo)
+    ↓ User says "do #xxx", "execute #xxx", "grill #xxx", etc. (if no matching task exists, create one first — see step 0 below)
+tasks.json (status: doing)  ← entering the design/grill phase counts as starting
+    ↓ Execution shape decided by difficulty
+    ├─ trivial → main thread implements directly (the only exception; see dispatch.md for the test)
+    ├─ small  → dispatch 1 implementer subagent to finish in one pass (model per dispatch.md)
+    ├─ medium → grill-me converges the design → spec → dispatch implementer(s) by subtasks (subtasks are a living plan, edited as work proceeds)
+    └─ large  → grill-me → spec (with ## Task N sections) → rime-sdd orchestrates execution (subagent per task + per-task review)
+    ⚠ The spec locks design intent; tasks.json subtasks are an adaptive execution checklist — add/remove items freely when reality diverges from expectations
+    ⚠ Dispatch rules (subagent + model) are defined in dispatch.md: the main thread only dispatches — implementation work is delegated to a subagent with an explicitly specified model tier
+    ⚠ Once a spec file is produced, write its path into the task's docs field
+    ↓ Once done, after the user confirms OK and changes are committed (zero commits → may not be marked done)
+tasks.json (status: done, completedAt: today)
+    ↓ On phase closing
+archives/tasks.P{n}.json archived → archive.md narrative summary → tasks.json removes archived items
 ```
 
-## 设计阶段：grill-me
+## Design phase: grill-me
 
-medium / large 任务动手前先收敛设计、产出 **spec**。默认用 grill-me 式逐题逼问：
+For medium / large tasks, converge the design and produce a **spec** before touching code. The default is grill-me style, question-by-question grilling:
 
 > Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
 >
@@ -39,155 +39,155 @@ medium / large 任务动手前先收敛设计、产出 **spec**。默认用 gril
 >
 > If a question can be answered by exploring the codebase, explore the codebase instead.
 
-> grill-me 原文取自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT License）。
+> The original grill-me prompt is from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT License).
 
-- **grill-me（收敛）是默认**：用户带着方向来时，逼问钉死决策树的每个分支。需要同时产出 ADR / glossary 时用 `grill-with-docs`。
-- 收敛结束写 **spec**，固化关键决策 + 理由 + 放弃的方案——spec 比 implementation plan 更耐久。
-- **逼问中冒出视觉问题**（光靠文字说不清的 layout / UI 外观 / 方案对比）：**先问用户**要不要启用 **HTML 格式 spec** 把 mock 画出来讨论，用户同意可创建 HTML spec（详见下方「spec 格式」）。
+- **grill-me (convergence) is the default**: when the user arrives with a direction, grill to pin down every branch of the decision tree. Use `grill-with-docs` when ADRs / glossary need to be produced alongside.
+- Once convergence is done, write the **spec**, capturing key decisions + rationale + rejected alternatives — a spec outlasts an implementation plan.
+- **When a visual question comes up during grilling** (layout / UI appearance / option comparisons that words alone can't convey): **ask the user first** whether to switch on an **HTML-format spec** to sketch mocks for discussion; if the user agrees, create the HTML spec (see "Spec Format" below).
 
-### spec 格式
+### Spec Format
 
-- 默认 **Markdown**，落点为与 `plansDirectory` 同级的 `specs/`（默认 `docs/specs/*.md`，详见下方「实施 › 文档落点」）。
-- 涉及 **UI** 的 spec 用 **HTML**：可画 wireframe、嵌可运行 mock。模板见 `rime-init` 的 `reference/template-spec.html`（sidebar 编号导航 + 决策表 + phone/desktop 双 mock 框）。dashboard `/file` 原生渲染 `.html`，点开即所见。正文字体按 spec 语言指定：中文 `'Noto Sans CJK SC', system-ui`，日文 `'Noto Sans CJK JP', system-ui`，不要在前面叠拉丁 webfont（Jost 等），否则中日文粗细大小不一。
-- **遇到视觉问题**（需要展示 layout、对比布局方案、讨论 UI 外观与交互时）：**先征得用户同意**，再把该 spec 写成 **HTML 格式**（非 Markdown），在 HTML spec 里呈现可运行 mock、画对比框，**所见即所讨论**——视觉讨论收敛在 spec 文件内，dashboard `/file` 点开即看。
-- **验证记录区**：task 完成时**先**在 spec 末尾追加 `## 验证记录`（清单逐条落盘，待验证态 `- [ ]`），**再**向用户呈现验证清单并附 spec 路径；用户验证反馈后回填结果（通过项打勾 + 通过日期）。spec 闭环——开头是设计意图与放弃的方案，结尾是验证证据。验证内容只落 spec，不写 tasks.json。
+- Default is **Markdown**, placed in `specs/` at the same level as `plansDirectory` (default `docs/specs/*.md`, see "Implementation › Doc Placement" below).
+- Specs involving **UI** use **HTML**: wireframes can be drawn and runnable mocks embedded. See `rime-init`'s `reference/template-spec.html` for the template (numbered sidebar navigation + decision table + phone/desktop dual mock frames). The dashboard's `/file` renders `.html` natively — open it and you see it directly. Set the body font to match the spec's language: Chinese `'Noto Sans CJK SC', system-ui`, Japanese `'Noto Sans CJK JP', system-ui`; don't stack a Latin webfont (Jost, etc.) in front of it, or CJK weight/size will look inconsistent.
+- **When a visual question arises** (needing to show layout, compare layout options, or discuss UI appearance and interaction): **get the user's agreement first**, then write that spec in **HTML format** (not Markdown); present runnable mocks and comparison frames inside the HTML spec — **what you see is what you discuss** — visual discussion converges inside the spec file, and the dashboard's `/file` shows it the moment it's opened.
+- **Verification section**: when the task is complete, **first** append `## Verification` to the end of the spec (checklist items persisted one by one, in unverified state `- [ ]`), **then** present the verification checklist to the user in the user's conversation language along with the spec path; after the user verifies and reports back, fill in the results (check off passed items + pass date). The spec closes the loop — it opens with design intent and rejected alternatives, and closes with verification evidence. Verification content is written only to the spec, never to tasks.json.
 
-### 实施
+### Implementation
 
-spec 定稿后主线程转入**调度者**角色：实现工作按 [dispatch.md](dispatch.md) 派发 subagent 并**显式指定 model**（fable/session 模型不下放）；medium 按 subtasks 逐段串行派发、主线程逐段审 diff；仅 **trivial** 改动主线程直接做。
+Once the spec is finalized, the main thread switches into the **dispatcher** role: implementation work is dispatched to subagents per [dispatch.md](dispatch.md) with an **explicitly specified model** (the fable/session model is never delegated down); for medium tasks, dispatch serially, segment by segment, following subtasks, with the main thread reviewing the diff after each segment; only **trivial** changes are done directly by the main thread.
 
-- spec 定稿后，把执行步骤映射到 tasks.json **subtasks，边做边更新**（不写重型 plan 文档）。subtasks 就是自适应的执行清单。
-- **large** 任务的 spec 应包含 `## Task N` 段落（每个 task 一段：需求、接口约束、验收标准），定稿后用 `rime-sdd` 编排执行——每 task 派 fresh implementer subagent + per-task spec/quality review gate + final whole-branch review。medium 任务按 subtasks 顺序逐段派发实施。
+- Once the spec is finalized, map the execution steps onto tasks.json **subtasks, updated as work proceeds** (no heavyweight plan document is written). Subtasks are the adaptive execution checklist.
+- The spec for a **large** task should include `## Task N` sections (one section per task: requirements, interface constraints, acceptance criteria); once finalized, use `rime-sdd` to orchestrate execution — each task gets a fresh implementer subagent + a per-task spec/quality review gate + a final whole-branch review. Medium tasks are dispatched for implementation segment by segment, in subtask order.
 
-> **⚠ 文档落点（配置驱动）**
-> 落点由 **Claude Code `plansDirectory` 配置** 驱动：
-> - **spec** → 与 `plansDirectory` **同级**的 `specs/`（例：`plansDirectory` 为 `./docs/plans` → spec 落 `./docs/specs/`）；**未配置则走默认：项目根目录下 `docs/specs/`**。文件名 `YYYY-MM-DD-<topic>-design.md`
-> - **plan**（如需）→ 读 Claude Code 配置 `plansDirectory`（项目 `.claude/settings.json` 优先，否则 `~/.claude/settings.json`）所指目录；**未配置则走默认：项目根目录下 `docs/plans/`**。文件名 `YYYY-MM-DD-<feature>.md`
+> **⚠ Doc Placement (configuration-driven)**
+> Placement is driven by the **Claude Code `plansDirectory` setting**:
+> - **spec** → `specs/` at the **same level** as `plansDirectory` (e.g., `plansDirectory` = `./docs/plans` → spec goes to `./docs/specs/`); **if unconfigured, default to `docs/specs/` at the project root**. Filename: `YYYY-MM-DD-<topic>-design.md`
+> - **plan** (if needed) → the directory pointed to by the Claude Code `plansDirectory` setting (project `.claude/settings.json` takes precedence, otherwise `~/.claude/settings.json`); **if unconfigured, default to `docs/plans/` at the project root**. Filename: `YYYY-MM-DD-<feature>.md`
 
-### 开始执行 task
+### Starting a task
 
-用户说「做 #0011」「执行任务 xxx」「grill #xxx」等表达时（包括开始 grill/设计阶段）：
+When the user says something like "do #0011", "start task xxx", "grill #xxx" (including starting the grill/design phase):
 
-0. **没有对应 task 时先建 task**：若用户给的 ID 在 tasks.json 中不存在，或用户直接描述了一件尚未登记的工作（如「帮我做 XX 功能」），先走 `/rime-backlog`（别名 `/rime-task`）流程创建 task 拿到编号，再从第 1 步继续。所有进入执行流程的工作都必须先在 tasks.json 有对应 item
-1. 读取 `.rime/tasks.json`，找到对应 item
-2. 将 status 更新为 `doing`（grill/设计 即算开始，不必等到写代码）
-3. 读取 `.rime/cautions.json`，按 task 的 title + description 关键词与 cautions 的 `tags` + `title` 字段做 substring 匹配（CJK 文本直接子串包含检查），匹配到的 cautions 注入到当前对话 context，无匹配则跳过
-4. 评估 difficulty 是否合理：AI 根据 task 的 title + description + subtasks 重新评估 difficulty（small / medium / large），若与 tasks.json 中的 difficulty 不一致则提示用户确认并更新
-5. **依赖软警告**（仅文字提示，用户自行决定）：读取 task 的 `dependsOn`，逐个查依赖 task 的 status，若有非 `done` 项，列出这些依赖（id + status），提示用户「以下依赖尚未完成，是否仍要现在开始？」。不阻止状态流转，用户自决
-6. 根据 difficulty 决定执行方式（见上方流程图），执行分配规则见 [dispatch.md](dispatch.md)
-7. **记录 commitFrom**: 执行 `git rev-parse HEAD`，成功则写入 task 的 `commitFrom` 字段（每次 doing 都覆写）。若命令失败（非 git 仓库等），静默跳过
-8. **回填 docs**：grill/设计阶段产出的 spec/prototype/正式文档落盘后，立即写入 task 的 `docs` 字段（`[{type, path}]`，type 见 data-contract 枚举），不要等 task 完成时补
-9. **Branch 建议**（仅文字建议，用户自行决定）:
-   - `small` → 不建议
-   - `medium` → 可选建议："这个任务可以考虑新建分支 `feature/xxx`，也可以直接在当前分支开发"
-   - `large` → 强烈建议："建议为这个任务创建独立分支 `feature/xxx`"
-   - 命名格式: `feature/xxx` / `fix/xxx`，描述性，不含 task ID
-10. **记录 branch**: 建议后询问用户："已创建分支了吗？如有请提供分支名，跳过则直接回车"。用户提供则写入 task 的 `branch` 字段，跳过则不写
+0. **If no matching task exists, create one first**: if the ID the user gave doesn't exist in tasks.json, or the user directly describes work that isn't registered yet (e.g., "help me build feature XX"), first go through the `/rime-backlog` (alias `/rime-task`) flow to create the task and get an ID, then continue from step 1. All work entering the execution flow must first have a corresponding item in tasks.json.
+1. Read `.rime/tasks.json` and find the matching item
+2. Update status to `doing` (entering grill/design counts as starting — no need to wait until code is written)
+3. Read `.rime/cautions.json`; match the task's title + description keywords against the cautions' `tags` + `title` fields via substring matching (for CJK text, a plain substring-containment check); any matched cautions are injected into the current conversation context, otherwise skip
+4. Assess whether difficulty is reasonable: the AI re-evaluates difficulty (small / medium / large) from the task's title + description + subtasks; if it disagrees with the difficulty recorded in tasks.json, prompt the user to confirm and update it
+5. **Soft warning on dependencies** (a text prompt only, the user decides): read the task's `dependsOn`, check the status of each dependency task; if any are not `done`, list those dependencies (id + status) and prompt the user, delivered in the user's conversation language: "The following dependencies aren't done yet — do you still want to start now?" This doesn't block the state transition; the user decides.
+6. Decide the execution shape by difficulty (see the lifecycle diagram above); dispatch rules are in [dispatch.md](dispatch.md)
+7. **Record commitFrom**: run `git rev-parse HEAD`; on success, write it into the task's `commitFrom` field (overwritten every time the task enters doing). If the command fails (not a git repo, etc.), skip silently.
+8. **Backfill docs**: as soon as a spec/prototype/formal document produced during the grill/design phase is written to disk, immediately write it into the task's `docs` field (`[{type, path}]`, see data-contract for the type enum) — don't wait until task completion to add it
+9. **Branch suggestion** (text suggestion only, the user decides), presented in the user's conversation language:
+   - `small` → no suggestion
+   - `medium` → optional suggestion: "You could create a new branch `feature/xxx` for this task, or just develop on the current branch"
+   - `large` → strong suggestion: "Recommend creating a dedicated branch `feature/xxx` for this task"
+   - Naming format: `feature/xxx` / `fix/xxx`, descriptive, without the task ID
+10. **Record the branch**: after suggesting, ask the user, in the user's conversation language: "Have you created the branch? If so, provide the branch name; press enter to skip." If the user provides one, write it to the task's `branch` field; if skipped, leave it unwritten.
 
-### 完成 task
+### Completing a task
 
-1. **增量 cautions GC**：读取 `.rime/cautions.json`，筛出上一轮 GC 后新增的条目——`createdAt` ≥ active 区上一个 done task 的 `completedAt`；无则用本 task 进入 doing 的日期（`git show -s --format=%cs <commitFrom>`，无 `commitFrom` 以 task 的 `createdAt` 代替）。边界含当天，宁宽勿漏，重复审到的条目维持原判。逐条判定，**不做全量扫描**：
-   - **DROP**（直接删除），满足任一：一次性事故经过（某次语法错误、某次 commit 失误、某次分支搞错）；session 状态汇报（「XX 未更新」「XX 待确认」「XX 与本次无关」）；项目数值/决策记录（金额、时长、尺寸等——属 anchor 的 decisions，不属 cautions）；人尽皆知的常识（缓存要刷新、warning 不影响功能）
-   - **MERGE**：与已有条目讲同一教训 → 删新留旧；新条目信息更完整时把补充信息并入旧条目的 `summary`
-   - **KEEP**：可复用的技术教训——换个项目、换个时间还会踩的坑（浏览器兼容性、CSS/Canvas/API 行为、数据丢失教训、安全问题等）
-   - 判定基准一句话：「三个月后在另一个项目遇到同类场景，这条还有用吗？」有用才留
-   - 直接修改 cautions.json，落盘即生效，**保留原有 id 不重排**；完成后向用户一句话汇报（删了几条、留了几条）
-2. 如有 subtasks，确认全部完成
-3. **收尾提交**：本 task 的全部改动提交完毕（走 `/rime-git`）；验证期间的修复照常追加提交
-4. **生成验证清单——先落盘，后呈现**：基于 task 的 title + description + `commitFrom..HEAD` 的 diff 生成**可操作**步骤（跑哪条命令、开哪个页面点哪里、看到什么算通过）；有 spec 时对照 spec 的设计意图，把验收点翻译成用户当下能跑/能点的具体步骤
-   - **有 spec（medium / large）**：先在 spec 末尾追加 `## 验证记录` 区（清单逐条落盘，待验证态 `- [ ]`），再向用户呈现，呈现时附 spec 路径。spec 未落盘不得请用户开始验证
-   - **无 spec（small）**：仅对话呈现，格式「你可以这样验证: ① …  ② …  ③ …」
-5. **用户实际验证**——等用户跑完反馈，不替用户判定通过
-6. **回填验证记录**：有 spec → 更新 `## 验证记录`：通过项打勾 + 通过日期，未通过项记录问题与后续处理；无 spec → 口头闭环。验证内容**不写入 tasks.json**
-7. **Commit gate → 标 done（一笔写入）**：
-   - **Gate**（非 git 项目豁免：`git rev-parse --git-dir` 失败 → 跳过检查直接进标 done）：本 task 的改动已全部提交（其他并行 doing task 的未提交改动不计）；`git rev-parse HEAD` ≠ `commitFrom`。任一不满足 → **不得标 done**，回第 3 步补提交。git 项目缺 `commitFrom` → 与用户确认起点 commit、补写 `commitFrom` 后再过 gate
-   - **标 done**：用户确认 OK 后，在**同一次写入**中完成 `status: done` + `completedAt` + `commits: { "from": "<commitFrom>", "to": "<HEAD>" }`（非 git 项目省略 commits）
-   - **done 为终态**：此后不再写该 task 的任何字段，例外仅两种——phase 关闭时的归档移除、validator 报错的数据修复；done 后发现问题 → 新建 task 处理，不回退状态
-   - 多个 task 并行 doing 时，各自 commit range 可能重叠，属预期行为
+1. **Incremental cautions GC**: read `.rime/cautions.json` and filter to entries added since the last GC pass — `createdAt` ≥ the `completedAt` of the previous done task in the active set; if there is none, use the date this task entered doing (`git show -s --format=%cs <commitFrom>`, or the task's `createdAt` if there's no `commitFrom`). The boundary is inclusive of that day — err on the side of over-including rather than missing entries; re-reviewed entries keep their prior verdict. Judge entry by entry, **do not do a full scan**:
+   - **DROP** (delete outright) if any of: a one-off incident (a syntax slip, a commit mistake, a wrong-branch mishap); a session status report ("XX not updated", "XX pending confirmation", "XX unrelated to this round"); a project figure/decision record (amounts, durations, sizes, etc. — these belong in anchor decisions, not cautions); common knowledge everyone already knows (cache needs refreshing, a warning doesn't affect functionality)
+   - **MERGE**: if it teaches the same lesson as an existing entry → delete the new one and keep the old; if the new entry has more complete information, fold the additional detail into the old entry's `summary`
+   - **KEEP**: reusable technical lessons — pitfalls that would recur in a different project or at a different time (browser compatibility, CSS/Canvas/API behavior, data-loss lessons, security issues, etc.)
+   - One-sentence test: "Three months from now, in a different project, facing a similar scenario — would this still be useful?" Keep it only if the answer is yes.
+   - Edit cautions.json directly — the change takes effect once written; **keep existing ids, don't renumber**; when done, report to the user in one sentence, in the user's conversation language (how many were removed, how many kept)
+2. If there are subtasks, confirm they are all complete
+3. **Wrap-up commit**: commit all of this task's changes in full (via `/rime-git`); fixes made during verification are committed additionally as usual
+4. **Generate the verification checklist — persist first, present second**: based on the task's title + description and the `commitFrom..HEAD` diff, generate **actionable** steps (which command to run, which page/element to open and click, what result counts as passing); when there is a spec, cross-reference its design intent and translate acceptance points into concrete steps the user can run/click right now
+   - **With a spec (medium / large)**: first append a `## Verification` section to the end of the spec (checklist items persisted one by one, in unverified state `- [ ]`), then present it to the user, in the user's conversation language, along with the spec path. Do not ask the user to start verifying until the spec is persisted to disk.
+   - **Without a spec (small)**: present in conversation only, in the user's conversation language, in the format "You can verify this as follows: ① … ② … ③ …"
+5. **Actual user verification** — wait for the user to run through it and report back; never decide pass/fail on the user's behalf
+6. **Backfill the verification record**: with a spec → update `## Verification`: check off passed items with a pass date, and record the issue and follow-up for items that failed; without a spec → close the loop verbally. Verification content is **never written to tasks.json**
+7. **Commit gate → mark done (in one write)**:
+   - **Gate** (exempt for non-git projects: if `git rev-parse --git-dir` fails → skip the check and go straight to marking done): all of this task's changes are committed (uncommitted changes from other tasks concurrently doing don't count); `git rev-parse HEAD` ≠ `commitFrom`. If either condition fails → **may not be marked done** — go back to step 3 and finish committing. A git project missing `commitFrom` → confirm the starting commit with the user, backfill `commitFrom`, then pass the gate
+   - **Marking done**: once the user confirms OK, complete `status: done` + `completedAt` + `commits: { "from": "<commitFrom>", "to": "<HEAD>" }` **in the same write** (omit `commits` for non-git projects)
+   - **done is a terminal state**: no field of this task is written again afterward, with exactly two exceptions — archival removal on phase closing, and data fixes for validator errors; if a problem is found after done → create a new task to handle it, never roll back the status
+   - When multiple tasks are doing in parallel, their commit ranges may overlap — this is expected
 
 ---
 
-## 文档更新规则
+## Doc Update Rules
 
-| 时机 | 更新内容 |
+| Trigger | Update |
 |------|----------|
-| 发现改善点 / 新想法 | 用 `/rime-backlog`（别名 `/rime-task`）添加到 tasks.json（status: todo） |
-| 阶段完成，开始下一阶段 | 触发 Phase 关闭流程（见下方） |
-| 新增依赖 / 改技术选型 `[开发]` | 更新 techstack.md |
-| 交互行为变更 `[开发]` | 更新 interaction.md 对应章节 |
-| 数据结构变更 `[开发]` | 更新 schema.md |
-| 用户说"更新文档" | 更新 README.md + docs/ 根目录核心文档（不含子目录） |
+| Found an improvement / new idea | Add it to tasks.json via `/rime-backlog` (alias `/rime-task`) (status: todo) |
+| Phase completed, starting the next one | Trigger the Phase Closing Flow (see below) |
+| New dependency / tech-stack change `[dev]` | Update techstack.md |
+| Interaction behavior change `[dev]` | Update the corresponding section of interaction.md |
+| Data structure change `[dev]` | Update schema.md |
+| User says "update the docs" | Update README.md + the core docs at the docs/ root (excluding subdirectories) |
 
-更新方式：
+How to update:
 
-- **PRD 叙事更新**：功能规划变更时更新引用列表，砍掉的加到"不做的事"
-- **archive 归档**：整个 phase 完成后写入阶段总结
-- **techstack.md Phase checklist** `[开发]`：完成项打 `[x]`，新阶段直接追加
-- 调研内容放 `docs/researches/`，设计内容放 `docs/designs/`，不放根目录
-- 详细仕様放 `docs/product/`，PRD 保持概要级别并链接过去
-
----
-
-## Phase 关闭流程
-
-当一个 phase 内所有 tasks 的 status 都变为 `done` 时：
-
-1. 提示用户是否关闭该 phase
-2. 用户确认后：
-   - `phase.json`: 该 phase 的 status → `done`，记录 `completedAt`
-   - `.rime/archives/tasks.P{n}.json`: 写入该 phase 的所有 done tasks（完整 task 对象原样保留）。归档 JSON 为关闭时的不可变快照，写入后不随其他文件变更而更新
-   - `archive.md`: 追加阶段叙事概要（不含 task 列表）
-   - `tasks.json`: 移除该 phase 的 done items；移除后扫描剩余所有 task 的 `dependsOn`，删除指向已归档 ID 的引用（依赖满足即消解，active 区不留悬空引用，详情回 archive 查）
-   - `anchors/`: 删除旧 anchor 文件，全局只保留最近 10 个
-   - `prd.md`: 移除已归档阶段的内容
-3. 如需开始新 phase：用户在 prd.md 中定义，AI 同步更新 phase.json
-
-> P0/P1 等已关闭阶段的 archive.md 叙事保持不变，本流程从下一个关闭的 phase 起适用。
-
-### 归档 JSON 格式
-
-路径与字段见 [data-contract.md](data-contract.md) 的 archives 一节。要点：不可变快照、items 保留完整 task 对象、phase/name/completedAt 从 phase.json 取值。
+- **PRD narrative update**: when feature planning changes, update the reference list; anything cut gets added to "Things we're not doing"
+- **Archive**: write the phase summary once the entire phase is complete
+- **techstack.md Phase checklist** `[dev]`: check off `[x]` for completed items; append directly for new phases
+- Research content goes in `docs/researches/`, design content in `docs/designs/` — not at the root
+- Detailed specifications go in `docs/product/`; the PRD stays at summary level and links over to them
 
 ---
 
-## 规则与约束
+## Phase Closing Flow
 
-### 写入约束
+When every task's status within a phase becomes `done`:
 
-**所有路径**（AI 手动更新、`/rime-backlog` command）向 tasks.json 写入 item 时，必须满足 [data-contract.md](data-contract.md) 的「写入约束」：必填字段齐全（缺失则**中止写入并报错**）、`dependsOn` 先过 DFS 检环（构成环则**拒绝写入**，图恒为 DAG）、空 `dependsOn` 省略 key。
+1. Prompt the user, in the user's conversation language, on whether to close the phase
+2. Once the user confirms:
+   - `phase.json`: set that phase's status → `done`, record `completedAt`
+   - `.rime/archives/tasks.P{n}.json`: write all of that phase's done tasks (full task objects preserved as-is). The archive JSON is an immutable snapshot taken at closing time — it does not update afterward when other files change
+   - `archive.md`: append a narrative summary of the phase (no task list)
+   - `tasks.json`: remove that phase's done items; after removal, scan the `dependsOn` of all remaining tasks and delete references pointing to archived IDs (a dependency is considered resolved once satisfied — the active set keeps no dangling references; details live in the archive)
+   - `anchors/`: delete old anchor files, keeping only the most recent 10 globally
+   - `prd.md`: remove content for the archived phase
+3. To start a new phase: the user defines it in prd.md, and the AI updates phase.json to match
 
-### 编号规则
+> The archive.md narrative for already-closed phases like P0/P1 stays unchanged; this flow applies starting from the next phase that closes.
 
-所有功能项使用**全局递增编号** `#0001`、`#0002`...：
+### Archive JSON Format
 
-- 编号由 `tasks.json` 的 `nextId` 自增生成，补零 4 位
-- 编号全局唯一，不回收不复用
-- 用 `/rime-backlog` 添加新 item 时自动分配编号
-
-### docs/ 目录规则
-
-- `.rime/` **一律不入库**——硬要求，不由用户覆盖（入库会导致合并冲突与**切分支时状态无声漂移**，详见 [data-contract.md](data-contract.md)「存储位置与解析顺序」）
-- `docs/` 默认不入库；其策略与 `.rime/` **无关**，独立决定（`.rime/` 是可变状态，`docs/` 是文档产物）
-- **入库文件不得引用不入库的资产**：代码注释、commit message、入库的 md 里不写 task ID（`#0001`）、caution ID（`C-001`）、`docs/` 下路径——对 clone 者是死链。注释要自足，把「为什么」写进注释本身。派 subagent 时必须逐条传达（它不知道 `#0012` 指什么）。详见 [data-contract.md](data-contract.md)「不入库资产的引用禁令」
-- 根目录放核心文档（prd, archive, techstack 等）
-- 子目录名用**复数形式**（specs, plans, researches, designs）
-- `specs/`（spec：设计意图 + 决策 + 验证记录）与 `plans/`（plan：临时执行计划）**同级**：落点跟随 Claude Code `plansDirectory` 配置，**未配置则走默认——项目根目录下 `docs/specs/`**（plan 目录 `docs/plans/` 如需）
-- `product/` 放详细仕様書（复杂功能的讨论结果）
+See the archives section of [data-contract.md](data-contract.md) for the path and fields. Key points: an immutable snapshot, items preserve full task objects, phase/name/completedAt are taken from phase.json.
 
 ---
 
-## 数据层参考
+## Rules & Constraints
 
-**`.rime/` 五类文件的字段、枚举、ID 格式、读写归属的权威定义：[data-contract.md](data-contract.md)。** 涉及字段细节时先读它。
+### Write Constraints
 
-执行分配（subagent + model 档位）的权威定义：[dispatch.md](dispatch.md)。
+**Every path** (manual AI updates, the `/rime-backlog` command) writing an item to tasks.json must satisfy the "Write Constraints" in [data-contract.md](data-contract.md): all required fields present (missing → **abort the write and report an error**), `dependsOn` passes a DFS cycle check first (a cycle → **reject the write**; the graph is always a DAG), and an empty `dependsOn` omits the key.
 
-| 文件 | 职责 |
+### ID Rules
+
+All feature items use a **globally incrementing ID** `#0001`, `#0002`, ...:
+
+- The ID is generated by incrementing `tasks.json`'s `nextId`, zero-padded to 4 digits
+- IDs are globally unique, never recycled or reused
+- Assigned automatically when adding a new item via `/rime-backlog`
+
+### docs/ Directory Rules
+
+- `.rime/` is **never tracked in git** — a hard requirement, not overridable by the user (tracking it causes merge conflicts and **silent state drift when switching branches**; see "Storage Location & Resolution Order" in [data-contract.md](data-contract.md))
+- `docs/` is untracked by default; its policy is **independent** of `.rime/` and decided separately (`.rime/` is mutable state, `docs/` is documentation output)
+- **Tracked files must not reference untracked assets**: don't write task IDs (`#0001`), caution IDs (`C-001`), or `docs/` paths in code comments, commit messages, or tracked markdown — they're dead links to anyone who clones the repo. Make comments self-contained: write the "why" directly into the comment itself. When dispatching a subagent, this must be communicated explicitly (it has no idea what `#0012` refers to). See "Ban on Referencing Untracked Assets" in [data-contract.md](data-contract.md) for details.
+- Core docs (prd, archive, techstack, etc.) live at the root
+- Subdirectory names use the **plural form** (specs, plans, researches, designs)
+- `specs/` (spec: design intent + decisions + verification log) sits **alongside** `plans/` (plan: a temporary execution plan): placement follows the Claude Code `plansDirectory` setting; **if unconfigured, default to `docs/specs/` at the project root** (plan directory `docs/plans/` if needed)
+- `product/` holds detailed specifications (the outcome of discussions for complex features)
+
+---
+
+## Data Layer Reference
+
+**The authoritative definition of fields, enums, ID formats, and read/write ownership for the five `.rime/` file types is [data-contract.md](data-contract.md).** Read it first whenever field-level detail is involved.
+
+The authoritative definition of dispatch (subagent + model tier) is [dispatch.md](dispatch.md).
+
+| File | Responsibility |
 |------|------|
-| `.rime/tasks.json` | 任务状态 source of truth（items + subtasks + dependsOn） |
-| `.rime/phase.json` | 当前 phase、历史 phases |
-| `.rime/cautions.json` | 踩坑记录，append-only，SessionEnd hook 自动提取 |
-| `.rime/anchors/` | session 记录，自动生成，gitignore |
-| `.rime/archives/` | phase 关闭时的不可变 task 快照 |
-| `docs/prd.md` | 产品定位和规格，叙事文档，用 #ID 引用 tasks.json |
-| `docs/archive.md` | 阶段叙事归档，phase 关闭时写入总结 |
+| `.rime/tasks.json` | Source of truth for task state (items + subtasks + dependsOn) |
+| `.rime/phase.json` | Current phase, historical phases |
+| `.rime/cautions.json` | Pitfall records, append-only, auto-extracted by the SessionEnd hook |
+| `.rime/anchors/` | Session records, auto-generated, gitignored |
+| `.rime/archives/` | Immutable task snapshots taken at phase closing |
+| `docs/prd.md` | Product positioning and spec, a narrative document, references tasks.json via #ID |
+| `docs/archive.md` | Phase narrative archive, summary written at phase closing |

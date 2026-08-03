@@ -1,32 +1,32 @@
-# Archive 模板
+# Archive Template
 
-已完成阶段的叙事归档。Phase 关闭时从 PRD 移入。
+Narrative archive of completed phases. Moved in from the PRD when a phase closes.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} Archive — 已完成阶段
+# {Project Name} Archive — Completed Phases
 
-> 从 PRD 归档的已完成阶段。叙事记录，不再活跃管理。
-> 各 item 详细状态可在 `.rime/tasks.json` 中查看（done items 在 phase 关闭时回收）。
+> Completed phases archived from the PRD. Narrative record, no longer actively managed.
+> Detailed status for each item can be viewed in `.rime/tasks.json` (done items are reclaimed when a phase closes).
 
-## P0 — MVP（YYYY-MM-DD 完成）
+## P0 — MVP (completed YYYY-MM-DD)
 
-> 可选：记录该阶段的 scope 决策说明
-> 例：基于"一个月可用版"的时间约束，i18n 延后...
+> Optional: record this phase's scope decisions
+> Example: given the time constraint of a "usable in one month" version, i18n was deferred...
 
-完成项: #001 功能A, #002 功能B, #003 功能C
+Completed items: #001 Feature A, #002 Feature B, #003 Feature C
 
-### 总结
+### Summary
 
-一段话描述这个阶段做了什么、学到了什么、有什么值得记录的经验。
+A paragraph describing what this phase did, what was learned, and any experience worth recording.
 ```
 
-## 写法要点
+## Writing Notes
 
-- 按阶段分节（P0、P1...），记录完成日期
-- **叙事为主**，不用状态表格
-- 完成项用 `#ID 标题` 格式引用，一行列出
-- 可附带该阶段的 scope 决策 blockquote
-- 总结部分记录经验教训，方便后续参考
-- 只有整个 phase 完成后才归档，不单独归档某个 item
+- Section by phase (P0, P1, ...), recording the completion date
+- **Narrative-first**, no status tables
+- Reference completed items in `#ID Title` format, listed on one line
+- May include a blockquote with that phase's scope decisions
+- The summary records lessons learned, for future reference
+- Only archive once the entire phase is complete — never archive a single item on its own

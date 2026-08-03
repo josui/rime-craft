@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# 共享工具函数：.rime 目录解析（含 worktree 映射）+ git 变更匹配
-# 解析顺序的权威定义见 skills/rime-flow/data-contract.md「存储位置与解析顺序」
+# Shared utility functions: .rime directory resolution (including worktree mapping) + git change matching
+# The authoritative definition of the resolution order is in skills/rime-flow/data-contract.md, "Storage Location & Resolution Order"
 
-# 把 cwd 映射到主检出（main working tree）的等价路径
-# linked worktree 中 <wt>/apps/foo → <main>/apps/foo；主检出中原样返回
+# Map cwd to its equivalent path in the main checkout (main working tree)
+# In a linked worktree, <wt>/apps/foo → <main>/apps/foo; in the main checkout, returned as-is
 #
-# .rime/ 是项目全局的可变状态且不入库，权威副本只存在于主检出侧。
-# 保留 cwd 的相对部分而非直接返回主检出根，是为了不破坏 monorepo——
-# 在 <wt>/apps/foo 工作时应解析到 <main>/apps/foo/.rime，而不是把整个
-# monorepo 的所有子项目 .rime/ 都返回。
-# 主检出场景下返回值 == cwd，故行为与映射引入前逐字节一致。
+# .rime/ is project-global mutable state and is untracked; the authoritative copy exists only on the main-checkout side.
+# We keep the relative part of cwd rather than returning the main-checkout root directly, so as not to break monorepos —
+# when working in <wt>/apps/foo, it should resolve to <main>/apps/foo/.rime, not return
+# every subproject's .rime/ across the whole monorepo.
+# In the main-checkout case the return value == cwd, so behavior is byte-identical to before this mapping was introduced.
 #
-# 用法: rime_resolve_base "$CWD"
+# Usage: rime_resolve_base "$CWD"
 rime_resolve_base() {
   local cwd="$1"
   local git_dir git_common wt_root main_root rel
 
-  # --path-format=absolute 归一化两侧：--git-dir 在仓库根会返回相对路径 .git
-  # （git ≥ 2.31），不归一化则无法与 --git-common-dir 可靠比较
+  # --path-format=absolute normalizes both sides: at the repo root, --git-dir returns the relative path .git
+  # (git ≥ 2.31); without normalization it cannot be reliably compared against --git-common-dir
   git_dir=$(cd "$cwd" 2>/dev/null && git rev-parse --path-format=absolute --git-dir 2>/dev/null) || true
   git_common=$(cd "$cwd" 2>/dev/null && git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || true
 
-  # 非 git，或不在 linked worktree 中（两者相等）→ 原样返回
+  # Not a git repo, or not inside a linked worktree (the two are equal) → return as-is
   if [ -z "$git_dir" ] || [ -z "$git_common" ] || [ "$git_dir" = "$git_common" ]; then
     echo "$cwd"
     return 0
@@ -30,8 +30,8 @@ rime_resolve_base() {
   wt_root=$(cd "$cwd" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null) || true
   main_root=$(dirname "$git_common")
 
-  # main_root 必须是一个真正的主检出：bare repo + worktree 布局下
-  # dirname(git_common) 只是 bare 仓库的父目录，不含 .git，此时不可映射
+  # main_root must be a genuine main checkout: under a bare-repo + worktree layout,
+  # dirname(git_common) is just the bare repo's parent directory and has no .git, so mapping isn't valid here
   if [ -z "$wt_root" ] || [ ! -e "$main_root/.git" ]; then
     echo "$cwd"
     return 0
@@ -46,16 +46,16 @@ rime_resolve_base() {
   fi
 }
 
-# 查找 .rime 目录
-# 顺序: $RIME_DIR → <base>/.rime → <base> 下向下搜索（monorepo）
-#       base 为 cwd 经 rime_resolve_base 映射后的路径
-# 用法: find_rime_dirs "$CWD"
-# 输出: 每行一个 .rime 目录的绝对路径
+# Find .rime directories
+# Order: $RIME_DIR → <base>/.rime → search downward under <base> (monorepo)
+#        base is cwd after mapping through rime_resolve_base
+# Usage: find_rime_dirs "$CWD"
+# Output: one absolute .rime directory path per line
 find_rime_dirs() {
   local cwd="$1"
   local base
 
-  # 显式覆盖（CI / 特殊场景）
+  # Explicit override (CI / special cases)
   if [ -n "${RIME_DIR:-}" ] && [ -d "$RIME_DIR" ]; then
     echo "$RIME_DIR"
     return 0
@@ -63,13 +63,13 @@ find_rime_dirs() {
 
   base=$(rime_resolve_base "$cwd")
 
-  # 单项目：直接命中
+  # Single project: direct hit
   if [ -d "$base/.rime" ]; then
     echo "$base/.rime"
     return 0
   fi
 
-  # Monorepo：向下搜索（排除重目录，限深度 4）
+  # Monorepo: search downward (excluding heavy directories, depth limited to 4)
   find "$base" -maxdepth 4 -name ".rime" -type d \
     -not -path "*/node_modules/*" \
     -not -path "*/.git/*" \
@@ -78,29 +78,29 @@ find_rime_dirs() {
     -not -path "*/vendor/*" 2>/dev/null | sort
 }
 
-# 判断 .rime 目录是否匹配 git 变更文件
-# 用法: rime_matches_changes "$RIME_DIR" "$CWD" "$CHANGED_FILES"
-#   CHANGED_FILES = 换行分隔的相对路径列表
-# 返回: 0=匹配, 1=不匹配
+# Determine whether a .rime directory matches the git-changed files
+# Usage: rime_matches_changes "$RIME_DIR" "$CWD" "$CHANGED_FILES"
+#   CHANGED_FILES = newline-separated list of relative paths
+# Returns: 0=match, 1=no match
 rime_matches_changes() {
   local rime_dir="$1"
   local cwd="$2"
   local changed="$3"
   local parent base
   parent=$(dirname "$rime_dir")
-  # 与 find_rime_dirs 同侧比较：worktree 中 rime_dir 位于主检出侧，
-  # 直接拿 cwd 做前缀会永不匹配，导致 session-end 静默跳过
+  # Compare on the same side as find_rime_dirs: in a worktree, rime_dir lives on the main-checkout side,
+  # so using cwd directly as the prefix would never match, causing session-end to silently skip
   base=$(rime_resolve_base "$cwd")
 
-  # 根目录的 .rime → 匹配所有变更
+  # .rime at the root → matches all changes
   if [ "$parent" = "$base" ]; then
     return 0
   fi
 
-  # 子目录的 .rime → 检查变更文件是否在该子目录下
-  # 纯 shell 前缀比较，避免路径中的 . 等字符被当正则解释（如 tools.old 误匹配 toolsXold/）
-  # changed 是相对 worktree 根的路径，rel_parent 是相对主检出根的路径——
-  # 映射保留了相对部分，故两者的相对层级一致，可直接比较
+  # .rime in a subdirectory → check whether the changed files fall under that subdirectory
+  # Pure shell prefix comparison, to avoid characters like . in the path being interpreted as regex (e.g. tools.old wrongly matching toolsXold/)
+  # changed is relative to the worktree root, rel_parent is relative to the main-checkout root —
+  # the mapping preserves the relative part, so the two are at the same relative level and can be compared directly
   local rel_parent="${parent#"$base"/}"
   local line
   while IFS= read -r line; do
@@ -111,9 +111,9 @@ rime_matches_changes() {
   return 1
 }
 
-# 获取 git 变更文件列表（相对于 CWD）
-# 用法: get_changed_files "$CWD"
-# 输出: 换行分隔的相对路径
+# Get the list of git-changed files (relative to CWD)
+# Usage: get_changed_files "$CWD"
+# Output: newline-separated relative paths
 get_changed_files() {
   local cwd="$1"
   cd "$cwd" 2>/dev/null || return 1
@@ -124,10 +124,10 @@ get_changed_files() {
   } | sort -u
 }
 
-# 从 .rime 路径提取子项目标签
+# Extract a subproject label from a .rime path
 # /Users/x/mono/tools/.rime → tools
 # /Users/x/mono/apps/kura/.rime → apps/kura
-# /Users/x/project/.rime → (空，即根项目)
+# /Users/x/project/.rime → (empty, i.e. the root project)
 rime_label() {
   local rime_dir="$1"
   local cwd="$2"

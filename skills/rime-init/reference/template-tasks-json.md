@@ -1,8 +1,8 @@
-# .rime/ 初始模板
+# .rime/ Initial Templates
 
-`.rime/tasks.json` 是任务状态的 source of truth。
+`.rime/tasks.json` is the source of truth for task status.
 
-> **字段定义、枚举、ID 格式、写入约束等完整 schema 见权威契约：rime-flow skill 的 [data-contract.md](../../rime-flow/data-contract.md)。本文件只提供初始化骨架。**
+> **For the full schema — field definitions, enums, ID format, write constraints, etc. — see the authoritative contract: rime-flow skill's [data-contract.md](../../rime-flow/data-contract.md). This file only provides the initialization skeleton.**
 
 ## tasks.json
 
@@ -15,7 +15,7 @@
 }
 ```
 
-`segments` 可选，用于按 module 分配编号区间：
+`segments` is optional, used to allocate ID ranges by module:
 
 ```json
 {
@@ -44,8 +44,8 @@
 []
 ```
 
-裸数组（无 schemaVersion，理由见契约文档），append-only。由 SessionEnd hook 自动提取或手动追加。
+A bare array (no schemaVersion — see the contract doc for why), append-only. Auto-extracted by the SessionEnd hook or appended manually.
 
-## anchors/ 与 archives/
+## anchors/ and archives/
 
-均为运行时自动生成，初始化时只需创建空的 `anchors/` 目录（archives/ 由 phase 关闭流程按需创建）。文件格式见契约文档。
+Both are auto-generated at runtime; initialization only needs to create an empty `anchors/` directory (archives/ is created as needed by the phase-closing flow). File format is in the contract doc.

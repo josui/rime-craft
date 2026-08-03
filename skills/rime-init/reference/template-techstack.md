@@ -1,37 +1,37 @@
-# Techstack 模板 `[开发]`
+# Techstack Template `[Dev]`
 
-技术选型、项目结构、阶段计划。
+Tech stack choices, project structure, phase plan.
 
-## 模板
+## Template
 
 ```markdown
-# {项目名} — 技术选型 & 项目结构
+# {Project Name} — Tech Stack & Project Structure
 
-## 技术栈
+## Tech Stack
 
-| 用途 | 选型 | 说明 |
+| Purpose | Choice | Notes |
 |------|------|------|
 
-## 项目结构
+## Project Structure
 
-<!-- 目录树 + 行内注释 -->
+<!-- Directory tree + inline comments -->
 
-## 依赖清单
+## Dependency List
 
-<!-- 列出所有直接依赖及用途 -->
+<!-- List every direct dependency and its purpose -->
 
-## 开发阶段
+## Development Phases
 
 ### Phase 1: xxx ✅
-- [x] 已完成项
-- [ ] 待做项
+- [x] Completed item
+- [ ] Pending item
 
 ### Phase 2: xxx
 - [ ] ...
 ```
 
-## 写法要点
+## Writing Notes
 
-- 目录树要及时更新，新增文件/目录时同步
-- Phase checklist 完成项打 `[x]`，新阶段直接追加
-- 依赖清单注明每个依赖的用途，不只列包名
+- Keep the directory tree up to date — update it whenever files/directories are added
+- Mark completed phase-checklist items `[x]`; append new phases directly
+- Note each dependency's purpose in the dependency list, not just its package name

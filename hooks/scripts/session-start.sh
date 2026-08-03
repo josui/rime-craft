@@ -4,15 +4,15 @@ set -euo pipefail
 LOG="$HOME/.rime-hook.log"
 log() { echo "[$(date +%H:%M:%S)] session-start: $*" >> "$LOG"; }
 
-# 依赖预检：jq 缺失时上下文注入无法工作，留痕后退出
+# Dependency precheck: without jq, context injection cannot work — log and exit
 command -v jq >/dev/null 2>&1 || { log "exit: jq not found in PATH"; exit 0; }
 
-# 1. 读取 stdin 获取 cwd
+# 1. Read stdin to get cwd
 INPUT=$(cat)
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 if [ -z "$CWD" ]; then log "exit: no cwd"; exit 0; fi
 
-# 2. 加载工具函数 + 查找 .rime 目录
+# 2. Load utility functions + find .rime directories
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/rime-utils.sh"
 
@@ -24,7 +24,7 @@ RIME_DIR_COUNT=$(echo "$RIME_DIRS" | wc -l | tr -d ' ')
 IS_MONO=false
 [ "$RIME_DIR_COUNT" -gt 1 ] && IS_MONO=true
 
-# 3. 对每个 .rime 目录生成 context 片段
+# 3. Generate a context fragment for each .rime directory
 HAS_CONTENT=false
 OUTPUT="## Rime Context"
 OUTPUT="$OUTPUT"$'\n'
@@ -34,12 +34,12 @@ while IFS= read -r RIME_DIR; do
 
   LABEL=$(rime_label "$RIME_DIR" "$CWD")
 
-  # Monorepo 模式下加子项目标题
+  # In monorepo mode, add a subproject heading
   if [ "$IS_MONO" = true ] && [ -n "$LABEL" ]; then
     OUTPUT="$OUTPUT"$'\n'"### $LABEL"
   fi
 
-  # 读取 phase
+  # Read phase
   PHASE_CURRENT=$(jq -r '.current // empty' "$RIME_DIR/phase.json" 2>/dev/null || echo "")
   PHASE_NAME=""
   if [ -n "$PHASE_CURRENT" ]; then
@@ -51,7 +51,7 @@ while IFS= read -r RIME_DIR; do
     HAS_CONTENT=true
   fi
 
-  # doing task 的未完成 subtask 活清单（可见性 → 提高即时同步率）
+  # Live checklist of incomplete subtasks for doing tasks (visibility → improves real-time sync rate)
   DOING_LIST=""
   if [ -f "$RIME_DIR/tasks.json" ]; then
     DOING_LIST=$(jq -r '
@@ -64,11 +64,11 @@ while IFS= read -r RIME_DIR; do
   fi
 
   if [ -n "$DOING_LIST" ]; then
-    OUTPUT="$OUTPUT"$'\n'"**进行中**:"$'\n'"$DOING_LIST"
+    OUTPUT="$OUTPUT"$'\n'"**In progress**:"$'\n'"$DOING_LIST"
     HAS_CONTENT=true
   fi
 
-  # 读取最新 anchor
+  # Read the latest anchor
   LATEST_ANCHOR=""
   if [ -d "$RIME_DIR/anchors" ]; then
     LATEST_ANCHOR=$(ls -t "$RIME_DIR/anchors/"*.json 2>/dev/null | head -1 || echo "")
@@ -77,15 +77,15 @@ while IFS= read -r RIME_DIR; do
   if [ -n "$LATEST_ANCHOR" ]; then
     ANCHOR_TIME=$(jq -r '.timestamp // empty' "$LATEST_ANCHOR" 2>/dev/null | cut -c1-16 | tr 'T' ' ')
     ANCHOR_WORKED=$(jq -r '(.workedOn // []) | join(", ")' "$LATEST_ANCHOR" 2>/dev/null || echo "")
-    ANCHOR_DECISIONS=$(jq -r '(.decisions // [])[] | "- 决策: \(.)"' "$LATEST_ANCHOR" 2>/dev/null || echo "")
+    ANCHOR_DECISIONS=$(jq -r '(.decisions // [])[] | "- Decision: \(.)"' "$LATEST_ANCHOR" 2>/dev/null || echo "")
     ANCHOR_NEXT=$(jq -r '(.nextSteps // [])[]' "$LATEST_ANCHOR" 2>/dev/null || echo "")
 
     if [ -n "$ANCHOR_TIME" ]; then
-      OUTPUT="$OUTPUT"$'\n'"**上次 session** ($ANCHOR_TIME):"
-      [ -n "$ANCHOR_WORKED" ] && OUTPUT="$OUTPUT"$'\n'"- 涉及: $ANCHOR_WORKED"
+      OUTPUT="$OUTPUT"$'\n'"**Last session** ($ANCHOR_TIME):"
+      [ -n "$ANCHOR_WORKED" ] && OUTPUT="$OUTPUT"$'\n'"- Touched: $ANCHOR_WORKED"
       [ -n "$ANCHOR_DECISIONS" ] && OUTPUT="$OUTPUT"$'\n'"$ANCHOR_DECISIONS"
       if [ -n "$ANCHOR_NEXT" ]; then
-        OUTPUT="$OUTPUT"$'\n'"**下一步**:"
+        OUTPUT="$OUTPUT"$'\n'"**Next steps**:"
         while IFS= read -r line; do
           OUTPUT="$OUTPUT"$'\n'"- $line"
         done <<< "$ANCHOR_NEXT"
@@ -97,12 +97,12 @@ while IFS= read -r RIME_DIR; do
 
 done <<< "$RIME_DIRS"
 
-# 4. tasks.json 同步提醒
+# 4. tasks.json sync reminder
 OUTPUT="$OUTPUT"$'\n'
-OUTPUT="$OUTPUT"$'\n'"**tasks.json 同步规则**：开始执行 task（含 grill/设计阶段）→ status=doing 并覆写 commitFrom（git rev-parse HEAD）；**每完成一个 subtask 立即改 done**（dashboard 依赖，不要攒）；spec/prototype 等产出落盘 → 立即回填 docs:[{type,path}]；验证清单**先写进 spec 的验证记录区、再向用户呈现**（先落盘后呈现，呈现时附 spec 路径）；task 完成 → 先过 commit gate（改动已提交且 HEAD ≠ commitFrom，零 commit 不得标 done），done + completedAt + commits{from,to} 同笔写入，禁止 done 后回填。只允许写 data-contract.md 字段表列出的字段，禁止发明新字段；拿不准先加载 rime-flow skill。"
+OUTPUT="$OUTPUT"$'\n'"**tasks.json sync rules**: Starting a task (including grill / design phase) → set status=doing and overwrite commitFrom (git rev-parse HEAD); **mark each subtask done the moment it's finished** (the dashboard depends on this — don't batch them up); when a spec/prototype output is persisted to disk → immediately backfill docs:[{type,path}]; the verification checklist must **first be written into the spec's Verification section, then presented to the user** (persist to disk before presenting; the presentation includes the spec path and is delivered in the user's conversation language); completing a task → first pass the commit gate (changes committed and HEAD ≠ commitFrom; zero commits must not be marked done), with done + completedAt + commits{from,to} written in the same write — backfilling after done is prohibited. Only fields listed in the data-contract.md field table may be written; inventing new fields is prohibited. When unsure, load the rime-flow skill first."
 HAS_CONTENT=true
 
-# 5. 输出
+# 5. Output
 if [ "$HAS_CONTENT" = true ]; then
   log "output: dirs=$RIME_DIR_COUNT mono=$IS_MONO"
   jq -n --arg ctx "$OUTPUT" '{

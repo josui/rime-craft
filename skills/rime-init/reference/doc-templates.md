@@ -2,6 +2,8 @@
 
 Templates and writing notes for each document type. Consult the relevant file as needed.
 
+Templates define structure only. The language of generated document content is not governed by this skill — follow the repo's existing conventions and the user's language habits.
+
 ## Common Documents
 
 | Template | Description |

@@ -376,7 +376,7 @@ Task reviewer: Spec ✅. Task quality: Approved.
 [Dispatch final whole-branch review via mattpocock: review]
 Final reviewer: Standards ✅, Spec ✅ — all requirements met, ready to merge
 
-[Return to rime-flow: complete task flow — wrap-up commit → verification checklist (persist to the spec's Verification section first, then present) → user verify → backfill verification results → commit gate → done + completedAt + commits in the same write]
+[Return to rime-flow: complete task flow — wrap-up commit → verification checklist (persist to the spec's verification section first, then present) → user verify → backfill verification results → commit gate → done + completedAt + commits in the same write]
 Done!
 ```
 
@@ -460,5 +460,5 @@ Done!
 - **`review`** (mattpocock) — final whole-branch review (two-axis parallel sub-agents: Standards + Spec)
 
 **Downstream (rime-flow takes over):**
-- After all tasks complete, return to rime-flow's "Completing a task" flow (wrap-up commit → persist the verification checklist to the spec's Verification section first, then present → user verifies → backfill verification results → commit gate → done + completedAt + commits in the same write)
+- After all tasks complete, return to rime-flow's "Completing a task" flow (wrap-up commit → persist the verification checklist to the spec's verification section first, then present → user verifies → backfill verification results → commit gate → done + completedAt + commits in the same write)
 - Commits go through `/rime-git`

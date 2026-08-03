@@ -75,7 +75,6 @@ Rules:
 - subtasksCompleted: work completed in this session. If it corresponds to a subtask of a doing task, **repeat that subtask's title verbatim** (the system uses this to automatically reconcile it to done); otherwise, describe freely
 - subtasksAdded: freely describe newly discovered subtasks (recorded for the session log only, not used for automatic status changes)
 - Leave fields with nothing to report as empty arrays — do not invent content
-- cautions: write the title and summary in English regardless of the conversation's language
 - Output only the JSON, with no other text"
 
 # perl alarm for timeout (macOS has no GNU timeout): on timeout, receives SIGALRM and exits, falling back to a minimal anchor

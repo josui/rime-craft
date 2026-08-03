@@ -114,7 +114,7 @@ Execution must stay in sync with tasks.json:
 - Once a spec is finalized, map its execution steps onto tasks.json subtasks (add/split)
 - Update a subtask's status as soon as it's completed
 - Confirm the task status is `doing` before starting execution
-- Write the verification checklist into the spec's `## Verification` section first, then present it to the user (medium / large)
+- Write the verification checklist into the spec's verification section first, then present it to the user (medium / large)
 - Before marking `done`, pass the commit gate: every change for this task is committed and there's a new commit (HEAD ≠ commitFrom; exempt for non-git projects); `completedAt` / `commits` are written in the same write as status; no backfilling after done — rework opens a new task
 - If a task is found to need adjustment during execution (complexity change, needs splitting), update tasks.json immediately before continuing
 

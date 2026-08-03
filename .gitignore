@@ -2,3 +2,4 @@ docs/
 .DS_Store
 .rime/
 .worktrees/
+.claude/settings.local.json

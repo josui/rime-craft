@@ -399,6 +399,14 @@
     white-space: pre-wrap;
   }
 
+  .tk-desc p {
+    margin: 0;
+  }
+
+  .tk-desc p + p {
+    margin-top: 0.55em;
+  }
+
   /* Todo: truncate desc */
   .col[data-status="todo"] .tk-desc {
     display: -webkit-box;
@@ -902,6 +910,19 @@ const CAUTIONS = __CAUTIONS_DATA__;
 
 const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// 描述按行分段；连续的 "- " 列表行并为一段，让段间距只落在段落之间
+const descHtml = s => {
+  const blocks = [];
+  for (const line of String(s == null ? '' : s).split('\n')) {
+    if (!line.trim()) continue;
+    const isItem = /^\s*[-•]\s/.test(line);
+    const last = blocks[blocks.length - 1];
+    if (isItem && last && last.list) last.lines.push(line);
+    else blocks.push({ list: isItem, lines: [line] });
+  }
+  return blocks.map(b => `<p>${esc(b.lines.join('\n'))}</p>`).join('');
+};
+
 document.getElementById('ts').textContent = new Date().toLocaleString('ja-JP');
 
 if (__WATCH_MODE__) {
@@ -1113,7 +1134,7 @@ function renderTasks() {
           ${t.branch ? `<span class="git-b branch">${t.branch}</span>` : ''}
         </div>
         <div class="tk-title">${esc(t.title)}</div>
-        ${t.description ? `<div class="tk-desc">${esc(t.description)}</div>` : ''}
+        ${t.description ? `<div class="tk-desc">${descHtml(t.description)}</div>` : ''}
         <div class="tk-meta">
           ${t.priority ? `<span class="badge ${t.priority}"><span class="dot"></span>${PL[t.priority] || t.priority}</span>` : ''}
           ${t.difficulty ? `<span class="diff ${t.difficulty}">${DL[t.difficulty] || t.difficulty}</span>` : ''}
@@ -1247,7 +1268,7 @@ function renderDwContent(t) {
       ${t.branch ? `<span class="git-b branch">${t.branch}</span>` : ''}
     </div>
     <div class="tk-title">${esc(t.title)}</div>
-    ${t.description ? `<div class="tk-desc">${esc(t.description)}</div>` : ''}
+    ${t.description ? `<div class="tk-desc">${descHtml(t.description)}</div>` : ''}
     <div class="tk-meta">
       ${t.priority ? `<span class="badge ${t.priority}"><span class="dot"></span>${PL[t.priority] || t.priority}</span>` : ''}
       ${t.difficulty ? `<span class="diff ${t.difficulty}">${DL[t.difficulty] || t.difficulty}</span>` : ''}

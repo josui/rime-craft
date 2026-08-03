@@ -112,7 +112,7 @@ A prompt dispatched to a subagent must be self-contained:
 - Report format
 - **Comment ban** (must be communicated explicitly every time — a subagent has no way to know this on its own): comments written into code must not contain task IDs (`#0001`), caution IDs (`C-001`), or `docs/` paths — these are untracked by default and are dead links to anyone who clones the repo. Comments should be self-contained: write the "why" directly into them. See "Ban on Referencing Untracked Assets" in [data-contract.md](data-contract.md) for the authoritative definition.
 
-**Language boundary**: dispatch prompts and subagent reports (AI-to-AI traffic) are written in English — this is the only place a language may be mandated. The language of artifacts (docs, code comments, commit messages, cautions) is never governed by skills: follow the repo's existing conventions and the user's language habits.
+Dispatch prompts and subagent reports are written in English.
 
 **A subagent never inherits the main thread's conversation history** — a fresh subagent works only from the information given in its prompt.
 

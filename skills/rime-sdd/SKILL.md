@@ -80,7 +80,7 @@ digraph process {
     "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
     "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
     "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
-    "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review"];
+    "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review (tiered, see Review Loop Cost Rules)"];
     "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
@@ -142,7 +142,7 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path.
+**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path. Name the reviewer when dispatching (Agent `name` parameter, e.g. `reviewer-task-N`) — it stays attached to this task for any re-review rounds (see Review Loop Cost Rules).
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -215,13 +215,51 @@ final whole-branch review. When you fill a reviewer template:
 - Every fix dispatch carries the implementer contract: the fix subagent
   re-runs the tests covering its change and reports the results. Name the
   covering test files in the dispatch — a one-line fix does not need the
-  whole suite. Before re-dispatching the reviewer, confirm the fix report
-  contains the covering tests, the command run, and the output; dispatch
-  the re-review once all three are present.
+  whole suite. Before sending the re-review (to the same reviewer, via
+  SendMessage), confirm the fix report contains the covering tests, the
+  command run, and the output; send the re-review once all three are
+  present.
 - If the final whole-branch review returns findings, dispatch ONE fix
   subagent with the complete findings list — not one fixer per finding.
   Per-finding fixers each rebuild context and re-run suites; a real
   session's final-review fix wave cost more than all its tasks combined.
+
+## Review Loop Cost Rules
+
+The review loop is the largest fixed cost of this skill. The authoritative
+cost model lives in rime-flow's `dispatch.md`（「review 成本模型」）; these
+are its operational rules here:
+
+- **Persistent reviewer per task.** Fresh-per-task exists to prevent
+  implementation-context pollution, so it binds implementers only. The
+  task reviewer is the opposite: dispatch it once per task with a stable
+  name (Agent `name` parameter, e.g. `reviewer-task-N`) and run every
+  re-review round through SendMessage to that same reviewer — its hot
+  context already holds the brief, report, and original diff, so each
+  round hands over only the fix-delta review package
+  (`scripts/review-package PREV_HEAD NEW_HEAD`, PREV_HEAD = the HEAD the
+  last review saw) and the updated report file. Dispose of the reviewer
+  when the task completes; the next task gets a fresh one — never reuse a
+  reviewer across tasks.
+- **Tiered re-review.** The re-review channel depends on the most severe
+  finding the fix wave addressed. If the wave fixed any Critical or
+  Important finding → full reviewer re-review. If the wave contains only
+  Minor, comment-only, or test-only changes → the controller verifies by
+  reading the fix diff itself, confirming each finding is addressed, and
+  noting that in the ledger — no subagent round. The downgrade lowers the
+  channel, never the bar: a finding the controller's read shows unaddressed
+  is a failed review — dispatch another fix. The tier applies to re-reviews
+  only; the first review of a task is always the full gate.
+- **Verdict in the final message, every round.** A reviewer reply that
+  ends without the full report — going idle, sending an acknowledgement,
+  narrating progress — is a non-answer, not an approval. Re-prompt the
+  same reviewer for the verdict and do not dispatch fixes or mark the
+  task complete until the report arrives. If one re-prompt still yields
+  no report, treat the reviewer as dead: dispatch a fresh named reviewer
+  with the original inputs.
+- **Batch auxiliary reviews.** Language/documentation reviews (copy
+  audits, jp-review, etc.) do not run per commit or per review round —
+  run them once over the task's whole diff at task wrap-up.
 
 ## File Handoffs
 
@@ -380,7 +418,12 @@ Done!
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (reviewer found spec issues = not done)
-- Skip review loops (reviewer found issues = implementer fixes = review again)
+- Skip review loops (every fix wave gets verified — by reviewer or by the
+  downgraded controller-read channel, never by nothing)
+- Accept a reviewer round whose final message lacks the verdict report
+  (idle or an acknowledgement ≠ review) — re-prompt for the report
+- Dispatch a fresh reviewer for a re-review while the task's named
+  reviewer is still alive — continue it via SendMessage
 - Let implementer self-review replace actual review (both are needed)
 - Tell a reviewer what not to flag, or pre-rate a finding's severity in the
   dispatch prompt ("treat it as Minor at most") — the spec's example code is
@@ -399,7 +442,7 @@ Done!
 
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
-- Reviewer reviews again
+- Re-review — channel per Review Loop Cost Rules
 - Repeat until approved
 - Don't skip the re-review
 

@@ -4,6 +4,11 @@ Use this template when dispatching a task reviewer subagent. The reviewer
 reads the task's diff once and returns two verdicts: spec compliance and
 code quality.
 
+Dispatch the reviewer **once per task** with a stable Agent `name` (e.g.
+`reviewer-task-N`); re-review rounds continue that reviewer via
+SendMessage, not this template. Handoff mechanics and channel tiering:
+SKILL.md, Review Loop Cost Rules.
+
 **Purpose:** Verify one task's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
 
@@ -119,6 +124,24 @@ Subagent (general-purpose):
     spec-compliance verdict. Every line is a verdict, a finding with
     file:line, or a check you ran — no preamble, no process narration,
     no closing summary.
+
+    This is a hard contract, this round and every later round: NEVER end
+    a turn without the full report. Going idle, replying with an
+    acknowledgement, or narrating progress without the two verdicts is a
+    failed review round — the controller cannot proceed and will re-prompt
+    you for the same report. If you cannot complete the review, say so
+    explicitly in a report that marks what you could not verify; silence
+    is never an answer.
+
+    ## Re-Review Rounds
+
+    You stay attached to this task. After fixes, the controller sends you
+    a follow-up message with the fix-delta diff file and the updated
+    implementer report. Judge only (1) whether each finding you raised is
+    resolved and (2) whether the fixes introduced new defects — do not
+    re-review the unchanged parts of the original diff. Then output the
+    full report format again, both verdicts included, as the final message
+    of that round.
 
     ## Calibration
 

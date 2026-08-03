@@ -89,6 +89,18 @@ task 执行分配（subagent + model）的唯一权威规则。rime-flow / rime-
 
 ---
 
+## review 成本模型
+
+review 是 SDD 流程最大的固定开销。三条原则（编排机制见 rime-sdd 的 Review Loop Cost Rules，此处不复述）：
+
+- **复核分级**：fix 后的复核深度按**本轮修复的最高严重度**降档——含 Critical / Important 修复 → 派 reviewer subagent 复核；仅 Minor / 注释 / test-only 修复 → 主线程读 fix diff 代行。**降档只降通道不降标准**，且只作用于复核轮，首轮 review 永远全量 gate。
+- **reviewer 常驻复用**：per-task fresh 防的是实现上下文污染，只约束 implementer；reviewer 相反——一个 task 内从首轮跟到复核收尾（热上下文省掉每轮重读 brief / diff 的固定成本），task 结束即弃，**跨 task 不复用**。
+- **辅助 review 攒批**：语言 / 文档类辅助 review（文案审查、jp-review 等）不随 commit、不随 review 轮，**攒到 task 收尾一次扫**全量改动。
+
+配套纪律：reviewer 每轮必须在 **final message 交完整 verdict 报告**——idle / 只发确认不算复核完成，主线程重催；仍无报告则视同 agent 失效，换新 reviewer 重派。
+
+---
+
 ## 派发 prompt 契约
 
 派发给 subagent 的 prompt 必须自包含：

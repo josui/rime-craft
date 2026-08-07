@@ -1,9 +1,9 @@
-// rime-dashboard v2.2.0
+// rime-dashboard v2.3.0
 // Entry: CLI parsing / HTTP server / SSE live reload / fs.watch
 // The board page template is board.html in this directory (data injected via placeholders); UI changes touch the template only
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, watch, existsSync } from 'node:fs'
-import { join, resolve, dirname, relative } from 'node:path'
+import { join, resolve, dirname, relative, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { exec, execFileSync } from 'node:child_process'
@@ -76,8 +76,13 @@ function openBrowser(url) {
   exec(`${cmd} "${url}"`)
 }
 
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 function generateHtml(isLive) {
   return readFileSync(TEMPLATE_PATH, 'utf8')
+    .replace('__PROJECT_NAME__', () => escapeHtml(basename(PROJECT_DIR)))
     .replace('__TASKS_DATA__', () => readJson('tasks.json'))
     .replace('__PHASE_DATA__', () => readJson('phase.json'))
     .replace('__CAUTIONS_DATA__', () => readJson('cautions.json'))

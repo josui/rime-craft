@@ -146,6 +146,19 @@ const server = createServer((req, res) => {
     try {
       const raw = readFileSync(filePath)
       const ext = relPath.slice(relPath.lastIndexOf('.') + 1).toLowerCase()
+      if (ext === 'md' || ext === 'markdown') {
+        const mdTemplatePath = join(dirname(TEMPLATE_PATH), 'md.html')
+        const mdDir = dirname(relPath)
+        // Escaping angle brackets as a unicode sequence keeps a literal closing-script-tag inside the markdown from ending the embedding tag early
+        const jsSafe = s => JSON.stringify(s).replace(/</g, '\\u003c')
+        const html = readFileSync(mdTemplatePath, 'utf8')
+          .replace('__DOC_TITLE__', () => escapeHtml(`${basename(relPath)} — ${basename(PROJECT_DIR)}`))
+          .replace('__MD_SOURCE__', () => jsSafe(raw.toString('utf8')))
+          .replace('__MD_DIR__', () => jsSafe(mdDir === '.' ? '' : mdDir))
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(html)
+        return
+      }
       const TYPES = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', json: 'application/json', svg: 'image/svg+xml' }
       const type = TYPES[ext] || 'text/plain'
       res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` })

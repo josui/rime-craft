@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__DOC_TITLE__</title>
+<script defer src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.11.1/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f2ed;
+    --surface: #faf9f6;
+    --border: #ddd9d1;
+    --text: #2c2a25;
+    --accent: #4355db;
+    --accent-soft: #eef0fb;
+    --radius: 5px;
+  }
+
+  html {
+    /* Fluid type scale: everything below is rem/em-based, so the whole page tracks the viewport */
+    font-size: clamp(16px, 14.5px + 0.2vw, 19px);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: clamp(1.25rem, 4vw, 3rem) 1rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 400px) minmax(0, 1280px);
+    gap: 2rem;
+    max-width: calc(1280px + 400px + 2rem);
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .layout.no-toc {
+    grid-template-columns: minmax(0, 1280px);
+    max-width: 1280px;
+  }
+
+  .toc {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    padding: 0.25rem 0;
+  }
+
+  .toc-label {
+    font-family: 'Inconsolata', ui-monospace, monospace;
+    font-size: 0.62em;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    opacity: 0.5;
+    padding-left: 0.75rem;
+    margin-bottom: 0.6em;
+  }
+
+  .toc a {
+    display: block;
+    color: var(--text);
+    opacity: 0.7;
+    text-decoration: none;
+    font-size: 0.7em;
+    line-height: 1.5;
+    padding: 0.34em 0.75rem;
+    border-radius: 6px;
+  }
+
+  .toc a:hover { opacity: 1; background: rgba(44, 42, 37, 0.05); }
+
+  .toc a.active {
+    opacity: 1;
+    background: rgba(44, 42, 37, 0.09);
+  }
+
+  .toc-h1 { font-weight: 650; opacity: 0.9; }
+  .toc-h2 { font-weight: 600; opacity: 0.9; margin-top: 0.9em; }
+  .toc-h3 { padding-left: 1.6rem; }
+
+  @media (max-width: 1150px) {
+    .toc { display: none; }
+    .layout { grid-template-columns: minmax(0, 1280px); }
+  }
+
+  .page {
+    max-width: 1280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 5vw, 3.5rem);
+  }
+
+  #content h1, #content h2, #content h3 { scroll-margin-top: 1rem; }
+
+  .path-header {
+    font-family: 'Inconsolata', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--text);
+    opacity: 0.55;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    word-break: break-all;
+  }
+
+  #content > *:first-child { margin-top: 0; }
+
+  #content h1, #content h2, #content h3, #content h4, #content h5, #content h6 {
+    line-height: 1.35;
+    margin: 1.6em 0 0.7em;
+  }
+
+  #content h1, #content h2 {
+    padding-bottom: 0.35em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #content h1 { border-bottom-width: 2px; }
+
+  #content h1 { font-size: 1.65rem; }
+  #content h2 { font-size: 1.35rem; }
+  #content h3 { font-size: 1.15rem; }
+  #content h4, #content h5, #content h6 { font-size: 1rem; }
+
+  #content p { margin: 0.9em 0; }
+
+  #content ul, #content ol {
+    margin: 0.6em 0 0.9em 1.4em;
+  }
+
+  #content li { margin: 0.3em 0; }
+
+  #content ul.task-list {
+    list-style: none;
+    margin-left: 0.2em;
+  }
+
+  #content li.task-item input {
+    width: 1.25em;
+    height: 1.25em;
+    margin-right: 0.5em;
+    vertical-align: -0.15em;
+    accent-color: var(--accent);
+  }
+
+  #content code {
+    font-family: 'Inconsolata', ui-monospace, monospace;
+    font-size: 0.9em;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.15em 0.4em;
+  }
+
+  #content pre {
+    font-family: 'Inconsolata', ui-monospace, monospace;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1em;
+    margin: 1em 0;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+
+  #content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.85em;
+  }
+
+  #content blockquote {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 0.4em 1em;
+    margin: 1em 0;
+    color: #4a463f;
+  }
+
+  #content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2em 0;
+  }
+
+  #content a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  #content a:hover { text-decoration: underline; }
+
+  #content img {
+    max-width: 100%;
+    border-radius: var(--radius);
+  }
+
+  #content del { opacity: 0.6; }
+
+  #content .table-wrap {
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  #content table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  #content th, #content td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.8em;
+    text-align: left;
+  }
+
+  #content thead th {
+    background: var(--accent-soft);
+    font-weight: 600;
+  }
+
+  #content tbody tr:nth-child(even) td { background: var(--bg); }
+
+  /* Syntax-highlight theme mapped onto the dashboard palette; when the
+     highlight.js CDN is unreachable these classes never appear and code
+     stays plain */
+  .hljs-comment, .hljs-quote { color: #8a8478; font-style: italic; }
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-meta { color: #4355db; }
+  .hljs-string, .hljs-regexp, .hljs-addition { color: #3d8b5e; }
+  .hljs-number, .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-symbol { color: #c0690b; }
+  .hljs-title, .hljs-name, .hljs-section, .hljs-deletion { color: #c53030; }
+  .hljs-built_in, .hljs-type, .hljs-selector-class, .hljs-selector-id { color: #7a4fd6; }
+  .hljs-emphasis { font-style: italic; }
+  .hljs-strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="toc" id="toc"></nav>
+  <div class="page">
+    <div class="path-header" id="path"></div>
+    <div id="content"></div>
+  </div>
+</div>
+<script>
+const MD_SOURCE = __MD_SOURCE__;
+const MD_DIR = __MD_DIR__;
+
+// Quotes are escaped here too, so text is inert even when interpolated into a
+// double-quoted attribute (code-span content restored late can end up there)
+const escapeHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const escapeAttr = s => s.replace(/"/g, '&quot;');
+const leadingSpaces = line => line.match(/^ */)[0].length;
+
+// Resolves a markdown link/image target the same way the /file/ route expects:
+// absolute paths, hashes, and http(s)/mailto/tel/ftp URLs pass through; any
+// other scheme (javascript:, data:, vbscript:, ...) is defused to "#" so a
+// crafted [text](javascript:...) link can never execute; everything else is
+// treated as relative to the markdown file's own directory.
+function resolveUrl(url) {
+  if (/^(https?:|mailto:|tel:|ftp:)/i.test(url)) return url;
+  if (url.startsWith('/') || url.startsWith('#')) return url;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) return '#';
+  const dir = MD_DIR.replace(/\/$/, '');
+  const path = dir ? `${dir}/${url}` : url;
+  return `/file/${path}`;
+}
+
+// Inline formatting operates on already-escaped text; code spans are pulled
+// out first (behind a plain-ASCII marker unlikely to occur in prose) so
+// markup inside `code` never gets re-parsed as bold/italic/etc.
+function parseInline(raw) {
+  const codes = [];
+  let s = escapeHtml(raw);
+  s = s.replace(/`([^`]+)`/g, (_, c) => {
+    codes.push(c);
+    return `@@MDCODE${codes.length - 1}@@`;
+  });
+  // Attribute values must never contain a code placeholder: the late restore
+  // pass would inject <code> markup (and its raw content) inside the quoted
+  // attribute, so placeholders in URL/alt positions are expanded to their
+  // plain text here, before the attribute is assembled
+  const codeText = t => t.replace(/@@MDCODE(\d+)@@/g, (_, idx) => codes[Number(idx)]);
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) =>
+    `<img alt="${escapeAttr(codeText(alt))}" src="${escapeAttr(resolveUrl(codeText(src).trim()))}">`);
+  s = s.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (_, text, href) =>
+    `<a href="${escapeAttr(resolveUrl(codeText(href).trim()))}">${text}</a>`);
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  s = s.replace(/(?<![A-Za-z0-9])_([^_]+)_(?![A-Za-z0-9])/g, '<em>$1</em>');
+  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  s = s.replace(/@@MDCODE(\d+)@@/g, (_, idx) => `<code>${codes[Number(idx)]}</code>`);
+  return s;
+}
+
+function renderParagraph(lines) {
+  return lines.map(line => {
+    const hard = /( {2,}|\\)$/.test(line);
+    const trimmed = line.replace(/ {2,}$|\\$/, '');
+    return parseInline(trimmed) + (hard ? '<br>' : '');
+  }).join('\n');
+}
+
+function isSeparatorRow(line) {
+  const cells = splitTableRow(line);
+  return cells.length > 0 && cells.every(c => /^:?-+:?$/.test(c.trim()));
+}
+
+function splitTableRow(line) {
+  let s = line.trim();
+  if (s.startsWith('|')) s = s.slice(1);
+  if (s.endsWith('|')) s = s.slice(0, -1);
+  return s.split(/(?<!\\)\|/).map(c => c.trim());
+}
+
+function matchListItem(line) {
+  const m = /^( *)([-*+]|\d+\.)\s+(.*)$/.exec(line);
+  if (!m) return null;
+  return {
+    indent: m[1].length,
+    ordered: /\d/.test(m[2]),
+    content: m[3],
+    contentIndent: m[0].length - m[3].length,
+  };
+}
+
+function isBlockStart(line) {
+  if (/^ {0,3}(`{3,}|~{3,})/.test(line)) return true;
+  if (/^ {0,3}#{1,6}\s+/.test(line)) return true;
+  if (/^ {0,3}([-*_])( *\1){2,}\s*$/.test(line)) return true;
+  if (/^ {0,3}>/.test(line)) return true;
+  if (matchListItem(line)) return true;
+  if (line.includes('|')) return true;
+  return false;
+}
+
+// Consumes one list (all items at the same indent/marker-type) starting at
+// lines[start]; nested lists recurse through parseBlocks on each item's
+// dedented continuation lines, keyed off the marker's own text column.
+function parseList(lines, start) {
+  const first = matchListItem(lines[start]);
+  const indent = first.indent;
+  const ordered = first.ordered;
+  const items = [];
+  let i = start;
+
+  while (i < lines.length) {
+    if (lines[i].trim() === '') {
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() === '') j++;
+      const next = j < lines.length ? matchListItem(lines[j]) : null;
+      if (next && next.indent === indent && next.ordered === ordered) { i = j; continue; }
+      break;
+    }
+    const m = matchListItem(lines[i]);
+    if (!m || m.indent !== indent || m.ordered !== ordered) break;
+
+    const contentIndent = m.contentIndent;
+    const itemLines = [m.content];
+    i++;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (line.trim() === '') {
+        let k = i;
+        while (k < lines.length && lines[k].trim() === '') k++;
+        if (k < lines.length && leadingSpaces(lines[k]) >= contentIndent) {
+          itemLines.push('');
+          i++;
+          continue;
+        }
+        break;
+      }
+      const lm = matchListItem(line);
+      if (lm && lm.indent < contentIndent) break;
+      if (leadingSpaces(line) >= contentIndent) {
+        itemLines.push(line.slice(contentIndent));
+        i++;
+        continue;
+      }
+      break;
+    }
+
+    let checked = null;
+    const tm = /^\[([ xX])\]\s+(.*)$/.exec(itemLines[0]);
+    if (tm) {
+      checked = tm[1].toLowerCase() === 'x';
+      itemLines[0] = tm[2];
+    }
+    items.push({ html: parseBlocks(itemLines), checked });
+  }
+
+  const tag = ordered ? 'ol' : 'ul';
+  const hasTask = items.some(it => it.checked !== null);
+  // Tight rendering: a single-paragraph item sheds its <p> wrapper — the
+  // block element would drop the text onto its own line after an inline
+  // checkbox and add stray margins inside plain bullets
+  const itemInner = html => /^<p>(?:(?!<\/?p>)[\s\S])*<\/p>$/.test(html)
+    ? html.slice(3, -4)
+    : html;
+  const body = items.map(it => it.checked !== null
+    ? `<li class="task-item"><input type="checkbox" disabled ${it.checked ? 'checked' : ''}>${itemInner(it.html)}</li>`
+    : `<li>${itemInner(it.html)}</li>`
+  ).join('');
+  return { html: `<${tag}${hasTask ? ' class="task-list"' : ''}>${body}</${tag}>`, next: i };
+}
+
+function parseBlocks(lines) {
+  let out = '';
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.trim() === '') { i++; continue; }
+
+    const fenceMatch = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)\s*$/.exec(line);
+    if (fenceMatch) {
+      const fenceChar = fenceMatch[1][0];
+      const fenceLen = fenceMatch[1].length;
+      const lang = fenceMatch[2] || '';
+      i++;
+      const codeLines = [];
+      const closeRe = new RegExp('^ {0,3}' + fenceChar + '{' + fenceLen + ',}\\s*$');
+      while (i < lines.length && !closeRe.test(lines[i])) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length) i++;
+      const langClass = lang ? ` class="language-${escapeAttr(escapeHtml(lang))}"` : '';
+      out += `<pre><code${langClass}>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+      continue;
+    }
+
+    const headingMatch = /^ {0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      out += `<h${level}>${parseInline(headingMatch[2])}</h${level}>`;
+      i++;
+      continue;
+    }
+
+    if (/^ {0,3}([-*_])( *\1){2,}\s*$/.test(line)) {
+      out += '<hr>';
+      i++;
+      continue;
+    }
+
+    if (/^ {0,3}>/.test(line)) {
+      const bqLines = [];
+      while (i < lines.length && (/^ {0,3}>/.test(lines[i]) ||
+        (lines[i].trim() === '' && i + 1 < lines.length && /^ {0,3}>/.test(lines[i + 1])))) {
+        bqLines.push(lines[i].replace(/^ {0,3}> ?/, ''));
+        i++;
+      }
+      out += `<blockquote>${parseBlocks(bqLines)}</blockquote>`;
+      continue;
+    }
+
+    if (line.includes('|') && i + 1 < lines.length && isSeparatorRow(lines[i + 1])) {
+      const headerCells = splitTableRow(line);
+      const aligns = splitTableRow(lines[i + 1]).map(c => {
+        const left = c.startsWith(':');
+        const right = c.endsWith(':');
+        return left && right ? 'center' : right ? 'right' : left ? 'left' : '';
+      });
+      i += 2;
+      const bodyRows = [];
+      while (i < lines.length && lines[i].trim() !== '' && lines[i].includes('|')) {
+        bodyRows.push(splitTableRow(lines[i]));
+        i++;
+      }
+      const cell = (tag, c, idx) => `<${tag}${aligns[idx] ? ` style="text-align:${aligns[idx]}"` : ''}>${parseInline(c)}</${tag}>`;
+      const thead = `<tr>${headerCells.map((c, idx) => cell('th', c, idx)).join('')}</tr>`;
+      const tbody = bodyRows.map(r => `<tr>${r.map((c, idx) => cell('td', c, idx)).join('')}</tr>`).join('');
+      out += `<div class="table-wrap"><table><thead>${thead}</thead><tbody>${tbody}</tbody></table></div>`;
+      continue;
+    }
+
+    if (matchListItem(line)) {
+      const { html, next } = parseList(lines, i);
+      out += html;
+      i = next;
+      continue;
+    }
+
+    const pLines = [];
+    while (i < lines.length && lines[i].trim() !== '' && !isBlockStart(lines[i])) {
+      pLines.push(lines[i]);
+      i++;
+    }
+    if (pLines.length) {
+      out += `<p>${renderParagraph(pLines)}</p>`;
+      continue;
+    }
+    i++;
+  }
+
+  return out;
+}
+
+function render(markdown) {
+  const lines = markdown.replace(/\t/g, '    ').split(/\r\n|\r|\n/);
+  return parseBlocks(lines);
+}
+
+document.getElementById('content').innerHTML = render(MD_SOURCE);
+
+// Left index: anchor ids are assigned here (prefixed so a heading named
+// "toc" or "content" can't collide with the page's own element ids), then
+// the current section is tracked against a fixed offset from the top
+{
+  const toc = document.getElementById('toc');
+  const heads = [...document.querySelectorAll('#content h1, #content h2, #content h3')];
+  if (heads.length < 2) {
+    document.querySelector('.layout').classList.add('no-toc');
+  } else {
+    const used = new Map();
+    toc.innerHTML = '<div class="toc-label">INDEX</div>' + heads.map(h => {
+      const base = h.textContent.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\p{L}\p{N}\-_]/gu, '') || 'section';
+      const n = used.get(base) || 0;
+      used.set(base, n + 1);
+      h.id = n ? `h-${base}-${n}` : `h-${base}`;
+      return `<a class="toc-${h.tagName.toLowerCase()}" href="#${h.id}">${escapeHtml(h.textContent)}</a>`;
+    }).join('');
+    const links = [...toc.querySelectorAll('a')];
+    let active = null;
+    const onScroll = () => {
+      let cur = heads[0];
+      for (const h of heads) {
+        if (h.getBoundingClientRect().top <= 90) cur = h;
+        else break;
+      }
+      if (cur.id !== active) {
+        active = cur.id;
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === `#${active}`));
+      }
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+}
+
+// highlight.js arrives via a deferred CDN script; the load event fires after
+// deferred scripts run, and when the CDN is unreachable hljs is simply absent
+const highlightAll = () => {
+  if (!window.hljs) return;
+  document.querySelectorAll('#content pre code').forEach(el => hljs.highlightElement(el));
+};
+if (window.hljs) highlightAll();
+else window.addEventListener('load', highlightAll);
+
+const fileName = document.title.split(' — ')[0] || '';
+document.getElementById('path').textContent = MD_DIR ? `${MD_DIR}/${fileName}` : fileName;
+</script>
+</body>
+</html>

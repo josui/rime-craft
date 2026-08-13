@@ -3,7 +3,7 @@
 // The board page template is board.html in this directory (data injected via placeholders); UI changes touch the template only
 import { createServer } from 'node:http'
 import { readFileSync, writeFileSync, watch, existsSync } from 'node:fs'
-import { join, resolve, dirname, relative, basename } from 'node:path'
+import { join, resolve, dirname, relative, basename, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 import { exec, execFileSync } from 'node:child_process'
@@ -137,8 +137,9 @@ const server = createServer((req, res) => {
   if (req.url.startsWith('/file/')) {
     const relPath = decodeURIComponent(req.url.slice(6))
     const filePath = join(PROJECT_DIR, relPath)
-    // Security check: no path traversal outside the project directory
-    if (!filePath.startsWith(PROJECT_DIR)) {
+    // Containment check: separator-aware prefix so a sibling directory
+    // sharing the project's name as a prefix (e.g. rime-craft-evil) cannot pass.
+    if (!filePath.startsWith(PROJECT_DIR + sep)) {
       res.writeHead(403)
       res.end('Forbidden')
       return

@@ -153,7 +153,7 @@ Source of truth for task state.
 - `nextId` increments after a new item is added
 - If `description` is filled in, it must be **written multi-line** (`\n`-separated background/goals/constraints/acceptance points, see the field table above); it may not be crammed into one long line
 - An item **may only have fields listed in this file's field table written to it**; a new field requires revising this contract first (along with a schemaVersion evolution assessment) — consumers (dashboard/hooks) treat the field table as a whitelist
-- **Commit gate**: must be satisfied before status changes to `done` — exempt for non-git projects (`git rev-parse --git-dir` fails); otherwise, all of this task's changes are committed (uncommitted changes from parallel doing tasks don't count) and HEAD ≠ commitFrom; `completedAt` and `commits` are written **in the same write** as status
+- **Commit gate**: must be satisfied before status changes to `done` — exempt for non-git projects (`git rev-parse --git-dir` fails), or when every deliverable of this task lives in untracked-by-design locations (`docs/`, `.rime/`) and the user has confirmed the deliverables (expressed by removing `commitFrom` and writing no `commits`, in the same write as `status`); otherwise, all of this task's changes are committed (uncommitted changes from parallel doing tasks don't count) and HEAD ≠ commitFrom; `completedAt` and `commits` are written **in the same write** as status
 - **done is a terminal state**: no field of this item is written again after being marked done, with exactly two exceptions — archival removal on phase closing, and data fixes for validator errors; if a problem is found after done, create a new task to handle it, never roll back the status
 
 ### State Machine

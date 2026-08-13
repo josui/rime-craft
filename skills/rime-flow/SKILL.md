@@ -17,7 +17,7 @@ User defines a feature → /rime-backlog (alias /rime-task) → tasks.json (stat
 tasks.json (status: doing)  ← entering the design/grill phase counts as starting
     ↓ Execution shape decided by difficulty
     ├─ trivial → main thread implements directly (the only exception; see dispatch.md for the test)
-    ├─ small  → dispatch 1 implementer subagent to finish in one pass (model per dispatch.md)
+    ├─ small  → pre-dispatch brief confirmed by the user → dispatch 1 implementer subagent to finish in one pass (model per dispatch.md; see "small: Pre-dispatch Brief")
     ├─ medium → grill-me converges the design → spec → dispatch implementer(s) by subtasks (subtasks are a living plan, edited as work proceeds)
     └─ large  → grill-me → spec (with ## Task N sections) → rime-sdd orchestrates execution (subagent per task + per-task review)
     ⚠ The spec locks design intent; tasks.json subtasks are an adaptive execution checklist — add/remove items freely when reality diverges from expectations
@@ -28,6 +28,12 @@ tasks.json (status: done, completedAt: today)
     ↓ On phase closing
 archives/tasks.P{n}.json archived → archive.md narrative summary → tasks.json removes archived items
 ```
+
+## small: Pre-dispatch Brief
+
+small tasks skip the grill/spec phase, but not confirmation. Before dispatching the implementer, the main thread presents a short **in-conversation brief** — a few lines in the user's conversation language, not persisted to disk: which files will change, the intended approach, and the acceptance criteria. **Dispatch only after the user confirms the brief** — "do #xxx" authorizes starting the task (status → doing), not the implementation approach.
+
+- **Visual/style small tasks upgrade to an HTML spec**: when the change concerns layout, UI appearance, or styling — where a text brief can't convey what will be seen — write an HTML spec and get the user's confirmation first (see "Spec Format" below; the task then follows the with-spec verification path). small difficulty is no exemption from visual confirmation.
 
 ## Design phase: grill-me
 
@@ -95,9 +101,9 @@ When the user says something like "do #0011", "start task xxx", "grill #xxx" (in
 2. If there are subtasks, confirm they are all complete
 3. **Wrap-up commit**: commit all of this task's changes in full (via `/rime-git`); fixes made during verification are committed additionally as usual
 4. **Generate the verification checklist — persist first, present second**: based on the task's title + description and the `commitFrom..HEAD` diff, generate **actionable** steps (which command to run, which page/element to open and click, what result counts as passing); when there is a spec, cross-reference its design intent and translate acceptance points into concrete steps the user can run/click right now
-   - **With a spec (medium / large)**: first append a verification-record section to the end of the spec (heading in the spec's own language; checklist items persisted one by one, in unverified state `- [ ]`), then present it to the user, in the user's conversation language, along with the spec path. Do not ask the user to start verifying until the spec is persisted to disk.
-   - **Without a spec (small)**: present in conversation only, in the user's conversation language, in the format "You can verify this as follows: ① … ② … ③ …"
-5. **Actual user verification** — wait for the user to run through it and report back; never decide pass/fail on the user's behalf
+   - **With a spec**: first append a verification-record section to the end of the spec (heading in the spec's own language; checklist items persisted one by one, in unverified state `- [ ]`), then present it to the user, in the user's conversation language, along with the spec path. Do not ask the user to start verifying until the spec is persisted to disk.
+   - **Without a spec**: present in conversation only, in the user's conversation language, in the format "You can verify this as follows: ① … ② … ③ …"
+5. **Actual user verification** — wait for the user to run through it and report back; never decide pass/fail on the user's behalf. **Implementing and marking done in the same turn is prohibited**: the done write may only happen after the user has replied confirming verification — an uninterrupted implement → commit → done run is exactly the violation this step exists to stop
 6. **Backfill the verification record**: with a spec → update the spec's verification section: check off passed items with a pass date, and record the issue and follow-up for items that failed; without a spec → close the loop verbally. Verification content is **never written to tasks.json**
 7. **Commit gate → mark done (in one write)**:
    - **Gate** (exempt for non-git projects: if `git rev-parse --git-dir` fails → skip the check and go straight to marking done): all of this task's changes are committed (uncommitted changes from other tasks concurrently doing don't count); `git rev-parse HEAD` ≠ `commitFrom`. If either condition fails → **may not be marked done** — go back to step 3 and finish committing. A git project missing `commitFrom` → confirm the starting commit with the user, backfill `commitFrom`, then pass the gate

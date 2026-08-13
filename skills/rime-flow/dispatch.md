@@ -42,7 +42,7 @@ When all three hold → the main thread does it directly. The context-rebuilding
 | difficulty | Dispatch shape |
 |------|------|
 | trivial (an execution-time judgment on small) | Main thread does it directly (no dispatch) |
-| small | Dispatch 1 implementer subagent to finish in one pass; main thread accepts the diff |
+| small | After the user confirms the pre-dispatch brief (authoritative rule: SKILL.md "small: Pre-dispatch Brief"), dispatch 1 implementer subagent to finish in one pass; main thread accepts the diff |
 | medium | After the main thread grills → spec, dispatch implementers **serially**, segment by segment, by subtasks (not in parallel, to avoid conflicts); main thread reviews the diff after each segment; **no reviewer subagent is dispatched** |
 | large | Orchestrated by rime-sdd (per-task implementer + reviewer + final review); model tiers follow this file |
 

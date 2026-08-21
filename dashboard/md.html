@@ -335,13 +335,15 @@ function matchListItem(line) {
   };
 }
 
-function isBlockStart(line) {
+// A `|` alone is not a table: prose like `Edit|Write` or `[a|b]` is common.
+// A table starts only when the following line is a separator row.
+function isBlockStart(line, next) {
   if (/^ {0,3}(`{3,}|~{3,})/.test(line)) return true;
   if (/^ {0,3}#{1,6}\s+/.test(line)) return true;
   if (/^ {0,3}([-*_])( *\1){2,}\s*$/.test(line)) return true;
   if (/^ {0,3}>/.test(line)) return true;
   if (matchListItem(line)) return true;
-  if (line.includes('|')) return true;
+  if (line.includes('|') && next !== undefined && isSeparatorRow(next)) return true;
   return false;
 }
 
@@ -494,16 +496,15 @@ function parseBlocks(lines) {
       continue;
     }
 
-    const pLines = [];
-    while (i < lines.length && lines[i].trim() !== '' && !isBlockStart(lines[i])) {
+    // The first line always belongs to the paragraph — every block kind that
+    // could claim it was tested above, so dropping it here would lose content
+    const pLines = [line];
+    i++;
+    while (i < lines.length && lines[i].trim() !== '' && !isBlockStart(lines[i], lines[i + 1])) {
       pLines.push(lines[i]);
       i++;
     }
-    if (pLines.length) {
-      out += `<p>${renderParagraph(pLines)}</p>`;
-      continue;
-    }
-    i++;
+    out += `<p>${renderParagraph(pLines)}</p>`;
   }
 
   return out;

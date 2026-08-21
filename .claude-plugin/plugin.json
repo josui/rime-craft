@@ -1,6 +1,6 @@
 {
   "name": "rime-craft",
-  "version": "1.13.1",
+  "version": "1.15.1",
   "description": "Project lifecycle management: task/phase status flow, automatic session continuity, code & skill quality review, CSS architecture conventions, JS/TS rules, UI design quality, design-language extraction, image-prompt authoring, dashboard visualization",
   "author": {
     "name": "bing"

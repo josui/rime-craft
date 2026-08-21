@@ -28,6 +28,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | [rime-backlog](commands/rime-backlog.md) | Quickly add a task to .rime/tasks.json |
 | [rime-task](commands/rime-task.md) | Alias of rime-backlog (shorter to type) |
 | [rime-dashboard](commands/rime-dashboard.md) | Open the .rime/ data visualization dashboard |
+| [rime-lang](commands/rime-lang.md) | Install the recommended writing-language rules (ja / zh, no cross-contamination) into `~/.claude/CLAUDE.md` or `./CLAUDE.md`; idempotent |
 | [rime-git](commands/rime-git.md) | Analyze changes and generate a well-formed commit message (supports multi-commit splitting) |
 | [rime-tweet](commands/rime-tweet.md) | Read X/Twitter post content |
 | [rime-review](commands/rime-review.md) | Review code or skill quality (diff / branch / file / skill) |

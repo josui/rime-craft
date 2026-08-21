@@ -143,7 +143,7 @@ Source of truth for task state.
 | branch | string | | The associated branch name, written after the user confirms while doing |
 | commitFrom | string | | Automatically written with the HEAD hash while doing (overwritten every time), the start of the commit range |
 | commits | object | | Written **in the same write** as status when marked done: `{ "from": "...", "to": "..." }` (from ≠ to); omitted for non-git projects |
-| docs | array | | Written after producing a spec/plan/etc.: `[{ "type": "spec\|plan\|prototype\|reference\|blueprint", "path": "relative path" }]` |
+| docs | array | | Written after producing a spec/plan/etc.: `[{ "type": "spec\|plan\|prototype\|reference\|blueprint\|decision", "path": "relative path" }]` |
 
 ### Write Constraints (all write paths must comply)
 

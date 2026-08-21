@@ -48,7 +48,8 @@ For medium / large tasks, converge the design and produce a **spec** before touc
 > The original grill-me prompt is from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT License).
 
 - **grill-me (convergence) is the default**: when the user arrives with a direction, grill to pin down every branch of the decision tree. Use `grill-with-docs` when ADRs / glossary need to be produced alongside.
-- Once convergence is done, write the **spec**, capturing key decisions + rationale + rejected alternatives — a spec outlasts an implementation plan.
+- Once convergence is done, write the **spec**: conclusions / interfaces / constraints / acceptance criteria / verification record only — a spec outlasts an implementation plan. Rationale and rejected alternatives go to the decision record (next bullet), not the spec.
+- **Decision record**: at grill convergence, write `docs/decisions/YYYY-MM-DD-<topic>.md` (sibling of `specs/`, see Doc Placement) holding decision point / conclusion / rationale / rejected options; register it in the task's `docs` field as `{ "type": "decision", "path": ... }` as soon as it's on disk. **Dispatch prompts never reference it** — rejected alternatives are noise to an implementer and leak into code comments as "didn't use X because…". Rationale that lives there is not repeated in the spec.
 - **When a visual question comes up during grilling** (layout / UI appearance / option comparisons that words alone can't convey): **ask the user first** whether to switch on an **HTML-format spec** to sketch mocks for discussion; if the user agrees, create the HTML spec (see "Spec Format" below).
 
 ### Spec Format
@@ -56,7 +57,7 @@ For medium / large tasks, converge the design and produce a **spec** before touc
 - Default is **Markdown**, placed in `specs/` at the same level as `plansDirectory` (default `docs/specs/*.md`, see "Implementation › Doc Placement" below).
 - Specs involving **UI** use **HTML**: wireframes can be drawn and runnable mocks embedded. See `rime-init`'s `reference/template-spec.html` for the template (numbered sidebar navigation + decision table + phone/desktop dual mock frames). The dashboard's `/file` renders `.html` natively — open it and you see it directly. Set the body font to match the spec's language: Chinese `'Noto Sans CJK SC', system-ui`, Japanese `'Noto Sans CJK JP', system-ui`; don't stack a Latin webfont (Jost, etc.) in front of it, or CJK weight/size will look inconsistent.
 - **When a visual question arises** (needing to show layout, compare layout options, or discuss UI appearance and interaction): **get the user's agreement first**, then write that spec in **HTML format** (not Markdown); present runnable mocks and comparison frames inside the HTML spec — **what you see is what you discuss** — visual discussion converges inside the spec file, and the dashboard's `/file` shows it the moment it's opened.
-- **Verification section**: when the task is complete, **first** append a verification-record section to the end of the spec (heading written in the spec's own language; checklist items persisted one by one, in unverified state `- [ ]`), **then** present the verification checklist to the user in the user's conversation language along with the spec path; after the user verifies and reports back, fill in the results (check off passed items + pass date). The spec closes the loop — it opens with design intent and rejected alternatives, and closes with verification evidence. Verification content is written only to the spec, never to tasks.json.
+- **Verification section**: when the task is complete, **first** append a verification-record section to the end of the spec (heading written in the spec's own language; checklist items persisted one by one, in unverified state `- [ ]`), **then** present the verification checklist to the user in the user's conversation language along with the spec path; after the user verifies and reports back, fill in the results (check off passed items + pass date). The spec closes the loop — it opens with design intent, and closes with verification evidence. Verification content is written only to the spec, never to tasks.json.
 
 ### Implementation
 
@@ -69,6 +70,7 @@ Once the spec is finalized, the main thread switches into the **dispatcher** rol
 > Placement is driven by the **Claude Code `plansDirectory` setting**:
 > - **spec** → `specs/` at the **same level** as `plansDirectory` (e.g., `plansDirectory` = `./docs/plans` → spec goes to `./docs/specs/`); **if unconfigured, default to `docs/specs/` at the project root**. Filename: `YYYY-MM-DD-<topic>-design.md`
 > - **plan** (if needed) → the directory pointed to by the Claude Code `plansDirectory` setting (project `.claude/settings.json` takes precedence, otherwise `~/.claude/settings.json`); **if unconfigured, default to `docs/plans/` at the project root**. Filename: `YYYY-MM-DD-<feature>.md`
+> - **decision record** → `decisions/` at the **same level** as `plansDirectory` (e.g., `plansDirectory` = `./docs/plans` → decision record goes to `./docs/decisions/`); **if unconfigured, default to `docs/decisions/` at the project root**. Filename: `YYYY-MM-DD-<topic>.md`
 
 ### Starting a task
 
@@ -176,8 +178,8 @@ All feature items use a **globally incrementing ID** `#0001`, `#0002`, ...:
 - `docs/` is untracked by default; its policy is **independent** of `.rime/` and decided separately (`.rime/` is mutable state, `docs/` is documentation output)
 - **Tracked files must not reference untracked assets**: don't write task IDs (`#0001`), caution IDs (`C-001`), or `docs/` paths in code comments, commit messages, or tracked markdown — they're dead links to anyone who clones the repo. Make comments self-contained: write the "why" directly into the comment itself. When dispatching a subagent, this must be communicated explicitly (it has no idea what `#0012` refers to). See "Ban on Referencing Untracked Assets" in [data-contract.md](data-contract.md) for details.
 - Core docs (prd, archive, techstack, etc.) live at the root
-- Subdirectory names use the **plural form** (specs, plans, researches, designs)
-- `specs/` (spec: design intent + decisions + verification log) sits **alongside** `plans/` (plan: a temporary execution plan): placement follows the Claude Code `plansDirectory` setting; **if unconfigured, default to `docs/specs/` at the project root** (plan directory `docs/plans/` if needed)
+- Subdirectory names use the **plural form** (specs, plans, decisions, researches, designs)
+- `specs/` (spec: conclusions + verification log) sits **alongside** `plans/` (plan: a temporary execution plan) and `decisions/` (decision record: rationale + rejected options): placement follows the Claude Code `plansDirectory` setting; **if unconfigured, default to `docs/specs/` at the project root** (plan directory `docs/plans/`, decision-record directory `docs/decisions/` if needed)
 - `product/` holds detailed specifications (the outcome of discussions for complex features)
 
 ---

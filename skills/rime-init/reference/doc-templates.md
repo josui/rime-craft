@@ -21,9 +21,11 @@ Templates and writing notes for each document type. Consult the relevant file as
 
 ## Design Phase (spec)
 
-Medium / large tasks produce a spec after grill convergence, locking down decisions + rationale + boundaries:
+Medium / large tasks produce a spec after grill convergence, locking down conclusions + boundaries (rationale and rejected options go to the decision record, see below):
 
 | Format | Description |
 |------|------|
-| Markdown (free-form) | Non-UI spec — decision log + interaction + boundaries, placed in `specs/` alongside Claude Code's `plansDirectory` (default `docs/specs/*.md`) |
+| Markdown (free-form) | Non-UI spec — conclusions + interaction + boundaries, placed in `specs/` alongside Claude Code's `plansDirectory` (default `docs/specs/*.md`) |
 | [template-spec.html](template-spec.html) | UI spec — sidebar numbered navigation + decision table + phone/desktop dual mock frames, natively rendered by dashboard `/file` |
+
+Decision record → `docs/decisions/YYYY-MM-DD-<topic>.md` (sibling of `specs/`), free-form Markdown with a decision point / conclusion / rationale & rejected options table; never fed to implementers.

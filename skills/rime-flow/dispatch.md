@@ -109,6 +109,7 @@ A prompt dispatched to a subagent must be self-contained:
 - Files involved (paths)
 - Interface / global constraints
 - Acceptance criteria
+- **Spec only, never the decision record**: dispatch material includes the spec; `docs/decisions/` files are not part of dispatch material — implementers work from the spec alone.
 - Report format
 - **Comment ban** (must be communicated explicitly every time — a subagent has no way to know this on its own): comments written into code must not contain task IDs (`#0001`), caution IDs (`C-001`), or `docs/` paths — these are untracked by default and are dead links to anyone who clones the repo. Comments should be self-contained: write the "why" directly into them. See "Ban on Referencing Untracked Assets" in [data-contract.md](data-contract.md) for the authoritative definition.
 

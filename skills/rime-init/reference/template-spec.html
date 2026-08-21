@@ -95,7 +95,7 @@
       .r-table th { font-size: 12.5px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; background: var(--paper); }
       .r-table tr:last-child td { border-bottom: none; }
       .r-table .col-k { width: 22%; font-weight: 600; }
-      .r-table .col-v { width: 26%; color: var(--accent); font-weight: 600; }
+      .r-table .col-v { color: var(--accent); font-weight: 600; }
 
       /* ===== Phone-frame mock（mobile-first） ===== */
       .r-views { display: flex; flex-direction: column; gap: 56px; margin-top: 24px; }
@@ -182,13 +182,13 @@
           <div class="r-section__num">02 · Decisions</div>
           <h2 class="r-section__title">Decisions</h2>
           <p class="r-section__lede">
-            The key trade-offs locked down after grill interrogation, along with the <strong>rationale</strong> and the options rejected — so six months later you still know why it was decided this way.
+            The key trade-offs locked down after grill interrogation. This table locks the <strong>conclusions</strong> only — rationale and rejected options live in the decision record under <code class="r-inline">docs/decisions/</code> and are not fed to the implementer.
           </p>
           <table class="r-table">
-            <thead><tr><th class="col-k">Decision Point</th><th class="col-v">Conclusion</th><th>Rationale / Rejected Options</th></tr></thead>
+            <thead><tr><th class="col-k">Decision Point</th><th class="col-v">Conclusion</th></tr></thead>
             <tbody>
-              <tr><td>Data source</td><td>Option A</td><td>B needs an extra dependency; A reuses the existing store</td></tr>
-              <tr><td>...</td><td>...</td><td>...</td></tr>
+              <tr><td>Data source</td><td>Option A</td></tr>
+              <tr><td>...</td><td>...</td></tr>
             </tbody>
           </table>
         </section>

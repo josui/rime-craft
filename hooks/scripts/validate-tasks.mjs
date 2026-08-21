@@ -26,7 +26,7 @@ const REQUIRED_FIELDS = ["id", "title", "status", "priority", "createdAt", "phas
 const STATUS_ENUM = new Set(["todo", "doing", "done"]);
 const PRIORITY_ENUM = new Set(["high", "medium", "low"]);
 const DIFFICULTY_ENUM = new Set(["small", "medium", "large"]);
-const DOC_TYPE_ENUM = new Set(["spec", "plan", "prototype", "reference", "blueprint"]);
+const DOC_TYPE_ENUM = new Set(["spec", "plan", "prototype", "reference", "blueprint", "decision"]);
 const ID_RE = /^#\d{4}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -133,7 +133,7 @@ function validate(data) {
           if (!doc || typeof doc !== "object" || !doc.type || !doc.path) {
             errors.push(`${label}: docs entries should be {type, path}`);
           } else if (!DOC_TYPE_ENUM.has(doc.type)) {
-            errors.push(`${label}: docs[].type "${doc.type}" is not in the enum spec/plan/prototype/reference/blueprint`);
+            errors.push(`${label}: docs[].type "${doc.type}" is not in the enum spec/plan/prototype/reference/blueprint/decision`);
           }
         }
       }

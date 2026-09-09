@@ -75,7 +75,7 @@ Conditional dimension: enabled only when the target repository has test infrastr
 
 ---
 
-## Skill Dimensions (S1–S6)
+## Skill Dimensions (S1–S7)
 
 ### S1 — Trigger Surface
 
@@ -114,3 +114,32 @@ Conditional dimension: enabled only when the target repository has test infrastr
 - **Established vocabulary**: does the skill use existing, compact concept words, or coin new terms?
 - **No-op instruction detection**: does the skill pay cognitive load for instructions the model already obeys by default?
 - **Completion criteria**: does each step have a discernible "done" test?
+
+### S7 — Fact Currency
+
+Skill mode only. Every external-dependency fact the skill asserts is checked against official documentation on the web — logic can be flawless while the API, model ID, or version it names has moved on.
+
+**Fact points** — anything the skill states about the outside world:
+
+- **Model IDs / model names** — e.g. `claude-sonnet-4-5`, `fal-ai/flux-pro/v1.1`.
+- **API surface** — endpoints, request parameter names, response field names.
+- **Packages** — package names and versions, import paths.
+- **Third-party CLI** — commands and flags of tools the skill invokes.
+- **URLs** — documentation links, download locations.
+- **Third-party tool behavior** — claims like "X defaults to…" or "Y does not support…".
+- **Recommended usage** — procedures, best practices, or configuration the skill recommends ("do A then B", "use X for Y"). See the usage rule below — only official wording counts.
+
+**Out of scope**: relative paths inside the skill's own repository, this plugin's internal contract references, general programming knowledge that does not depend on a specific vendor or tool.
+
+**States**:
+
+| State | Meaning | Goes to |
+|---|---|---|
+| Current | Official docs confirm the fact still holds | Fact check table only |
+| Invalid | The instruction fails outright: the API call errors, the model ID resolves to nothing, the parameter is rejected, or the URL 404s | Fact check table + Findings, **Important** |
+| Outdated | Runs fine, but official docs label it deprecated or point to a different recommended value/approach | Fact check table + Findings, **Minor** |
+| Unverified | No official page could be found or fetched | Fact check table + Cannot verify, naming the page that should be checked |
+
+**Usage rule**: for recommended-usage facts, judge strictly against official wording. Outdated requires official docs to explicitly call the approach deprecated or name a different recommendation; Invalid requires the procedure to be unrunnable. Everything else is Current — this dimension checks against the vendor's stated position, not the reviewer's taste.
+
+**Verification source**: official documentation on the web only, via wigolo — `cache` first, then `fetch` on a miss; when the official URL is unknown, `search` with `include_domains` restricted to the official site to locate the page, then fetch. Do not substitute local signals (`--help`, `npm view`, installed package inspection) — they reflect the local environment, not what the skill's readers will find when they follow it. Fetch each official page once and reuse it across every fact point it covers. There is no switch to skip this dimension; a fact point whose page cannot be fetched is Unverified, not silently dropped.

@@ -26,7 +26,7 @@ When no arguments are given, review the current branch against `main` (or `maste
 ```
 /rime-review path/to/skill/SKILL.md
 ```
-Any SKILL.md file, prompt template, or skill directory triggers skill mode with the S1–S6 dimension framework.
+Any SKILL.md file, prompt template, or skill directory triggers skill mode with the S1–S7 dimension framework. Skill review verifies every external fact the skill references — model IDs, APIs, versions, CLI flags, recommended usage — against official documentation on the web, and reports a Fact check table.
 
 ## Behavior
 
@@ -34,7 +34,7 @@ The rime-review skill is loaded automatically. It determines:
 
 - **Mode** — code or skill, based on what the target path resolves to.
 - **Execution shape** — small reviews (≤ ~3 files, low risk) run inline in the main thread; deep reviews dispatch a named reviewer subagent.
-- **Dimensions** — code reviews apply C0–C6; skill reviews apply S1–S6.
+- **Dimensions** — code reviews apply C0–C6; skill reviews apply S1–S7.
 - **Verdict** — findings carry severity (Critical / Important / Minor / spec-mandated), confidence, and file:line citations.
 
 For natural-language review requests ("review this diff", "audit this module", "check this skill"), the skill triggers automatically through its description — this command is the explicit entry point when you want to be direct.

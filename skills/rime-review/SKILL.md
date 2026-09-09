@@ -46,20 +46,23 @@ Three scopes, all sharing the same dimension framework:
 
 ### Skill Mode
 
-Review a skill file or skill directory against the skill dimensions. The skill under review is read in full; no diff generation needed. Applies the same dimension framework (S1–S6) whether the skill is a standalone SKILL.md, a prompt template, or a multi-file skill directory.
+Review a skill file or skill directory against the skill dimensions. The skill under review is read in full; no diff generation needed. Applies the same dimension framework (S1–S7) whether the skill is a standalone SKILL.md, a prompt template, or a multi-file skill directory.
+
+After reading the skill in full and before producing findings, the reviewer runs S7 fact verification: (a) inventory every fact point in the skill with its `file:line`, (b) verify each via wigolo — `cache` first, then `fetch` on a miss, falling back to `search` with `include_domains` restricted to the official site only to locate the page when its URL is unknown, (c) assign a state, (d) emit the Fact check table plus the corresponding Findings / Cannot verify entries. [reference/dimensions.md](reference/dimensions.md)'s S7 section defines the fact categories, the four states, and the usage rule for recommended-usage facts — this section only sequences the check.
 
 ## Execution Mechanics
 
 The execution shape depends on review depth:
 
-- **Small reviews** (≤ ~3 files, low-risk change, straightforward skill) run inline in the main thread — no subagent dispatch overhead.
+- **Small reviews** (≤ ~3 files, low-risk code change) run inline in the main thread — no subagent dispatch overhead.
 - **Deep reviews** (multi-file, architectural, security-sensitive, or any skill review) dispatch a **named** reviewer subagent (Agent `name` parameter, e.g. `reviewer-code-N` or `reviewer-skill-N`). A named reviewer stays attached for re-review rounds via SendMessage.
+- **Skill reviews always dispatch a subagent** (see Entry Orchestration above). The dispatch prompt must instruct the reviewer to run S7 fact verification with wigolo, per the Skill Mode section above.
 
 **Review Cost Model & Model Selection**: the authoritative definitions live in rime-flow's [dispatch.md](../rime-flow/dispatch.md) ("Review Cost Model" and "Model Tiers" sections). rime-review follows them without restating them. Tiered re-review, reviewer residency, auxiliary review batching, and escalation rules all apply as defined there.
 
 **Verdict contract**: severity calibration (Critical / Important / Minor / spec-mandated), per-finding confidence, file:line requirement, full-report discipline, and review discipline rules are defined in [reference/verdict-contract.md](reference/verdict-contract.md). Every review round produces findings in that contract's format.
 
-**Dimensions**: the full dimension framework (code C0–C6, skill S1–S6) with check questions is defined in [reference/dimensions.md](reference/dimensions.md). The framework is generic — applicability of each check (especially security items) is judged against the target project's threat model at review time, never pre-excluded.
+**Dimensions**: the full dimension framework (code C0–C6, skill S1–S7) with check questions is defined in [reference/dimensions.md](reference/dimensions.md). The framework is generic — applicability of each check (especially security items) is judged against the target project's threat model at review time, never pre-excluded.
 
 ## Boundaries
 

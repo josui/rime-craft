@@ -95,6 +95,8 @@ Security findings follow an additional calibration rule:
 - **Baseline**: all security findings start at **Important**, regardless of the specific check (injection, auth, path traversal, leakage, supply chain).
 - **Auto-execution escalation**: injection findings on auto-execution paths — hooks, cron jobs, startup items, session-init scripts — are **Critical** directly. These paths run without human review, so an injection there has no second gate.
 
+**Skill mode — S7 Fact Currency**: an Invalid fact point is **Important**; an Outdated fact point is **Minor**. See dimensions.md's S7 section for what counts as a fact point and how each state is judged.
+
 ---
 
 ## Report Structure
@@ -104,7 +106,8 @@ A complete review report contains:
 1. **Verdict** — pass or findings (with a summary count by severity).
 2. **Strengths** — what was done well, with specific evidence. Accurate praise builds trust in the rest of the feedback.
 3. **Findings** — grouped by severity (Critical → Important → Minor), each with file:line, what is wrong, why it matters, and how to fix.
-4. **Cannot verify** — items that could not be confirmed from the available diff or files, with what the controller should check.
-5. **Assessment** — one- or two-sentence technical summary and a clear Approved / Needs fixes verdict.
+4. **Fact check** (skill mode only) — a table with columns `file:line | fact | status | official current value | source URL`, one row per fact point scanned, including Current ones. When the skill references no external facts, write "No external facts referenced".
+5. **Cannot verify** — items that could not be confirmed from the available diff or files, with what the controller should check.
+6. **Assessment** — one- or two-sentence technical summary and a clear Approved / Needs fixes verdict.
 
 A report that omits any section is incomplete and triggers the full-report discipline.

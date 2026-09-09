@@ -19,7 +19,7 @@ Claude Code plugin for project lifecycle management and AI-assisted development 
 | [rime-imagen](skills/rime-imagen/) | Image generation prompt authoring (gpt-image-2 / Nano Banana Pro — outputs prompt text only) |
 | [rime-js](skills/rime-js/) | JS/TS general ruleset (21 rules: Type Safety / Module / Error & Async / Performance) |
 | [rime-react](skills/rime-react/) | React component development ruleset (21 rules) |
-| [rime-review](skills/rime-review/) | Code & skill quality review (diff / branch / whole-file / skill; C0–C6 + S1–S6 dimensions) |
+| [rime-review](skills/rime-review/) | Code & skill quality review (diff / branch / whole-file / skill; C0–C6 + S1–S7 dimensions) |
 
 ### Commands
 

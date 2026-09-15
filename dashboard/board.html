@@ -926,11 +926,16 @@ const descHtml = s => {
 document.getElementById('ts').textContent = new Date().toLocaleString('ja-JP');
 
 if (__WATCH_MODE__) {
+  let hadError = false
   const es = new EventSource('/events')
-es.onmessage = () => location.reload()
-es.onerror = () => {
-  document.querySelector('.live-dot')?.classList.remove('on')
-}
+  es.onmessage = () => location.reload()
+  es.onerror = () => {
+    hadError = true
+    document.querySelector('.live-dot')?.classList.remove('on')
+  }
+  es.onopen = () => {
+    if (hadError) location.reload()
+  }
 }
 
 // Tabs

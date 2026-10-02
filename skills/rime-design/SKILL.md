@@ -9,7 +9,7 @@ description: >
 
 # Design Skill — UI 品质守护
 
-三件事：**路由**（外部 design skill 指针）、**token 定义**（DESIGN.md 加载与生成）、**设计检测**（baseline rules + AI slop 防御）。
+两件事：**路由**（外部 design skill 指针）、**设计检测**（baseline rules + AI slop 防御）。
 
 ---
 
@@ -19,20 +19,16 @@ description: >
 
 | 来源 | 安装方式 | 定位 | 何时用 |
 |------|---------|------|--------|
-| frontend-design | Claude Code 内置 | **设计哲学**（从 0 到 1）：像设计总监，给项目不可错认的视觉身份。关注 aesthetic direction、typography pairing、signature element、copywriting。无命令、无 detector | 新项目定设计方向、hero 设计、字体配对、视觉风险决策 |
-| impeccable | `npx impeccable install` | **工具链**（从 1 到 production）：23 命令 + 44 deterministic detector rules + hook 自动检测 + live browser iteration + DESIGN.md 生成 | 设计检测、迭代打磨、a11y/perf audit、生产化 |
+| Design（Artifact 类型） | Claude Code 内置 Artifact 工具（`action: "quickstart"`, `intent: "design"`） | 官方设计画布：在画布上产出可交互 artboard（页面 / 屏幕 / mockup / 线框），可套用账户的 Design System | 需要出 prototype / mockup / 界面原型给人看 |
 | emil-design-eng | 独立安装 | 动效哲学：Emil Kowalski 动效决策 + 实现 review | 动效方向决策、实现需要 review |
 | transitions-dev | 独立安装（Jakub Antalík / transitions.dev） | 动效实现库：常见 UI 模式的 production-ready CSS 过渡 recipe（dropdown / modal / tabs / toast / skeleton / icon swap / staggered reveal / shake 等），copy-paste 即用 | 需要具体过渡 / 微交互的现成实现 |
 | gsap（`gsap-core` 入口 + `gsap-*` 系） | 独立安装 | JS 动画库：timeline 编排、scroll-driven（ScrollTrigger）、SVG / 物理 / 复杂序列；按需 `gsap-scrolltrigger` / `gsap-timeline` / `gsap-react` / `gsap-plugins` | CSS 过渡不够用——复杂编排 / 滚动驱动 / SVG / 时间轴 |
-| text-to-lottie | 独立安装 | 矢量动画：生成 Lottie (Bodymovin) JSON，本地 skia 播放 | 插画级 / 装饰性矢量动画 |
-| shadcn | 独立安装 | shadcn/ui 组件管理 | shadcn 项目 |
 
-> **frontend-design 与 impeccable 的关系**：前者是思维方法（"怎么想、怎么定方向"），后者是工具链（"怎么检测、怎么迭代"）。两者可共存——frontend-design 定方向，impeccable 检测和打磨。impeccable 自述"started from frontend-design"，但在命令系统、detector、DESIGN.md 生成上远超官方版。
+> 当前环境没有 Artifact 工具时，prototype 回退到 rime-flow 的本地 HTML spec。发布 artifact 后，把 URL 登记到任务的 `docs`：`{type: "prototype", name: "<可区分的名称>", path: "<artifact URL>"}`（`docs` 条目格式见 rime-flow 的 `data-contract.md`）。
 >
 > **动效工具怎么选**（方向永远先问 `emil-design-eng`：该不该动、怎么动、动得对不对）：
 > - 简单 UI 过渡 / 微交互（dropdown / modal / toast / tabs / skeleton…）→ `transitions-dev`（现成 CSS recipe）
 > - 复杂编排 / 滚动驱动 / SVG / 时间轴 → `gsap`（`gsap-core` 入口，按需 `gsap-scrolltrigger` / `gsap-timeline` / `gsap-react`）
-> - 矢量插画 / 装饰性动画 → `text-to-lottie`（生成 Lottie JSON）
 
 ### 检测逻辑
 
@@ -46,55 +42,32 @@ AI 无法在运行时动态检测已安装的 skill 列表。采用「尝试调�
 
 在 UI 相关开发过程中，持续观察设计信号（间距混乱、文案含糊、缺乏个性、视觉过载等）。
 
-**装了 impeccable 时**：impeccable 自带 routing rules（意图→命令映射 + context-signals 脚本驱动），让 impeccable 处理路由。rime-design 不重复维护命令映射表——impeccable 自己的注册表是单一来源，抄一遍只会过期。
-
-**未装 impeccable 时**：发现设计信号用一句话建议对应改善方向（基于下方设计检测 baseline），用户同意则直接改善，不反复提醒同一信号。
+发现设计信号用一句话建议对应改善方向（基于下方设计检测 baseline），用户同意则直接改善，不反复提醒同一信号。
 
 ---
 
-## Token 定义
+## Token 锚定
 
-### 加载
-
-1. 检查 `docs/DESIGN.md` 是否存在
-2. **存在** → 读取 YAML frontmatter 获取 token 值（colors / typography / rounded / spacing / components），读取 prose 获取设计 rationale
-3. **不存在** → 提示用户：「项目缺少 DESIGN.md，要现在生成吗？」
-
-### 生成
-
-用户同意后，优先用外部命令；不可用则手动扫描：
-
-| 方式 | 说明 |
-|------|------|
-| `/impeccable init` | 交互式采集设计上下文，自动写 PRODUCT.md + DESIGN.md |
-| `/impeccable document` | 从现有项目代码自动生成 DESIGN.md |
-| 手动扫描 | 扫描项目（CSS 变量、Tailwind config、theme 文件、组件源码等）提取实际 token 值 → 用 `design-template.md` 模板生成 `docs/DESIGN.md` → 用户确认 → 如有 `npx @google/design.md lint` 可用则运行验证 |
-| 从参考网站提取 | 使用 `rime-scan` skill 提取 scan JSON，需要时转化为 `DESIGN.md` |
-
-> DESIGN.md 采用 [google-labs/design.md](https://github.com/google-labs-code/design.md) 格式（Apache-2.0）。模板见 [design-template.md](design-template.md)。
-
-### 锚定类规则 — 遵循项目定义
-
-读取 token 后，以下规则始终适用：
+遵循项目已有的 token——CSS custom properties、Tailwind config、theme 文件、现有组件——而不是另起定义。以下规则始终适用：
 
 | Rule | Description |
 |------|-------------|
-| **token-first** | 禁止硬编码颜色/间距/字号值，必须使用项目 tokens |
+| **token-first** | 禁止硬编码颜色/间距/字号值，必须使用项目已有 tokens |
 | **component-reuse** | 项目已有的组件必须优先使用，不重造 |
 | **spacing-scale** | 遵循项目间距体系，不用任意值 |
-| **typography-hierarchy** | 遵循已定义的字体层级，不自创大小/粗细组合 |
-| **color-palette** | 只用色板中的颜色，需要新色时先确认 |
+| **typography-hierarchy** | 遵循已有的字体层级，不自创大小/粗细组合 |
+| **color-palette** | 只用项目色板中的颜色，需要新色时先确认 |
 | **responsive-breakpoints** | 遵循项目断点体系，不自创断点 |
 
 ---
 
 ## 设计检测
 
-以下规则始终适用，不依赖外部 skill。装了 impeccable 时，impeccable 自带更详细的同类规则（44 deterministic detector rules + absolute bans），以 impeccable 为准；未装时以下为 fallback。
+以下规则始终适用，不依赖外部 skill。
 
 ### AI Slop 防御
 
-避免以下模式——装了 impeccable 时其 detector 会自动检测，未装时人工对照：
+避免以下模式：
 
 - 不用 cyan/purple 渐变、glassmorphism、neon accent
 - 不用 gradient text、bounce/elastic easing
@@ -109,7 +82,7 @@ AI 无法在运行时动态检测已安装的 skill 列表。采用「尝试调�
 
 ### Motion Base
 
-> 实现动效时按上方「动效工具怎么选」route 到对应 skill（CSS 过渡 → transitions-dev / 复杂编排 → gsap / 矢量 → text-to-lottie / 决策与 review → emil-design-eng）。以下为无外部 skill 时的 baseline。
+> 实现动效时按上方「动效工具怎么选」route 到对应 skill（CSS 过渡 → transitions-dev / 复杂编排 → gsap / 决策与 review → emil-design-eng）。以下为无外部 skill 时的 baseline。
 
 1. 先判断是否需要动画（高频操作 100+/天 → 不动画）
 2. 只动画 `transform` + `opacity`（GPU 加速），不动画 layout 属性

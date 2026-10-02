@@ -17,7 +17,6 @@ Templates and writing notes for each document type. Consult the relevant file as
 | [template-techstack.md](template-techstack.md) | Tech stack choices, project structure, phase plan |
 | [template-interaction.md](template-interaction.md) | Interaction design, page states, operation flows |
 | [template-schema.md](template-schema.md) | Data structure definitions |
-| [DESIGN.md (rime-design skill)](../../rime-design/design-template.md) | Design system tokens + rationale (google-labs/design.md format). Template and generation flow live in the rime-design skill, not in this directory |
 
 ## Design Phase (spec)
 

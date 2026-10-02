@@ -168,7 +168,6 @@ Commit uniformly via `/rime-git`.
 
 - [prd](docs/myapp-prd.md) — Product positioning and feature plan
 - [techstack](docs/myapp-techstack.md) — Tech stack choices and project structure
-- [DESIGN.md](docs/DESIGN.md) — Design system (tokens + rationale, google-labs DESIGN.md format)
 ```
 
 ### CLAUDE.md (Bridge File, Same Directory as AGENTS.md)

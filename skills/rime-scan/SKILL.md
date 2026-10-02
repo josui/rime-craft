@@ -5,8 +5,7 @@ description: >
   For a URL, uses agent-browser to programmatically extract precise tokens
   (colors, typography, spacing, component styles) and complements them with AI
   visual analysis; for a screenshot, uses AI visual analysis only (degraded mode).
-  Outputs structured scan JSON, optionally converted to DESIGN.md
-  (google-labs/design.md format) or an HTML design sheet.
+  Outputs structured scan JSON, optionally rendered as an HTML design sheet.
 ---
 
 # rime-scan
@@ -95,20 +94,16 @@ Extracted:
 
 You can:
 • Save as a JSON file for reference
-• Have me generate DESIGN.md from this JSON (used by rime-design)
 • Have me generate a visual HTML design sheet from this JSON
 • Start a new project directly — I'll reference these tokens
 ```
 
-## 与 rime-design 的关系
+## Schema
 
-- rime-scan 输出的 JSON 可按需转化为 `docs/DESIGN.md`（rime-design 的设计上下文，google-labs DESIGN.md 格式）；字段映射见 rime-design 的 `design-template.md`「从 scan JSON 填充」
-- 转化不自动发生，用户明确要求时执行
-- schema 参见 `schema.md`
+- scan JSON 的字段定义参见 `schema.md`
 
 ## 不做的事
 
-- 不自动生成 DESIGN.md
 - 不做 Markdown 分析报告（复用性低）
 - 不做多页对比（多页时多次调用）
-- 不做自有项目审计（#0027 rime-design 扩展）
+- 不做自有项目审计

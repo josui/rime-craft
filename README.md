@@ -53,8 +53,8 @@ rime-craft is designed to be combined with external skills, each handling its ow
 | Code review | `rime-backlog` converts findings into tasks | `review` dual-axis review (Standards + Spec) |
 | Quality review | `rime-review` (necessity, architecture, robustness, security, skill review) | `review` Standards + Spec axes (when installed) |
 | CSS architecture | `rime-css` methodology | `agent-browser` responsive verification |
-| UI design quality | `rime-design` baseline rules | `impeccable` suite / `emil-design-eng` |
-| UI motion / transitions | `rime-design` motion baseline + routing | `transitions-dev` (CSS recipes) / `gsap` (JS timelines, scroll-driven) / `text-to-lottie` (vector) / `emil-design-eng` (decisions & review) |
+| UI design quality | `rime-design` baseline rules | `emil-design-eng` / Artifact `Design` type (prototypes) |
+| UI motion / transitions | `rime-design` motion baseline + routing | `transitions-dev` (CSS recipes) / `gsap` (JS timelines, scroll-driven) / `emil-design-eng` (decisions & review) |
 | Design language extraction | `rime-scan` structured scan JSON | `agent-browser` programmatic extraction + AI visual analysis |
 | Image generation prompts | `rime-imagen` authors prompt text | External tools: ChatGPT Web / Gemini / AI Studio (copy and use) |
 | JS/TS development | `rime-js` ruleset | `typescript-eslint` |

@@ -82,11 +82,8 @@ Choose the needed documents based on project size and type.
 | techstack | Tech stack choices, project structure, phase plan | Recommended |
 | interaction | Interaction design, page states, operation flows | Medium size and up |
 | schema | Data structure definitions | Medium size and up |
-| DESIGN.md | Design system (tokens + rationale, [google-labs/design.md](https://github.com/google-labs-code/design.md) format) | Projects with a UI |
 
-File naming: `{project}-{type}.md`. Exception: `DESIGN.md` uses the standard [google-labs/design.md](https://github.com/google-labs-code/design.md) filename, with no project prefix. Templates → [reference/doc-templates.md](reference/doc-templates.md) (DESIGN.md's template and generation flow live in the `rime-design` skill)
-
-> DESIGN.md is a design contract shared by the team. If `docs/` is gitignored by default (see A3), when collaborating with a team it's recommended to `git add -f docs/DESIGN.md` separately or move it out of the ignore scope — otherwise collaborators won't get the design system after cloning.
+File naming: `{project}-{type}.md`. Templates → [reference/doc-templates.md](reference/doc-templates.md)
 
 **PRD first**: write the PRD before starting work.
 

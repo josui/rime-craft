@@ -51,6 +51,10 @@ lives there too — one directory per large task, so successive sdd runs in
 the same working tree never overwrite each other's briefs, reports, or
 ledger. The scripts fail loudly if the slug is missing.
 
+**Commits:** implementer and fix subagents never commit; the controller
+commits each task via `/rime-git` once its review is clean. The rule lives
+in rime-flow's `dispatch.md` ("Commit Responsibility").
+
 ```dot
 digraph process {
     rankdir=TB;
@@ -60,10 +64,11 @@ digraph process {
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
+        "Implementer subagent implements, tests, self-reviews (no commit)" [shape=box];
+        "Write review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
         "Task reviewer reports spec ✅ and quality approved?" [shape=diamond];
         "Dispatch fix subagent for Critical/Important findings" [shape=box];
+        "Controller commits the task via /rime-git" [shape=box];
         "Mark task complete in todo list and progress ledger" [shape=box];
     }
 
@@ -76,12 +81,13 @@ digraph process {
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
+    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, self-reviews (no commit)" [label="no"];
+    "Implementer subagent implements, tests, self-reviews (no commit)" -> "Write review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
+    "Write review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
     "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
-    "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review (tiered, see Review Loop Cost Rules)"];
-    "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
+    "Dispatch fix subagent for Critical/Important findings" -> "Write review package, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review (tiered, see Review Loop Cost Rules)"];
+    "Task reviewer reports spec ✅ and quality approved?" -> "Controller commits the task via /rime-git" [label="yes"];
+    "Controller commits the task via /rime-git" -> "Mark task complete in todo list and progress ledger";
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final whole-branch review (mattpocock: review)" [label="no"];
@@ -142,7 +148,7 @@ that implementer. Single-file mechanical fixes also take the cheapest tier.
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Generate the review package (`scripts/review-package BASE HEAD`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the implementer — never `HEAD~1`, which silently drops all but the last commit of a multi-commit task), then dispatch the task reviewer with the printed path. Name the reviewer when dispatching (Agent `name` parameter, e.g. `reviewer-task-N`) — it stays attached to this task for any re-review rounds (see Review Loop Cost Rules).
+**DONE:** Generate the review package (`scripts/review-package --worktree BASE`, from this skill's directory — it prints the unique file path it wrote; BASE is the HEAD you recorded before dispatching the implementer, and the working tree was clean then, so the diff is exactly this task's uncommitted changes), then dispatch the task reviewer with the printed path. Name the reviewer when dispatching (Agent `name` parameter, e.g. `reviewer-task-N`) — it stays attached to this task for any re-review rounds (see Review Loop Cost Rules).
 
 **DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
 
@@ -187,13 +193,13 @@ final whole-branch review. When you fill a reviewer template:
   process rules (YAGNI, test hygiene, review method) — the constraints
   block is for what THIS project's spec demands.
 - Hand the reviewer its diff as a file: run this skill's
-  `scripts/review-package BASE HEAD` and pass the reviewer the file path
-  it prints (or, without bash: `git log --oneline`, `git diff --stat`,
-  and `git diff -U10` for the range, redirected to one uniquely named
-  file). The output never enters your own context, and the reviewer sees
-  the commit list, stat summary, and full diff with context in one Read
-  call. Use the BASE you recorded before dispatching the implementer —
-  never `HEAD~1`, which silently truncates multi-commit tasks.
+  `scripts/review-package --worktree BASE` and pass the reviewer the file
+  path it prints (or, without bash: `git add -N` any untracked files, then
+  `git diff --stat BASE` and `git diff -U10 BASE` redirected to one
+  uniquely named file). Per-task review runs on the uncommitted working
+  tree. The output never enters your own context, and the reviewer sees
+  the stat summary and full diff with context in one Read call. Use the
+  BASE you recorded before dispatching the implementer.
 - A dispatch prompt describes one task, not the session's history. Do not
   paste accumulated prior-task summaries ("state after Tasks 1-3") into
   later dispatches — a fresh subagent needs its task, the interfaces it
@@ -209,11 +215,12 @@ final whole-branch review. When you fill a reviewer template:
   dispatch a fix that contradicts the spec without asking.
 - The final whole-branch review uses the `review` skill (mattpocock): run
   `scripts/review-package MERGE_BASE HEAD` (MERGE_BASE = the commit the
-  branch started from, e.g. `git merge-base main HEAD`) and include the
+  branch started from, e.g. `git merge-base main HEAD`; by then every task
+  is committed) and include the
   printed path in the final review dispatch, so the final reviewer reads
   one file instead of re-deriving the branch diff with git commands.
-- Every fix dispatch carries the implementer contract: the fix subagent
-  re-runs the tests covering its change and reports the results. Name the
+- Every fix dispatch carries the implementer contract (no commits
+  included): the fix subagent re-runs the tests covering its change and reports the results. Name the
   covering test files in the dispatch — a one-line fix does not need the
   whole suite. Before sending the re-review (to the same reviewer, via
   SendMessage), confirm the fix report contains the covering tests, the
@@ -236,16 +243,18 @@ are its operational rules here:
   name (Agent `name` parameter, e.g. `reviewer-task-N`) and run every
   re-review round through SendMessage to that same reviewer — its hot
   context already holds the brief, report, and original diff, so each
-  round hands over only the fix-delta review package
-  (`scripts/review-package PREV_HEAD NEW_HEAD`, PREV_HEAD = the HEAD the
-  last review saw) and the updated report file. Dispose of the reviewer
+  round hands over a refreshed review package
+  (`scripts/review-package --worktree BASE` again — same BASE, a new
+  uniquely named file) and the updated report file; the reviewer judges
+  only what the fixes touched. Dispose of the reviewer
   when the task completes; the next task gets a fresh one — never reuse a
   reviewer across tasks.
 - **Tiered re-review.** The re-review channel depends on the most severe
   finding the fix wave addressed. If the wave fixed any Critical or
   Important finding → full reviewer re-review. If the wave contains only
   Minor, comment-only, or test-only changes → the controller verifies by
-  reading the fix diff itself, confirming each finding is addressed, and
+  reading the fix changes itself (the fix report's changed files, via
+  `git diff BASE -- <files>`), confirming each finding is addressed, and
   noting that in the ledger — no subagent round. The downgrade lowers the
   channel, never the bar: a finding the controller's read shows unaddressed
   is a failed review — dispatch another fix. The tier applies to re-reviews
@@ -259,7 +268,8 @@ are its operational rules here:
   with the original inputs.
 - **Batch auxiliary reviews.** Language/documentation reviews (copy
   audits, jp-review, etc.) do not run per commit or per review round —
-  run them once over the task's whole diff at task wrap-up.
+  run them once over the task's whole diff at task wrap-up, before the
+  controller's commit.
 
 ## File Handoffs
 
@@ -281,7 +291,7 @@ and is re-read on every later turn. Hand artifacts over as files:
 - **Report file:** name the implementer's report file after the brief
   (brief `…/task-N-brief.md` → report `…/task-N-report.md`) and put it in
   the dispatch prompt. The implementer writes the full report there and
-  returns only status, commits, a one-line test summary, and concerns.
+  returns only status, files changed, a one-line test summary, and concerns.
 - **Reviewer inputs:** the task reviewer gets three paths — the same brief
   file, the report file, and the review package — plus the global
   constraints that bind the task.
@@ -301,12 +311,19 @@ a ledger file, not only in todos.
   at the first task not marked complete. The per-task-id directory means a
   leftover ledger from a different large task can never masquerade as this
   run's progress.
-- When a task's review comes back clean, append one line to the ledger in
-  the same message as your other bookkeeping:
-  `Task N: complete (commits <base7>..<head7>, review clean)`.
+- When a task's review comes back clean, commit the task via `/rime-git`
+  (see Commit Responsibility in rime-flow's `dispatch.md` — this must happen
+  before the next implementer is dispatched), then append one line to the
+  ledger in the same message as your other bookkeeping:
+  `Task N: complete (commits <base7>..<head7>, review clean)` — BASE is the
+  HEAD you recorded before dispatch, head is the HEAD after your commit.
 - The ledger is your recovery map: the commits it names exist in git even
   when your context no longer remembers creating them. After compaction,
-  trust the ledger and `git log` over your own recollection.
+  trust the ledger and `git log` over your own recollection. If the ledger's
+  last task is complete but the working tree has uncommitted changes, they
+  belong to the next task in flight (implemented, not yet reviewed or
+  committed) — do not re-dispatch from scratch; review them against the
+  HEAD recorded at that task's start (the ledger's last head7).
 - `git clean -fdx` will destroy the ledger (it's git-ignored scratch); if
   that happens, recover from `git log`.
 
@@ -337,13 +354,12 @@ Implementer: "Got it. Implementing now..."
   - Implemented install-hook command
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
-  - Committed
 
-[Run review-package, dispatch task reviewer with the printed path]
+[Run review-package --worktree, dispatch task reviewer with the printed path]
 Task reviewer: Spec ✅ - all requirements met, nothing extra.
   Strengths: Good test coverage, clean. Issues: None. Task quality: Approved.
 
-[Mark Task 1 complete]
+[Commit Task 1 via /rime-git, mark Task 1 complete]
 
 Task 2: Recovery modes
 
@@ -354,9 +370,8 @@ Implementer:
   - Added verify/repair modes
   - 8/8 tests passing
   - Self-review: All good
-  - Committed
 
-[Run review-package, dispatch task reviewer with the printed path]
+[Run review-package --worktree, dispatch task reviewer with the printed path]
 Task reviewer: Spec ❌:
   - Missing: Progress reporting (spec says "report every 100 items")
   - Extra: Added --json flag (not requested)
@@ -368,7 +383,7 @@ Fixer: Removed --json flag, added progress reporting, extracted PROGRESS_INTERVA
 [Task reviewer reviews again]
 Task reviewer: Spec ✅. Task quality: Approved.
 
-[Mark Task 2 complete]
+[Commit Task 2 via /rime-git, mark Task 2 complete]
 
 ...
 
@@ -376,7 +391,7 @@ Task reviewer: Spec ✅. Task quality: Approved.
 [Dispatch final whole-branch review via mattpocock: review]
 Final reviewer: Standards ✅, Spec ✅ — all requirements met, ready to merge
 
-[Return to rime-flow: complete task flow — wrap-up commit → verification checklist (persist to the spec's verification section first, then present) → user verify → backfill verification results → commit gate → done + completedAt + commits in the same write]
+[Return to rime-flow: complete task flow — wrap-up commit for anything still uncommitted → verification checklist (persist to the spec's verification section first, then present) → user verify → backfill verification results → commit gate → done + completedAt + commits in the same write]
 Done!
 ```
 
@@ -429,9 +444,13 @@ Done!
   dispatch prompt ("treat it as Minor at most") — the spec's example code is
   a starting point, not evidence that its weaknesses were chosen
 - Dispatch a task reviewer without a diff file — generate it first
-  (`scripts/review-package BASE HEAD`) and name the printed path in the
-  prompt
+  (`scripts/review-package --worktree BASE`) and name the printed path in
+  the prompt
 - Move to next task while the review has open Critical/Important issues
+- Dispatch the next implementer before committing the previous task — its
+  BASE must be a real commit
+- Let an implementer or fix subagent commit — the controller commits, via
+  `/rime-git`
 - Re-dispatch a task the progress ledger already marks complete — check
   the ledger (and `git log`) after any compaction or resume
 
@@ -460,5 +479,5 @@ Done!
 - **`review`** (mattpocock) — final whole-branch review (two-axis parallel sub-agents: Standards + Spec)
 
 **Downstream (rime-flow takes over):**
-- After all tasks complete, return to rime-flow's "Completing a task" flow (wrap-up commit → persist the verification checklist to the spec's verification section first, then present → user verifies → backfill verification results → commit gate → done + completedAt + commits in the same write)
-- Commits go through `/rime-git`
+- After all tasks complete, return to rime-flow's "Completing a task" flow (wrap-up commit for anything still uncommitted → persist the verification checklist to the spec's verification section first, then present → user verifies → backfill verification results → commit gate → done + completedAt + commits in the same write)
+- Commits are the controller's alone and go through `/rime-git`; the rule lives in rime-flow's `dispatch.md` ("Commit Responsibility")

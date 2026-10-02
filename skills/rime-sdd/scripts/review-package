@@ -1,47 +1,89 @@
 #!/usr/bin/env bash
-# Generate a review package: commit list, stat summary, and the net
-# diff with extended context, written to a file the reviewer reads in one
-# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
-# tasks intact.
+# Generate a review package: stat summary and the net diff with extended
+# context, written to a file the reviewer reads in one call.
 #
-# Usage: review-package BASE HEAD [OUTFILE]
+# Usage:
+#   review-package --worktree BASE [OUTFILE]   per-task review: uncommitted
+#       working tree vs BASE (implementers never commit; BASE = HEAD recorded
+#       before the task was dispatched). Untracked, non-ignored files are marked
+#       intent-to-add (`git add -N`) so new files appear in the diff; this
+#       touches the index only, never file contents or HEAD.
+#   review-package BASE HEAD [OUTFILE]         committed range, with commit
+#       list — the final whole-branch review (MERGE_BASE..HEAD).
+#
 # Default OUTFILE: <resolved .rime>/sdd/$SDD_SLUG/review-<base7>..<head7>.diff
+# for a range, review-<base7>+worktree-<hash7>.diff for the working tree
+# (hash of the package content, so a re-review after fixes gets a fresh file).
 # (.rime location resolved by sdd-workspace — in a linked worktree this is the
 # main checkout's .rime/, not the worktree's)
-# (per rime task — export SDD_SLUG first, see sdd-workspace; named per
-# range, so a re-review after fixes gets a distinct fresh file).
+# (per rime task — export SDD_SLUG first, see sdd-workspace.)
 set -euo pipefail
 
-if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-  echo "usage: review-package BASE HEAD [OUTFILE]" >&2
+usage() {
+  echo "usage: review-package --worktree BASE [OUTFILE]" >&2
+  echo "       review-package BASE HEAD [OUTFILE]" >&2
   exit 2
-fi
+}
 
-base=$1
-head=$2
+worktree=0
+if [ "${1:-}" = "--worktree" ]; then
+  worktree=1
+  shift
+  [ $# -ge 1 ] && [ $# -le 2 ] || usage
+  base=$1
+  out=${2:-}
+else
+  [ $# -ge 2 ] && [ $# -le 3 ] || usage
+  base=$1
+  head=$2
+  out=${3:-}
+  git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+fi
 
 git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
-git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
 
-if [ $# -eq 3 ]; then
-  out=$3
-else
-  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
-  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+if [ "$worktree" -eq 0 ]; then
+  if [ -z "$out" ]; then
+    dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+    out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+  fi
+  {
+    echo "# Review package: ${base}..${head}"
+    echo
+    echo "## Commits"
+    git log --oneline "${base}..${head}"
+    echo
+    echo "## Files changed"
+    git diff --stat "${base}..${head}"
+    echo
+    echo "## Diff"
+    git diff -U10 "${base}..${head}"
+  } > "$out"
+  echo "wrote ${out}: $(git rev-list --count "${base}..${head}") commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+  exit 0
 fi
 
+# Working-tree mode: stage the existence of new files so they show up in the diff.
+tmp=$(mktemp)
+untracked=$(mktemp)
+trap 'rm -f "$tmp" "$untracked"' EXIT
+git ls-files --others --exclude-standard -z > "$untracked"
+if [ -s "$untracked" ]; then
+  git add -N --pathspec-from-file="$untracked" --pathspec-file-nul
+fi
 {
-  echo "# Review package: ${base}..${head}"
-  echo
-  echo "## Commits"
-  git log --oneline "${base}..${head}"
+  echo "# Review package: ${base}..working tree (uncommitted)"
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  git diff --stat "$base"
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
-} > "$out"
+  git diff -U10 "$base"
+} > "$tmp"
 
-commits=$(git rev-list --count "${base}..${head}")
-echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
+if [ -z "$out" ]; then
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  out="$dir/review-$(git rev-parse --short "$base")+worktree-$(git hash-object "$tmp" | cut -c1-7).diff"
+fi
+cp "$tmp" "$out"
+echo "wrote ${out}: uncommitted changes vs ${base}, $(wc -c < "$out" | tr -d ' ') bytes"

@@ -50,10 +50,12 @@ When all three hold → the main thread does it directly. The context-rebuilding
 
 ## Commit Responsibility
 
-| difficulty | Who commits |
+Implementers and fix subagents never commit, at any difficulty. The main thread decides when to commit and always commits via `/rime-git` (which may split the changes into several commits).
+
+| difficulty | When the main thread commits |
 |------|------|
-| trivial / small / medium | The implementer does not commit; after the main thread's diff review passes, it makes one consolidated wrap-up commit (`/rime-git`) |
-| large | Within rime-sdd orchestration, the implementer commits per task on its own |
+| trivial / small / medium | Once, as the wrap-up commit after its diff review passes |
+| large (rime-sdd) | Per task, after the task's review comes back clean — and before dispatching the next task's implementer, so each task's BASE is a real commit |
 
 ---
 

@@ -35,9 +35,10 @@ Subagent (general-purpose):
     1. Implement exactly what the task specifies
     2. Write tests (use the `tdd` skill where the task calls for TDD)
     3. Verify implementation works
-    4. Commit your work
-    5. Self-review (see below)
-    6. Report back
+    4. Self-review (see below)
+    5. Report back
+
+    Do not commit or stage — the controller commits after review.
 
     Work from: [directory]
 
@@ -45,7 +46,7 @@ Subagent (general-purpose):
     It's always OK to pause and clarify. Don't guess or make assumptions.
 
     While iterating, run the focused test for what you're changing; run the
-    full suite once before committing, not after every edit.
+    full suite once before reporting, not after every edit.
 
     ## Code Organization
 
@@ -60,12 +61,11 @@ Subagent (general-purpose):
     - In existing codebases, follow established patterns. Improve code you're touching
       the way a good developer would, but don't restructure things outside your task.
 
-    ## Comments and Commit Messages
+    ## Comments
 
     Never reference tracking artifacts that live outside the repository: task
     IDs (#0001), caution IDs (C-001), or paths under docs/. Those are gitignored
-    by default — to anyone who clones this repo they are dead links, and commit
-    messages can't be edited after the fact.
+    by default — to anyone who clones this repo they are dead links.
 
     You are a fresh subagent: you don't know what #0012 refers to either. That's
     exactly the position every future reader is in. Write comments that stand on
@@ -139,7 +139,7 @@ Subagent (general-purpose):
     Then report back with ONLY (under 15 lines — the detail lives in the
     report file):
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-    - Commits created (short SHA + subject)
+    - Files changed
     - One-line test summary (e.g. "14/14 passing, output pristine")
     - Your concerns, if any
     - The report file path

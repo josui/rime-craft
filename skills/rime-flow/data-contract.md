@@ -143,7 +143,7 @@ Source of truth for task state.
 | branch | string | | The associated branch name, written after the user confirms while doing |
 | commitFrom | string | | Automatically written with the HEAD hash while doing (overwritten every time), the start of the commit range |
 | commits | object | | Written **in the same write** as status when marked done: `{ "from": "...", "to": "..." }` (from ≠ to); omitted for non-git projects |
-| docs | array | | Written after producing a spec/plan/etc.: `[{ "type": "spec\|plan\|prototype\|reference\|blueprint\|decision", "path": "relative path" }]` |
+| docs | array | | Written after producing a spec/plan/etc.: `[{ "type": "spec\|plan\|prototype\|reference\|blueprint\|decision", "path": "...", "name": "..." }]`. `name` is optional (non-empty string, the dashboard label; falls back to a type-based label) — set it whenever the task has more than one doc of the same type. `path` is one of: an `http://` / `https://` URL (e.g. a published artifact; the dashboard links to it directly); a project-relative path (no `..` segments); or an absolute local path starting with `/` (the dashboard serves it only because it is registered here or in an archive). `~` is not expanded and is invalid |
 
 ### Write Constraints (all write paths must comply)
 

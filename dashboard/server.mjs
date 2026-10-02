@@ -2,7 +2,7 @@
 // Entry: CLI parsing / launcher (finds or starts a detached server on a stable port) / server (--serve: HTTP + SSE live reload)
 // The board page template is board.html in this directory (data injected via placeholders); UI changes touch the template only
 import { createServer, request as httpRequest } from 'node:http'
-import { readFileSync, writeFileSync, watch, existsSync, openSync, closeSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync, watch, existsSync, openSync, closeSync } from 'node:fs'
 import { join, resolve, dirname, relative, basename, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
@@ -209,6 +209,57 @@ async function runLauncher() {
   process.exit(0)
 }
 
+// Render a local file: markdown through md.html, everything else by extension.
+// mdDir is the markdown file's project-relative directory, used to resolve its
+// relative links; '' for files outside the project tree.
+function serveFile(res, filePath, mdDir) {
+  try {
+    const raw = readFileSync(filePath)
+    const ext = filePath.slice(filePath.lastIndexOf('.') + 1).toLowerCase()
+    if (ext === 'md' || ext === 'markdown') {
+      const mdTemplatePath = join(dirname(TEMPLATE_PATH), 'md.html')
+      // Escaping angle brackets as a unicode sequence keeps a literal closing-script-tag inside the markdown from ending the embedding tag early
+      const jsSafe = s => JSON.stringify(s).replace(/</g, '\\u003c')
+      const html = readFileSync(mdTemplatePath, 'utf8')
+        .replace('__DOC_TITLE__', () => escapeHtml(`${basename(filePath)} — ${basename(PROJECT_DIR)}`))
+        .replace('__MD_SOURCE__', () => jsSafe(raw.toString('utf8')))
+        .replace('__MD_DIR__', () => jsSafe(mdDir))
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+      res.end(html)
+      return
+    }
+    const TYPES = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', json: 'application/json', svg: 'image/svg+xml' }
+    const type = TYPES[ext] || 'text/plain'
+    res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` })
+    res.end(raw)
+  } catch {
+    res.writeHead(404)
+    res.end('File not found')
+  }
+}
+
+// Absolute doc paths registered in tasks.json and archives/*.json. Read fresh
+// per request so a newly registered doc is servable without a restart.
+function registeredAbsoluteDocs() {
+  const files = [join(RIME_DIR, 'tasks.json')]
+  try {
+    for (const name of readdirSync(join(RIME_DIR, 'archives'))) {
+      if (name.endsWith('.json')) files.push(join(RIME_DIR, 'archives', name))
+    }
+  } catch {}
+  const paths = new Set()
+  for (const file of files) {
+    try {
+      for (const item of JSON.parse(readFileSync(file, 'utf8')).items ?? []) {
+        for (const doc of item.docs ?? []) {
+          if (typeof doc?.path === 'string' && doc.path.startsWith('/')) paths.add(doc.path)
+        }
+      }
+    } catch {}
+  }
+  return paths
+}
+
 // Server (--serve --port <n>): HTTP + SSE + fs.watch. Runs detached from
 // whatever launched it; does not open a browser itself.
 function runServer() {
@@ -259,30 +310,20 @@ function runServer() {
         res.end('Forbidden')
         return
       }
-      try {
-        const raw = readFileSync(filePath)
-        const ext = relPath.slice(relPath.lastIndexOf('.') + 1).toLowerCase()
-        if (ext === 'md' || ext === 'markdown') {
-          const mdTemplatePath = join(dirname(TEMPLATE_PATH), 'md.html')
-          const mdDir = dirname(relPath)
-          // Escaping angle brackets as a unicode sequence keeps a literal closing-script-tag inside the markdown from ending the embedding tag early
-          const jsSafe = s => JSON.stringify(s).replace(/</g, '\\u003c')
-          const html = readFileSync(mdTemplatePath, 'utf8')
-            .replace('__DOC_TITLE__', () => escapeHtml(`${basename(relPath)} — ${basename(PROJECT_DIR)}`))
-            .replace('__MD_SOURCE__', () => jsSafe(raw.toString('utf8')))
-            .replace('__MD_DIR__', () => jsSafe(mdDir === '.' ? '' : mdDir))
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-          res.end(html)
-          return
-        }
-        const TYPES = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', json: 'application/json', svg: 'image/svg+xml' }
-        const type = TYPES[ext] || 'text/plain'
-        res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` })
-        res.end(raw)
-      } catch {
-        res.writeHead(404)
-        res.end('File not found')
+      const mdDir = dirname(relPath)
+      serveFile(res, filePath, mdDir === '.' ? '' : mdDir)
+      return
+    }
+    if (req.url.startsWith('/doc?')) {
+      // Absolute-path docs: served only when the exact path is registered as a
+      // docs path in the task data, so this never becomes an arbitrary-file reader.
+      const absPath = new URL(req.url, 'http://localhost').searchParams.get('path')
+      if (!absPath || !registeredAbsoluteDocs().has(absPath)) {
+        res.writeHead(403)
+        res.end('Forbidden')
+        return
       }
+      serveFile(res, absPath, '')
       return
     }
     res.writeHead(404)

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // PostToolUse hook (matcher: Edit|Write, targeting /.rime/tasks.json)
 // Mechanically validates that tasks.json conforms to data-contract.md: field whitelist, required fields and formats,
-// status consistency, commit gate (a done item with commitFrom must have commits and from ≠ to), dependsOn reference and cycle checking, docs[].type enum.
+// status consistency, commit gate (a done item with commitFrom must have commits and from ≠ to), dependsOn reference and cycle checking, docs[] type enum / name / path form.
 // Feedback only, does not modify the file — errors are fed back to the model via decision:"block" for self-correction; warnings are surfaced via additionalContext.
 
 import { readFileSync, appendFileSync } from "node:fs";
@@ -27,6 +27,22 @@ const STATUS_ENUM = new Set(["todo", "doing", "done"]);
 const PRIORITY_ENUM = new Set(["high", "medium", "low"]);
 const DIFFICULTY_ENUM = new Set(["small", "medium", "large"]);
 const DOC_TYPE_ENUM = new Set(["spec", "plan", "prototype", "reference", "blueprint", "decision"]);
+// docs[].path forms: http(s) URL, absolute local path, or project-relative path without ".." segments (no "~" expansion)
+function docPathError(path) {
+  if (typeof path !== "string") return "should be a string";
+  if (/^https?:\/\//i.test(path)) {
+    try {
+      new URL(path);
+      return null;
+    } catch {
+      return "is not a valid URL";
+    }
+  }
+  if (path.startsWith("~")) return 'may not start with "~" (no home-directory expansion; write the absolute path)';
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path)) return "has an unsupported scheme (only http:// and https:// URLs are allowed)";
+  if (!path.startsWith("/") && path.split("/").includes("..")) return 'is a relative path with ".." segments (use an absolute path for files outside the project)';
+  return null;
+}
 const ID_RE = /^#\d{4}$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -124,17 +140,24 @@ function validate(data) {
       }
     }
 
-    // docs[].type enum
+    // docs[]: type enum, optional name, path form
     if (item.docs !== undefined) {
       if (!Array.isArray(item.docs)) {
         errors.push(`${label}: docs should be an array`);
       } else {
         for (const doc of item.docs) {
           if (!doc || typeof doc !== "object" || !doc.type || !doc.path) {
-            errors.push(`${label}: docs entries should be {type, path}`);
-          } else if (!DOC_TYPE_ENUM.has(doc.type)) {
+            errors.push(`${label}: docs entries should be {type, path, name?}`);
+            continue;
+          }
+          if (!DOC_TYPE_ENUM.has(doc.type)) {
             errors.push(`${label}: docs[].type "${doc.type}" is not in the enum spec/plan/prototype/reference/blueprint/decision`);
           }
+          if (doc.name !== undefined && (typeof doc.name !== "string" || !doc.name.trim())) {
+            errors.push(`${label}: docs[].name should be a non-empty string (omit the key to use the type label)`);
+          }
+          const pathErr = docPathError(doc.path);
+          if (pathErr) errors.push(`${label}: docs[].path "${doc.path}" ${pathErr}`);
         }
       }
     }
